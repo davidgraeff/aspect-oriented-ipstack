@@ -1,0 +1,49 @@
+#ifndef __ARP_ETHERNET_AH__
+#define __ARP_ETHERNET_AH__
+
+#include "../Eth_Frame.h"
+#include "../demux/Demux.h"
+#include "../router/Interface.h"
+#include "ARP.h"
+
+using namespace ipstack;
+
+
+aspect ARP_Ethernet {
+
+  /* Affect class: Demux */  
+  advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
+         args(data, len, interface) && that(demux) :
+         around(const void* data, unsigned len, Interface* interface, Demux& demux){
+    
+    if(interface->getType() == Interface::ETHERNET){
+      
+      //check for correct ethernet frame length
+      if( (len < Eth_Frame::ETH_HEADER_SIZE) || (len > Eth_Frame::MAX_FRAME_SIZE) ){
+        return; //length too small or too big
+      }
+    
+      Eth_Frame* eth_frame = (Eth_Frame*) data;
+    
+      if(eth_frame->get_type() == ETH_TYPE_ARP){
+        //remove ethernet header
+        ARP_Packet* packet = (ARP_Packet*) eth_frame->get_data();
+      
+        if(len < (Eth_Frame::ETH_HEADER_SIZE + ARP_HEADER_SIZE)){
+          //packet too small!
+          return;
+        }
+      
+        if(packet->get_hw_type() == ARP_HW_TYPE_ETH){
+          //we have an ARP packet over Ethernet
+          demux.arp_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
+        }
+        return; //arp packet over ethernet processed
+      }
+    }
+    tjp->proceed(); //try another 'demux'-receive aspect
+  }
+  
+};
+
+#endif // __ARP_ETHERNET_AH__

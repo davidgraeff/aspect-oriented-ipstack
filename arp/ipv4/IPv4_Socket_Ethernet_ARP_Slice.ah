@@ -1,0 +1,9 @@
+#ifndef __IPV4_SOCKET_ETHERNET_ARP_SLICE__
+#define __IPV4_SOCKET_ETHERNET_ARP_SLICE__
+
+slice class IPv4_Socket_Ethernet_ARP_Slice {
+  private:
+  bool using_gateway;  
+};
+
+#endif // __IPV4_SOCKET_ETHERNET_ARP_SLICE__

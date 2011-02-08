@@ -1,0 +1,37 @@
+#ifndef __IPV4_TCP_TX_CHECKSUMMING_AH__
+#define __IPV4_TCP_TX_CHECKSUMMING_AH__
+
+#include "../IPv4.h"
+#include "../../tcp/TCP.h"
+#include "../IPv4_Socket.h"
+
+#include "../InternetChecksum.h"
+
+using namespace ipstack;
+
+
+aspect IPv4_TCP_Tx_Checksumming {
+  
+  advice execution("void ipstack::IPv4_Socket::setupHeader(ipstack::IPv4_Packet*, unsigned, %)") &&
+         args(packet, datasize, protocol_id) && that(socket) :
+         after(IPv4_Packet* packet, unsigned datasize, UInt8 protocol_id, IPv4_Socket& socket){
+    
+    if(protocol_id == TCP_Segment::IPV4_TYPE_TCP){
+      //we have a tcp packet
+      TCP_Segment* tcp = (TCP_Segment*) packet->get_data();
+      if(tcp->get_checksum() != 0){
+        //checksum already set. this is probably a retransmission
+        //do NOT calculate checksum once again!
+        return;
+      }
+      else{
+        UInt16 csum = InternetChecksum::compute(packet, socket.interface);
+        tcp->set_checksum(csum); // store checksum in TCP checksum field
+      }
+    }
+  }
+  
+};
+
+#endif // __IPV4_TCP_TX_CHECKSUMMING_AH__
+

@@ -1,0 +1,64 @@
+#ifndef __TCP_SLOWSTART_SLICE__
+#define __TCP_SLOWSTART_SLICE__
+
+#include "util/types.h"
+
+
+slice class TCP_SlowStart_Slice {
+  private:
+  UInt32 cwnd; //congestion window
+  UInt32 sstresh; //slow start threshold
+  
+  UInt16 outstanding_bytes; //unacknowledged data (UInt32?)
+  UInt32 mss_X_mss; //mss * mss
+  
+  void initSlowStart(){
+    cwnd = mss;
+    sstresh = 0xFFFFFFFFUL;
+    outstanding_bytes = 0;
+    UInt64 mss_X_mss_tmp = ((UInt64)mss) * mss; //overflow protection
+    if(mss_X_mss_tmp > 0xFFFFFFFFUL){
+      mss_X_mss = 0xFFFFFFFFUL;
+    }
+    else{
+      mss_X_mss = mss_X_mss_tmp;
+    }
+  }
+  
+  void increment_cwnd(){
+    UInt32 cwnd_old = cwnd;
+    if(cwnd <= sstresh){
+      //slow start
+      cwnd += mss; //exponential grow
+    }
+    else{
+      //congestion avoidance
+      cwnd += (mss_X_mss / cwnd); //linear increase
+    }
+    //overflow check
+    if(cwnd < cwnd_old){
+      //limit cwnd
+      cwnd = 0xFFFFFFFFUL;
+    }
+  }
+  
+  void drop_cwnd(){
+    if(cwnd == mss){
+      return; //already dropped
+    }
+    sstresh = cwnd/2;
+    UInt32 min_sstresh = 2*mss;
+    if(sstresh < min_sstresh){
+      sstresh = min_sstresh;
+    }
+    cwnd = mss;
+    outstanding_bytes = 0;
+  }
+  
+  bool cwnd_opened(){
+    return cwnd > outstanding_bytes;
+  }
+  
+};
+
+#endif // __TCP_SLOWSTART_SLICE__

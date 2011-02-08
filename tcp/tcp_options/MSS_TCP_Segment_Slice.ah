@@ -1,0 +1,38 @@
+#ifndef __TCP_OPTION_MSS_TCP_SEGMENT_SLICE__
+#define __TCP_OPTION_MSS_TCP_SEGMENT_SLICE__
+
+//#include "TCP_RecvElement.h"
+//using namespace ipstack;
+
+slice class MSS_TCP_Segment_Slice {
+  
+  void set_option_mss(UInt16 mss){
+    unsigned i = get_options_len(); //append to existing options
+    data[i+0] = 2; // kind
+    data[i+1] = 4; // length
+    *((UInt16*) (data+i+2)) = mss; //16bit mss value
+    set_header_len(get_header_len() + 1U);
+  }
+  
+  UInt16 get_option_mss(){
+    //returns the MSS value of this segment (if that tcp option is set)
+    unsigned opt_len = get_options_len();
+    unsigned i=0;
+    while(i < opt_len){
+      UInt8& kind = data[i];
+      UInt8& len = data[i+1]; //sum of (kind + len + options)
+      switch(kind){
+        case 0: return 0; //end of options list
+        case 1: i++; break; //nop
+        case 2: if(len >= 4){ return *((UInt16*)(data+i+2)); } //16 bit MSS
+                else{ return data[i+2]; } //only 8 bit MSS :-(
+        default: i+=len; break;
+      }
+    }
+    return 0;
+  }
+  
+};
+
+#endif // __TCP_OPTION_MSS_TCP_SEGMENT_SLICE__
+

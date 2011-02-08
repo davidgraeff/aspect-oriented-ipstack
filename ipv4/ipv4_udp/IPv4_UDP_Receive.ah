@@ -1,0 +1,70 @@
+#ifndef __IPV4_UDP_RECEIVE_AH__
+#define __IPV4_UDP_RECEIVE_AH__
+
+#include "../IPv4.h"
+#include "../../udp/UDP.h"
+#include "Demux_IPv4_UDP_Slice.ah"
+#include "IPv4_UDP_Socket_Receive_Slice.ah"
+#include "../../demux/Demux.h"
+#include "../../router/Interface.h"
+
+using namespace ipstack;
+
+aspect IPv4_UDP_Receive {
+
+  // *** Affect class: Demux
+  advice "ipstack::Demux" : slice Demux_IPv4_UDP_Slice;
+  
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+    if(packet->get_protocol() == UDP_Packet::IPV4_TYPE_UDP){
+      //we have a udp packet
+      if(len < (IPV4_MIN_HEADER_SIZE + UDP_Packet::UDP_HEADER_SIZE)){
+        return; //len too small!
+      }
+      
+      UDP_Packet* udp_packet = (UDP_Packet*) packet->get_data();
+      
+      //TODO: one-behind cache? -> header prediction?
+      
+      UInt16 udp_packet_dport = udp_packet->get_dport();
+      
+      IPv4_UDP_Socket* socket = demux.ipv4_udp_head_socket;
+      while(socket != 0){
+        if(socket->get_sport() == udp_packet_dport){
+          //dport match only for udp
+          socket->put(packet, len);
+          return; // dport match found
+        }
+        else{
+          socket = socket->getNext(); //try next socket
+        }
+      }
+      
+      //TODO: send icmp destination port unreachable
+      //printf("Invalid UPD Packet arrived (on port %d)\n", udp_packet->get_dport());
+    }
+    tjp->proceed(); //try another 'ipv4_demux'-aspect
+  }
+  
+  /* Affect class: IPv4_UDP_Socket */
+  advice "ipstack::IPv4_UDP_Socket" : slice IPv4_UDP_Socket_Receive_Slice;
+  
+  advice execution("bool ipstack::IPv4_UDP_Socket::bind()") &&
+         that(socket) : around(IPv4_UDP_Socket& socket){
+    // delegation to 'Demux'
+    *tjp->result() = Demux::Inst().bind(&socket);
+  }
+
+  advice execution("void ipstack::IPv4_UDP_Socket::unbind()") &&
+         that(socket) : around(IPv4_UDP_Socket& socket){
+    // delegation to 'Demux'
+    Demux::Inst().unbind(&socket);
+  }
+  
+};
+
+#endif //__IPV4_UDP_RECEIVE_AH__
+

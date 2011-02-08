@@ -1,0 +1,43 @@
+#ifndef __IRQ_SYNC_AH__
+#define __IRQ_SYNC_AH__
+
+#include "os/krn/EnterLeave.h"
+
+aspect IRQ_Sync{
+
+  advice execution("void ipstack::ARP_Cache::ipv4_wait(%)") : around() {
+    os::krn::leaveKernel(); //(re-)enable IRQs for incoming packets
+    tjp->proceed();
+    os::krn::enterKernel(); //disable IRQs again
+  }
+  
+  //advice ordering: execute IRQ_Sync at first!
+  advice call ("void ipstack::Interface::send(const void*, unsigned)") : 
+         order("IRQ_Sync" , "%" && !"IRQ_Sync");
+  
+  //Interface::send must be guarded, because the kernel sends arp/icmp packets,
+  //and the user sends arbitrary packets, too.
+  advice call("void ipstack::Interface::send(const void*, unsigned)") &&
+         within("ipstack::IPv4_Socket") : around(){
+    os::krn::enterKernel();
+    tjp->proceed();
+    os::krn::leaveKernel();
+  }
+  
+  //Mempools must be synchronized:
+  pointcut toSync() = "% ipstack::%_Socket::alloc(%)" ||
+                      "% ipstack::%_Socket::free(%)" ||
+                      "% ipstack::%_Socket::%bind()" || //sync linked-list operations
+                      "% ipstack::%_Socket::_listen()" || //sync linked-list operations
+                      "% ipstack::%_Socket::deaf()";  //sync linked-list operations
+
+  advice execution(toSync()) : around() {
+    os::krn::enterKernel();
+    tjp->proceed();
+    os::krn::leaveKernel();
+  }
+    
+};
+
+#endif // __IRQ_SYNC_AH__
+

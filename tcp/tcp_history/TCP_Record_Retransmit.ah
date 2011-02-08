@@ -1,0 +1,28 @@
+#ifndef __TCP_RECORD_RETRANSMIT_AH__
+#define __TCP_RECORD_RETRANSMIT_AH__
+
+#include "TCP_Record_Retransmit_Slice.ah"
+
+aspect TCP_Record_Retransmit {
+  
+  // *** Affect class: TCP_Record
+  advice "ipstack::TCP_Record" : slice TCP_Record_Retransmit_Slice;
+  
+  advice execution("bool ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
+         args(record, segment) &&
+         result(rexmitted) :
+         after(TCP_Record* record, TCP_Segment* segment, bool rexmitted){
+
+    record->free_retransmit = !rexmitted;
+  }
+  
+  advice execution("bool ipstack::TCP_Record::hasFreeRetransmit()") &&
+         that(record) :
+         around(TCP_Record& record){
+
+    *tjp->result() = record.free_retransmit;
+  }
+};
+
+#endif // __TCP_RECORD_RETRANSMIT_AH__
+

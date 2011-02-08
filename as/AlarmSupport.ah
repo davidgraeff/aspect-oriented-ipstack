@@ -1,0 +1,50 @@
+#ifndef __IPSTACK_ALARM_SUPPORT_AH__
+#define __IPSTACK_ALARM_SUPPORT_AH__
+
+#include "as/autosar_types.h"
+#include "as/AS.h"
+#include "os/krn/EnterLeave.h"
+
+#include "EventSupport.h"
+#include "AlarmSupport_Slice.ah"
+#include "../tcp/TCP_Socket.h"
+
+using namespace ipstack;
+
+
+aspect Ipstack_AlarmSupport {
+
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice AlarmSupport_Slice;
+  
+  advice execution("bool ipstack::TCP_Socket::block(%)") &&
+         args(timeout) && that(socket) :
+         around(UInt32 timeout, TCP_Socket& socket) {
+
+    if(timeout != 0){
+      //printf("set timeout in %u msec\n", timeout);
+      
+      //Because this is an aspect, AS:: calls are not synchronized!
+      //EnterLeave_Weaving_Static.ah uses the call advice,
+      //which doesn't match here :-(
+      //Workaround: call enterKernel() and leaveKernel() explicit!
+      
+      os::krn::enterKernel(); //lock
+      AS::SetRelAlarm(socket.alarm, timeout, 0);
+      AS::WaitEvent(IPStackAlarmEvent);
+      AS::ClearEvent(IPStackAlarmEvent);
+      bool alarm_finished = (AS::CancelAlarm(socket.alarm) != E_OK);
+      os::krn::leaveKernel(); //unlock
+      
+      *tjp->result() = alarm_finished;
+      //true := Alarm -> timeout reached, false := Packet arrived
+    }
+    else{
+      *tjp->result() = true;
+    }
+  }
+  
+};
+
+#endif // __IPSTACK_ALARM_SUPPORT_AH__
+

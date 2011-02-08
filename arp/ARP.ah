@@ -1,0 +1,14 @@
+#ifndef __ARP_AH__
+#define __ARP_AH__
+
+#include "Demux_ARP_Slice.ah"
+
+using namespace ipstack;
+
+
+aspect ARP_Aspect {
+  /* Affect class: Demux */
+  advice "ipstack::Demux" : slice Demux_ARP_Slice;
+};
+
+#endif // __ARP_AH__

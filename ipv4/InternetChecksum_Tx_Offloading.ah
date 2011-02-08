@@ -1,0 +1,108 @@
+#ifndef __INTERNET_CHECKSUM_TX_OFFLOADING_AH__
+#define __INTERNET_CHECKSUM_TX_OFFLOADING_AH__
+
+#include "IPv4.h"
+#include "IPv4_Socket.h"
+#include "../router/Interface.h"
+
+#include "../Eth_Frame.h" //TODO: don't depend on ethernet?
+
+using namespace ipstack;
+
+
+aspect InternetChecksum_Tx_Offloading {
+  
+  enum { IPV4_TYPE_UDP = 17,
+         IPV4_TYPE_TCP = 0x6};
+  
+  // *** Affect class 'InternetChecksum'
+  advice execution("% ipstack::InternetChecksum::computePayload(ipstack::IPv4_Packet*, %, ipstack::Interface*)") &&
+         args(packet, len, interface) :
+         around(IPv4_Packet* packet, UInt16 len, Interface* interface) {
+    
+    if( (interface != 0) && (interface->hasTransmitterHardwareChecksumming()) ){
+      *tjp->result() = 0; //computePayload is done by hardware
+    }
+    else{
+      tjp->proceed();
+    }
+  }
+  
+  advice execution("% ipstack::InternetChecksum::invert(%, ipstack::Interface*)") &&
+         args(csum, interface) :
+         around(UInt32 csum, Interface* interface) {
+    
+    if( (interface != 0) && (interface->hasTransmitterHardwareChecksumming()) ){
+      *tjp->result() = csum & 0xFFFF; // do not invert partial checksum
+    }
+    else{
+      tjp->proceed();
+    }
+  }
+  
+  // *** Affect class 'IPv4_Socket'
+  // call-advice ordering: always execute this aspect at last!
+  advice call ("void ipstack::Interface::send(const void*, unsigned)") : 
+    order("%" && !"InternetChecksum_Tx_Offloading", "InternetChecksum_Tx_Offloading");
+  
+  advice call("void ipstack::Interface::send(const void*, unsigned)") &&
+         within("ipstack::IPv4_Socket") &&
+         args(frame, framesize) &&
+         that(socket) && target(interface) :
+         around(const void* frame, unsigned framesize, IPv4_Socket& socket, Interface& interface){
+
+    if(interface.hasTransmitterHardwareChecksumming()){
+      
+      IPv4_Packet* packet = (IPv4_Packet*) frame;
+      
+      if(interface.getType() == Interface::ETHERNET) {
+        //Ethernet aspect has added an ethernet header before the ipv4 packet
+        Eth_Frame* eth_frame = (Eth_Frame*) frame;
+        packet = (IPv4_Packet*) eth_frame->get_data();
+      }
+        
+      UInt8 protocol = packet->get_protocol();
+      bool tcp;
+      if(protocol == IPV4_TYPE_UDP){
+        //Uncomment the following lines if checksum offloading is enabled,
+        //but no UDP checksumming should be done (rare use case).
+        /*UDP_Packet* udp_packet = (UDP_Packet*) packet->get_data();
+        if(udp_packet->get_checksum() == 0){
+          // we don't want a UDP checksum. no pseudo header checksum found
+          packet->computeChecksum(); //compute ipv4 checksum instead
+          tjp->proceed(); //do not use checksum offloading
+          return;
+        }*/
+        tcp = false;
+      }
+      else if(protocol == IPV4_TYPE_TCP){
+        tcp = true;
+      }
+      else{
+        tjp->proceed(); //only support UDP and TCP checksum offloading
+        return;
+      }
+      //call specialized send function for checksum offloading
+      interface.send(frame, framesize, tcp, packet->get_ihl()*4);
+      return;
+    }
+    tjp->proceed();
+  }
+  
+  advice call("void ipstack::IPv4_Packet::computeChecksum()") &&
+         within("ipstack::IPv4_Socket") &&
+         that(socket) && target(packet) :
+         around(IPv4_Socket& socket, IPv4_Packet& packet){
+
+    if(socket.interface->hasTransmitterHardwareChecksumming()){
+      packet.clearChecksum(); // clear IPv4 checksum. rest is done by hardware
+    }
+    else{
+      tjp->proceed();
+    }
+  }  
+  
+};
+
+#endif // __INTERNET_CHECKSUM_TX_OFFLOADING_AH__
+

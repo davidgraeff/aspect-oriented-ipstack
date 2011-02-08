@@ -1,0 +1,11 @@
+#ifndef __INTERFACE_AH__
+#define __INTERFACE_AH__
+
+#include "Interface_Slice.ah"
+
+aspect Interface_Inst_Aspect {
+  advice "hw::hal::NetworkDevice" : slice Interface_Slice;
+};
+
+
+#endif /* __INTERFACE_AH__ */

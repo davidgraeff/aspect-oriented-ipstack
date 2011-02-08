@@ -1,0 +1,112 @@
+#ifndef __DEMUX_IPV4_TCP_RESET_SLICE__
+#define __DEMUX_IPV4_TCP_RESET_SLICE__
+
+#include "util/types.h"
+#include "../IPv4.h"
+#include "../../tcp/TCP.h"
+#include "../../router/Interface.h"
+#include "../InternetChecksum.h"
+
+using namespace ipstack;
+
+
+slice class Demux_IPv4_TCP_Reset_Slice {
+  private:
+  
+  enum { LINK_LAYER_HEADER_SIZE = 14 }; //TODO
+
+  struct {
+    UInt8 link_layer[LINK_LAYER_HEADER_SIZE];
+    UInt8 ipv4_packet[IPV4_MIN_HEADER_SIZE];
+    UInt8 tcp_segment[TCP_Segment::TCP_MIN_HEADER_SIZE];
+    Interface* interface; //for hasBeenSent()
+    
+    IPv4_Packet* get_IPv4_Packet() { return (IPv4_Packet*) ipv4_packet; }
+    TCP_Segment* get_TCP_Segment() { return (TCP_Segment*) tcp_segment; }
+    
+    void init(){
+      if(get_IPv4_Packet()->get_protocol() != 0){
+        return; //already initialized
+      }
+      
+      //IPv4
+      get_IPv4_Packet()->set_ihl(IPV4_MIN_HEADER_SIZE/4);
+      get_IPv4_Packet()->set_version(IPV4_VERSION);
+      get_IPv4_Packet()->set_tos(IPV4_DEFAULT_TOS);
+      get_IPv4_Packet()->set_total_len(IPV4_MIN_HEADER_SIZE + TCP_Segment::TCP_MIN_HEADER_SIZE);
+      get_IPv4_Packet()->set_id(0);
+      get_IPv4_Packet()->set_flags(IPV4_DEFAULT_FLAGS);
+      get_IPv4_Packet()->set_fragment_offset(IPV4_NO_FRAGMENT_OFFSET);
+      get_IPv4_Packet()->set_ttl(IPV4_DEFAULT_TTL);
+      get_IPv4_Packet()->set_protocol(TCP_Segment::IPV4_TYPE_TCP);
+      
+      //TCP
+      get_TCP_Segment()->set_header_len(TCP_Segment::TCP_MIN_HEADER_SIZE/4);
+      get_TCP_Segment()->set_window(0);
+      get_TCP_Segment()->set_urgend_ptr(0);      
+    }
+    
+  } ipv4_tcp_rst_packet;
+  
+  bool ipv4_tcp_rst_packet_isFree(){
+    if(ipv4_tcp_rst_packet.interface == 0){
+      return true;
+    }
+    return ipv4_tcp_rst_packet.interface->hasBeenSent(ipv4_tcp_rst_packet.get_IPv4_Packet());
+  }  
+  
+  void ipv4_tcp_reset_setup(IPv4_Packet* packet, unsigned len, Interface* interface){
+    ipv4_tcp_rst_packet.init();
+    
+    ipv4_tcp_rst_packet.interface = interface;
+    
+    TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
+      
+    //IPv4
+    ipv4_tcp_rst_packet.get_IPv4_Packet()->set_src_ipaddr(interface->getIPv4Addr());
+    ipv4_tcp_rst_packet.get_IPv4_Packet()->set_dst_ipaddr(packet->get_src_ipaddr());
+    ipv4_tcp_rst_packet.get_IPv4_Packet()->computeChecksum(); //software checksumming
+    
+    //TCP
+    ipv4_tcp_rst_packet.get_TCP_Segment()->set_dport(tcp_segment->get_sport());
+    ipv4_tcp_rst_packet.get_TCP_Segment()->set_sport(tcp_segment->get_dport());
+      
+    // If the incoming segment has an ACK field, the reset takes its
+    // sequence number from the ACK field of the segment, otherwise the
+    // reset has sequence number zero and the ACK field is set to the sum
+    // of the sequence number and segment length of the incoming segment.
+    // The connection remains in the CLOSED state. (rfc 793, page 36)
+      
+    if(tcp_segment->has_ACK()){
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_seqnum(tcp_segment->get_acknum());
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_acknum(0);
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_flags(TCP_Segment::RST_FLAG);
+    }
+    else{
+      unsigned payload_len = len - ((packet->get_ihl() + tcp_segment->get_header_len()) * 4);
+      if(tcp_segment->has_SYN() || tcp_segment->has_FIN()){
+        //SYN, FIN consumes one sequence number
+        payload_len++;
+      }
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_seqnum(0);
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_acknum(tcp_segment->get_seqnum() + payload_len);
+      ipv4_tcp_rst_packet.get_TCP_Segment()->set_flags(TCP_Segment::RST_FLAG | TCP_Segment::ACK_FLAG);
+    }
+    
+    //software checksumming:
+    ipv4_tcp_rst_packet.get_TCP_Segment()->set_checksum(0);
+    ipv4_tcp_rst_packet.get_TCP_Segment()->set_checksum(InternetChecksum::compute(ipv4_tcp_rst_packet.get_IPv4_Packet(), 0));
+  }
+  
+  
+  void ipv4_tcp_reset(IPv4_Packet* packet, unsigned len, Interface* interface){    
+    if(ipv4_tcp_rst_packet_isFree()){
+      ipv4_tcp_reset_setup(packet, len, interface);
+      interface->send(ipv4_tcp_rst_packet.get_IPv4_Packet(), TCP_Segment::TCP_MIN_HEADER_SIZE + IPV4_MIN_HEADER_SIZE);
+    }
+  }
+  
+};
+
+#endif // __DEMUX_IPV4_TCP_RESET_SLICE__ 
+

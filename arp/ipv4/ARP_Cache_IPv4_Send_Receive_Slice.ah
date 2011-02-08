@@ -1,0 +1,45 @@
+#ifndef __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__
+#define __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__
+
+#include "util/types.h"
+#include "../../router/Interface.h"
+#include "Eth_ARP_IPv4_Packet.h"
+
+using namespace ipstack;
+
+
+slice class ARP_Cache_IPv4_Send_Receive_Slice {
+  public:
+  //Configuration:
+  enum { MAX_PACKETS = 1 }; // arp packets to be send concurrently
+  
+  private:
+  
+  Eth_ARP_IPv4_Packet packet_pool[MAX_PACKETS]; //the packet pool
+
+  Eth_ARP_IPv4_Packet* getNextFreePacket(){
+    for(unsigned i=0; i<MAX_PACKETS; i++){
+      Eth_ARP_IPv4_Packet& packet = packet_pool[i];
+      if(packet.isFree()){
+        return &packet;
+      }
+    }
+    return 0;
+  }
+
+  public:
+  
+  void ipv4_reply(const UInt8* src_hwaddr, const UInt32* src_ipv4_addr, Interface* interface){
+    // Aspects to be weaved here!
+    // handle incoming arp request: return an arp reply packet to the requesting host 
+  }
+  
+  void ipv4_update(const UInt32* ipv4_addr, const UInt8* hw_addr){
+    // Aspects to be weaved here!
+    // handle incoming arp replies: update own cache
+  }
+
+};
+
+#endif // __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__ 
+

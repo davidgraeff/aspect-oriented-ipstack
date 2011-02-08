@@ -1,0 +1,15 @@
+#ifndef __IPV4_ARP_AH__
+#define __IPV4_ARP_AH__
+
+#include "ARP_Cache_IPv4_Slice.ah"
+
+using namespace ipstack;
+
+
+aspect IPv4_ARP {  
+  // *** Affect class: ARP_Cache
+  advice "ipstack::ARP_Cache" : slice ARP_Cache_IPv4_Slice;
+  
+};
+
+#endif // __IPV4_ARP_AH__

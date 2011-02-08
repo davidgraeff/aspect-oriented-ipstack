@@ -1,0 +1,77 @@
+#ifndef __IPV4_RECEIVE_AH__
+#define __IPV4_RECEIVE_AH__
+
+#include "IPv4.h"
+#include "../demux/Demux.h"
+#include "../router/Interface.h"
+#include "Demux_IPv4_Slice.ah"
+
+using namespace ipstack;
+
+aspect IPv4_Receive {
+  /* Affect class: Demux */
+  advice "ipstack::Demux" : slice Demux_IPv4_Slice;
+
+  // advice ordering: always execute this aspect first!
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") : 
+    order( "IPv4_Receive", "%" && !"IPv4_Receive" );
+
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+    //is the receiving interface running ipv4?
+    if(interface->isIPv4Up() == false){
+      //discard packets on down interfaces
+      return;
+    }
+
+    len = packet->validPacketLength(len); //strip packet (e.g. ethernet padding)
+    if(len == 0){
+      //invalid packet length
+      return;
+    }
+    *((unsigned*)(tjp->arg(1))) = len; //update function parameter (for other aspects)
+    //packet length seems to be ok
+    
+    if(packet->get_version() != IPV4_VERSION){
+      //no ipv4 packet
+      return;
+    }
+        
+    //verify IPv4 header checksum:
+    if(packet->validPacketChecksum() == false){
+      //TODO: don't do that for offloading?!
+      return;
+    }
+    //IPv4 packet has passed all verification check so far ...
+    if(packet->get_dst_ipaddr() == interface->ipv4_addr){
+      //this packet is destined for this local host
+      
+      UInt16 fragment_offset = packet->get_fragment_offset();
+      if( (packet->get_flags() == IPV4_MF_FLAG) || (fragment_offset != 0) ) {
+        //this is a fragmented ipv4 packet. try to reassemble ...
+        demux.ipv4_reassemble(packet, len, interface, fragment_offset * 8);
+      }
+      else{
+        //no fragment
+        tjp->proceed(); // continue ipv4_demux(...)
+      }
+    }
+    else{
+      //this packet has to be routed elsewhere
+      demux.ipv4_forward(packet, len, interface);
+    }
+  }
+  
+  advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
+         args(data, len, interface) && that(demux) :
+         after(const void* data, unsigned len, Interface* interface, Demux& demux){
+    
+    //try to demux raw ipv4 packet (without any additional link-layer headers)
+    demux.ipv4_demux((IPv4_Packet*) data, len, interface);
+  }
+   
+};
+
+#endif // __IPV4_RECEIVE_AH__

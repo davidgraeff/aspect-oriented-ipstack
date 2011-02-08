@@ -1,0 +1,93 @@
+#ifndef __ARP_CACHE_IPV4_SEND_SLICE__
+#define __ARP_CACHE_IPV4_SEND_SLICE__
+
+#include "util/types.h"
+#include "../../router/Interface.h"
+#include "../ARP.h"
+#include "../../Eth_Frame.h"
+#include "Eth_ARP_IPv4_Packet.h"
+
+#include "hw/hal/SystemClock.h"
+
+using namespace ipstack;
+
+
+slice class ARP_Cache_IPv4_Send_Slice {
+  public:
+  //Configuration:
+  enum { MAX_CACHE_ENTRIES = 5 };
+  
+  private:
+  
+  struct cache_entry {
+    UInt32 ipv4_addr;
+    UInt8 hw_addr[6];
+  } entries[MAX_CACHE_ENTRIES];
+  
+  void ipv4_clear(){
+    for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
+      entries[i].ipv4_addr = 0;
+    }
+  }
+  
+  UInt8* ipv4_find(UInt32 ipv4_addr){
+    for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
+      cache_entry& entry = entries[i];
+      if(entry.ipv4_addr == ipv4_addr){
+        return entry.hw_addr;
+      }
+    }
+    return 0;
+  }
+  
+  void ipv4_wait(UInt32 ipv4_addr){
+    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
+    UInt64 timeout = clock.value() + ((UInt64)clock.freq()); //1 sec
+    while( (clock.value() < timeout) && (ipv4_find(ipv4_addr)==0) );
+  }
+  
+  public:
+  
+  //Send a new ARP-Request packet
+  void ipv4_request(UInt32 ipv4_addr, Interface* interface){
+    Eth_ARP_IPv4_Packet* packet = getNextFreePacket();
+    if(packet != 0){
+       packet->interface = interface;
+
+       //Ethernet type field
+       packet->get_Eth_Frame()->set_type(ETH_TYPE_ARP);
+
+       //ARP Header
+       packet->get_ARP_Packet()->set_hw_type(ARP_HW_TYPE_ETH);
+       packet->get_ARP_Packet()->set_protocol_type(ARP_PROTOCOL_TYPE_IPV4);
+       packet->get_ARP_Packet()->set_hw_addr_size(ARP_HW_ADDR_SIZE_ETH);
+       packet->get_ARP_Packet()->set_protocol_addr_size(ARP_PROTOCOL_ADDR_SIZE_IPV4);
+       packet->get_ARP_Packet()->set_opcode(ARP_REQUEST);
+       
+       //Source HW-Addr for this ARP reply packet:
+       const UInt8* i_hw_addr = interface->getAddress();
+       for(int i=0; i<6; i++){
+         packet->arp_src_hwaddr[i] = i_hw_addr[i];
+       }
+       packet->get_Eth_Frame()->set_src_hwaddr(i_hw_addr);
+       
+       //Source IP-Addr
+       packet->arp_src_ipv4_addr = interface->getIPv4Addr();
+       
+       //Destination HW-Addr
+       for(int i=0; i<6; i++){
+         packet->arp_dst_hwaddr[i] = 0xFF; //Broadcast ethernet address
+       }
+       packet->get_Eth_Frame()->set_dst_hwaddr_broadcast();
+       
+       //Destination IP-Addr
+       packet->arp_dst_ipv4_addr = ipv4_addr;
+       
+       //Send the ARP reply packet
+       interface->send(packet, Eth_ARP_IPv4_Packet::FRAMESIZE);
+    }
+  }
+
+};
+
+#endif /* __ARP_CACHE_IPV4_SEND_SLICE__ */

@@ -1,0 +1,74 @@
+#ifndef __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
+#define __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
+
+#include "../TCP_Socket.h"
+#include "SWS_SenderAvoidance_Slice.ah"
+
+using namespace ipstack;
+
+//TODO
+// --> This code has not been tested so far!
+//TODO
+
+aspect SillyWindowSyndrome_Sender_Avoidance {
+
+  //reference:
+  //RFC 813: WINDOW AND ACKNOWLEDGEMENT STRATEGY IN TCP by David D. Clark
+  
+  //Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice SWS_SenderAvoidance_Slice;
+
+  advice execution("void ipstack::TCP_Socket::updateSendWindow(ipstack::TCP_Segment*, %, %)") &&
+         that(socket) :
+         after(TCP_Socket& socket) {
+    //update max_sendWindow if possible
+    if(socket.sendWindow > socket.max_sendWindow){
+      socket.max_sendWindow = socket.sendWindow;
+    }
+  }
+  
+  advice execution("void ipstack::TCP_Socket::initSendWindow(ipstack::TCP_Segment*, %, %)") &&
+         that(socket) :
+         after(TCP_Socket& socket) {
+    socket.max_sendWindow = 0;
+  }
+  
+  advice execution("bool ipstack::TCP_Socket::sendNextSegment()") &&
+         that(socket) : 
+         around(TCP_Socket& socket) {
+
+    if(socket.application_buflen > socket.sendWindow){
+      //we want to send more data than currently advertised
+      //this is the only case where 'sender SWS avoidance' needs to be done
+      if( (socket.sendWindow*2U < socket.max_sendWindow) && (socket.sendWindow < socket.mss) ) {
+        //Wait until
+        // 1) at least 1/2 buffer space is free OR
+        // 2) one full-sized segment can be send
+              
+        if(socket.block(500) == true){ //0.5sec
+          //The override timeout should be in the range 0.1 - 1.0 seconds [rfc1122]
+          //timeout reached, no new packet arrived
+          //override sender SWS avoidance to prevent deadlocks
+          //TODO: reduce socket.max_sendWindow ? //socket.max_sendWindow = socket.mss;
+          tjp->proceed();
+          return;
+        }
+        else{
+          //a new packet has arrived meanwhile
+          *tjp->result() = false; //stop sending
+          return; //process the new packet
+          //TODO: this doesn't process the new packet very well,
+          //because the caller (ESTABLISHED) will wait additional
+          //time [ block(history.getNextTimeout()); ]
+          //TODO: don't wait @ caller!
+        }
+      }
+    }
+    tjp->proceed();
+  }
+  
+  
+};
+
+#endif // __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
+

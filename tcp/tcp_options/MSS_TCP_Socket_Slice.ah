@@ -1,0 +1,10 @@
+#ifndef __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
+#define __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
+
+
+slice class MSS_TCP_Socket_Slice {
+  unsigned max_mss;
+};
+
+#endif // __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
+

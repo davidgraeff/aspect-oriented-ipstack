@@ -1,0 +1,30 @@
+#ifndef __DEMUX_AH__
+#define __DEMUX_AH__
+
+#include "hw/hal/NetworkDevice.h"
+using hw::hal::NetworkDevice;
+
+#include "Demux.h"
+#include "../router/Interface.h"
+
+using namespace ipstack;
+
+aspect Demux_Aspect {
+
+  // *** Binding Aspect: loose coupling
+  advice execution("void hw::hal::NetworkDevice::demux(const void*, unsigned)") &&
+         args(data, len) && that(device) :
+         after(const void* data, unsigned len, NetworkDevice& device){
+  
+    Demux& demux = Demux::Inst(); //short name
+    
+    //make sure that data can be dereferenced
+    if(data != 0){
+      Interface* interface = &(device.interface_);
+      demux.demux(data, len, interface);
+    }
+  }
+  
+};
+
+#endif /*__DEMUX_AH__ */

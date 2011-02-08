@@ -1,0 +1,39 @@
+#ifndef __ARP_CACHE_IPV4_STATIC_SLICE__
+#define __ARP_CACHE_IPV4_STATIC_SLICE__
+
+#include "util/types.h"
+
+using namespace ipstack;
+
+
+slice class ARP_Cache_IPv4_Static_Slice {
+  public:
+  //Configuration:
+  enum { MAX_STATIC_ENTRIES = 1 };
+  
+  private:
+  
+  struct static_entry {
+    UInt32 ipv4_addr;
+    UInt8 hw_addr[6];
+  } static_entries[MAX_STATIC_ENTRIES];
+  
+  public:
+  
+  bool ipv4_insert(UInt32 ipv4_addr, const UInt8* hw_addr){
+    for(int i=0; i<MAX_STATIC_ENTRIES; i++){
+      static_entry& entry = static_entries[i];
+      if(entry.ipv4_addr == 0){
+        entry.ipv4_addr = ipv4_addr;
+        for(int j=0; j<6; j++){
+          entry.hw_addr[j] = hw_addr[j];
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+  
+};
+
+#endif // __ARP_CACHE_IPV4_STATIC_SLICE__ 

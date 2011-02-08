@@ -1,0 +1,79 @@
+#ifndef __TCP_SLOWSTART_AH__
+#define __TCP_SLOWSTART_AH__
+
+#include "util/types.h"
+#include "../TCP_Socket.h"
+#include "../TCP.h"
+#include "../tcp_history/TCP_Record.h"
+#include "SlowStart_Slice.ah"
+
+using namespace ipstack;
+
+
+aspect TCP_SlowStart {
+  
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice TCP_SlowStart_Slice;
+
+  advice execution("void ipstack::TCP_Socket::lowerSendWindow(%)") &&
+         args(subtract) && 
+         that(socket) :
+         after(UInt16 subtract, TCP_Socket& socket){
+
+    //increment 'outstanding_bytes' count due to normal sending
+    socket.outstanding_bytes += subtract;
+  }
+  
+  advice execution("void ipstack::TCP_Socket::set_seqnum_unacked(%)") &&
+         args(acknum) &&
+         that(socket) :
+         before(UInt32 acknum, TCP_Socket& socket){
+
+    // decrement 'outstanding_bytes' count
+    UInt16 acked = (UInt16)(acknum - socket.seqnum_unacked);
+    if(acked < socket.outstanding_bytes){
+      socket.outstanding_bytes -= acked;
+    }
+    else{
+      socket.outstanding_bytes = 0;
+    }
+    
+    socket.increment_cwnd(); // ... because an ACK arrived
+  }
+  
+  advice execution("% ipstack::TCP_Socket::getSendWindow()") &&
+         that(socket) : 
+         around(TCP_Socket& socket) {
+
+    //check if congestion window allows sending more data
+    if(socket.cwnd_opened()){
+      tjp->proceed(); //free space in congestion window -> continue
+    }
+    else{
+      *tjp->result() = 0; //congestion window is full -> abort
+    }
+  }
+  
+  advice execution("void ipstack::TCP_Socket::resend(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
+         args(record, segment) &&
+         that(socket) :
+         before(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+
+    if(record->hasFreeRetransmit() == false){
+      //only drop cwnd once per flight (free_retransmit == false)
+      socket.drop_cwnd();
+    } 
+  }  
+  
+  advice execution("void ipstack::TCP_Socket::setMSS(%)") &&
+         that(socket) :
+         after(TCP_Socket& socket){
+
+    //initialize congestion avoidance variables
+    socket.initSlowStart();
+  }
+
+};
+
+#endif // __TCP_SLOWSTART_AH__
+

@@ -1,0 +1,13 @@
+#ifndef __TCP_RECORD_RETRANSMIT_SLICE__
+#define __TCP_RECORD_RETRANSMIT_SLICE__
+
+using namespace ipstack;
+
+
+slice class TCP_Record_Retransmit_Slice {
+  bool free_retransmit;
+  //true, if the next retransmit should not be handled as packet loss
+};
+
+#endif // __TCP_RECORD_RETRANSMIT_SLICE__
+

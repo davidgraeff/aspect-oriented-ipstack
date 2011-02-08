@@ -1,0 +1,72 @@
+#ifndef __IPSTACK_EVENT_SUPPORT_AH__
+#define __IPSTACK_EVENT_SUPPORT_AH__
+
+#include "as/autosar_types.h"
+#include "as/AS.h"
+#include "os/krn/EnterLeave.h"
+
+#include "EventSupport.h"
+#include "EventSupport_Slice.ah"
+#include "../ipv4/IPv4_Socket.h"
+
+using namespace ipstack;
+
+aspect Ipstack_EventSupport {
+  
+  // *** Affect class: IPv4_Socket
+  advice "ipstack::IPv4_Socket" : slice EventSupport_Slice;
+
+  advice construction("ipstack::IPv4_Socket") &&
+         that(socket) : before(IPv4_Socket& socket) {
+    AS::GetTaskID(socket.taskid); //init taskid
+    //needs not to be synchronized -> changes no kernel data
+  }
+  
+  advice execution("bool ipstack::IPv4_%_Socket::put(ipstack::IPv4_Packet*, unsigned)") &&
+         that(socket) && result(success) &&
+         within(derived("ipstack::IPv4_Socket")) :
+         after(IPv4_Socket& socket, bool success) {
+    
+    if(success){
+      AS::SetEvent(socket.taskid, IPStackReceiveEvent_);
+    }
+  }
+  
+  advice execution("ipstack::IPv4_Packet* ipstack::IPv4_Socket::receive()") &&
+         that(socket) :
+         around(IPv4_Socket& socket) {
+    
+    void* recv = socket.packetbuffer->get();
+    while(recv == 0){
+      
+      //Because this is an aspect, AS:: calls are not synchronized!
+      //EnterLeave_Weaving_Static.ah uses the call advice,
+      //which doesn't match here :-(
+      //Workaround: call enterKernel() and leaveKernel() explicit!
+      
+      os::krn::enterKernel(); //lock
+      AS::WaitEvent(IPStackReceiveEvent_);
+      AS::ClearEvent(IPStackReceiveEvent_);
+      os::krn::leaveKernel(); //unlock
+      
+      recv = socket.packetbuffer->get();
+    }
+    *tjp->result() = ((IPv4_Packet*) recv);
+  }
+  
+  advice execution("void ipstack::TCP_Socket::block()") : around(){
+      //Because this is an aspect, AS:: calls are not synchronized!
+      //EnterLeave_Weaving_Static.ah uses the call advice,
+      //which doesn't match here :-(
+      //Workaround: call enterKernel() and leaveKernel() explicit!
+      
+      os::krn::enterKernel(); //lock
+      AS::WaitEvent(IPStackReceiveEvent_);
+      AS::ClearEvent(IPStackReceiveEvent_);
+      os::krn::leaveKernel(); //unlock
+  }
+
+};
+
+#endif // __IPSTACK_EVENT_SUPPORT_AH__
+

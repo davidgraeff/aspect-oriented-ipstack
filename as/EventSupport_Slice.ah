@@ -1,0 +1,12 @@
+#ifndef __IPSTACK_EVENT_SUPPORT_SLICE__
+#define __IPSTACK_EVENT_SUPPORT_SLICE__
+
+#include "as/autosar_types.h"
+#include "as/AS.h"
+
+slice class EventSupport_Slice {
+  TaskType taskid; //For CiAO events...
+};
+
+#endif // __IPSTACK_EVENT_SUPPORT_SLICE__
+

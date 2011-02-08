@@ -1,0 +1,71 @@
+#ifndef __TCP_RTT_ESTIMATION_AH__
+#define __TCP_RTT_ESTIMATION_AH__
+
+#include "util/types.h"
+#include "../TCP_Socket.h"
+#include "../TCP.h"
+#include "../tcp_history/TCP_Record.h"
+#include "RTT_Estimation_Slice.ah"
+
+using namespace ipstack;
+
+
+aspect TCP_RTT_Estimation {
+  
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice TCP_RTT_Estimation_Slice;
+  
+  advice call("void ipstack::TCP_Socket::send(void*, unsigned)") &&
+         within("bool ipstack::TCP_Socket::sendNextSegment()") &&
+         that(socket) :
+         before(TCP_Socket& socket) {
+
+    //start a new rtt estimation if possible
+    socket.start_RTT_Estimation();
+  }
+  
+  advice execution("void ipstack::TCP_Socket::set_seqnum_unacked(%)") &&
+         args(acknum) &&
+         that(socket) :
+         after(UInt32 acknum, TCP_Socket& socket){
+
+    //check if this ACK has finished our rtt estimation
+    socket.update_RTT_Estimation(acknum);
+  }
+  
+  advice execution("void ipstack::TCP_Socket::resend(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
+         args(record, segment) &&
+         that(socket) :
+         before(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+
+    //abort any running rtt estimation if a retransmission occures
+    //this is called 'Karn's Algorithm'
+    socket.abort_RTT_Estimation();
+    
+    if(record->hasFreeRetransmit() == false){
+      //exponential backoff (also 'Karn's Algorithm')
+      //only backoff once per flight (free_retransmit == false)
+      socket.rto_backoff();
+    } 
+  }
+  
+  advice execution("void ipstack::TCP_Socket::gen_initial_seqnum()") &&
+         that(socket) :
+         after(TCP_Socket& socket){
+
+    //initialize RTT values to defaults
+    socket.rtt_init();        
+  }
+  
+  advice execution("% ipstack::TCP_Socket::getRTO()") &&
+         that(socket) :
+         around(TCP_Socket& socket) {
+
+    //use estimated RTO:
+    *tjp->result() = socket.rto;
+  }
+  
+};
+
+#endif // __TCP_RTT_ESTIMATION_AH__
+

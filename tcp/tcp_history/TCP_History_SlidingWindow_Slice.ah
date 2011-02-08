@@ -1,0 +1,13 @@
+#ifndef __TCP_HISTORY_SLIDING_WINDOW_SLICE__
+#define __TCP_HISTORY_SLIDING_WINDOW_SLICE__
+
+#include "TCP_Record.h"
+using namespace ipstack;
+
+
+slice class TCP_History_SlidingWindow_Slice {
+  TCP_Record* freelist; //single linked (only next-pointer)
+};
+
+#endif //__TCP_HISTORY_SLIDING_WINDOW_SLICE__
+

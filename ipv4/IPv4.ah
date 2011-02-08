@@ -1,0 +1,19 @@
+#ifndef __IPV4_AH__
+#define __IPV4_AH__
+
+#include "Router_IPv4_Slice.ah"
+#include "Interface_IPv4_Slice.ah"
+
+using namespace ipstack;
+
+
+aspect IPv4 {
+  /* Affect class: Interface */
+  advice "ipstack::Interface" : slice Interface_IPv4_Slice;
+
+  /* Affect class: Router */
+  advice "ipstack::Router" : slice Router_IPv4_Slice;
+};
+
+#endif // __IPV4_AH__
+

@@ -1,0 +1,127 @@
+#ifndef __TCP_OPTION_MSS_AH__
+#define __TCP_OPTION_MSS_AH__
+
+#include "util/types.h"
+#include "../TCP_Socket.h"
+#include "../TCP.h"
+#include "MSS_TCP_Segment_Slice.ah"
+#include "MSS_TCP_Socket_Slice.ah"
+
+using namespace ipstack;
+
+aspect TCP_Option_MSS {
+  
+  enum { MSS_OPTION_BYTES = 4U }; //16 bit MSS option support
+  
+  // *** Affect class: TCP_Segment
+  advice "ipstack::TCP_Segment" : slice MSS_TCP_Segment_Slice;
+
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice MSS_TCP_Socket_Slice;
+  
+  advice execution("void ipstack::TCP_Socket::setMaxMTU(unsigned)") &&
+         args(max_mtu) &&
+         that(socket) : 
+         around(unsigned max_mtu, TCP_Socket& socket){
+
+    //subtract all used header sizes to calculate max_mss
+    socket.max_mss = max_mtu - socket.network_header_offset - TCP_Segment::TCP_MIN_HEADER_SIZE;
+  }
+  
+  advice construction("ipstack::TCP_Socket") &&
+         that(socket) :
+         after(TCP_Socket& socket) {
+
+    //init max_mss (for the case the user doesn't call setMaxMTU(...))
+    socket.max_mss = TCP_Segment::DEFAULT_MSS;
+  }
+  
+  advice execution("void ipstack::TCP_Socket::setMTU(unsigned)") &&
+         args(mtu) &&
+         that(socket) : 
+         around(unsigned mtu, TCP_Socket& socket){
+
+    //compare MTU to max_mss
+    unsigned link_mss = mtu - TCP_Segment::TCP_MIN_HEADER_SIZE;
+    
+    if(link_mss > socket.max_mss){
+      socket.setMSS(socket.max_mss);
+    }
+    else{
+      socket.setMSS(link_mss);
+    }
+  }
+  
+  //match all join-points where we create a SYN packet:
+  pointcut SYN_create() = "% ipstack::TCP_Socket::connect()" ||
+                          "% ipstack::TCP_Socket::listen(ipstack::TCP_Segment*, unsigned)";
+  
+  advice call("void* ipstack::TCP_Socket::alloc(unsigned)") &&
+         within(SYN_create()) &&
+         that(socket) &&
+         args(datasize) :
+         before(unsigned datasize, TCP_Socket& socket) {
+
+    //alloc additional bytes for the MSS option
+    *((unsigned*)tjp->arg(0)) = datasize + MSS_OPTION_BYTES;
+  }
+  
+  advice call("void ipstack::TCP_Socket::send(void*, unsigned)") &&
+         within(SYN_create()) &&
+         that(socket) &&
+         args(data, datasize) :
+         before(void* data, unsigned datasize, TCP_Socket& socket) {
+
+    //send additional bytes for the MSS option
+    *((unsigned*)tjp->arg(1)) = datasize + MSS_OPTION_BYTES;
+  }
+  
+  advice call("void ipstack::TCP_History::add(ipstack::TCP_Segment*, unsigned, %)") &&
+         within(SYN_create()) &&
+         that(socket) &&
+         args(segment, len, msec) :
+         before(TCP_Segment* segment, unsigned len, UInt32 msec, TCP_Socket& socket) {
+
+    //remember the additional bytes for the MSS option
+    *((unsigned*)tjp->arg(1)) = len + MSS_OPTION_BYTES;
+  }
+  
+  advice call("void ipstack::TCP_Segment::set_SYN()") &&
+         within(SYN_create()) &&
+         that(socket) &&
+         target(segment) :
+         after(TCP_Socket& socket, TCP_Segment& segment) {
+
+    //add mss option to tcp header
+    segment.set_option_mss(socket.mss);
+  }
+  
+  //match all join-points where we free a received SYN packet
+  pointcut SYN_free() = "% ipstack::TCP_Socket::listen(ipstack::TCP_Segment*, unsigned)" ||
+                        "% ipstack::TCP_Socket::synsent%(ipstack::TCP_Segment* , unsigned)";
+
+
+  advice call("void ipstack::TCP_Socket::free(void*)") &&
+         within(SYN_free()) &&
+         that(socket) &&
+         args(packet) :
+         before(TCP_Socket& socket, void* packet) {
+
+    //compare received MSS with our 'mss' (MTU - headers) and choose the smaller one
+    TCP_Segment* segment = (TCP_Segment*) packet;
+    
+    if(segment->has_SYN()){
+      //only SYN packets can carry the mss option
+      UInt16 recv_mss = segment->get_option_mss();
+    
+      if( (recv_mss != 0) && (recv_mss < socket.mss) ){
+        socket.setMSS(recv_mss); //use remote mss (smaller than ours)
+      }
+    }
+  }
+  
+  
+};
+
+#endif // __TCP_OPTION_MSS_AH__
+

@@ -1,0 +1,16 @@
+#ifndef __IPV4_UDP_SEND_AH__
+#define __IPV4_UDP_SEND_AH__
+
+#include "IPv4_UDP_Socket_Send_Slice.ah"
+
+using namespace ipstack;
+
+aspect IPv4_UDP_Send {
+    
+  /* Affect class: IPv4_UDP_Socket */
+  advice "ipstack::IPv4_UDP_Socket" : slice IPv4_UDP_Socket_Send_Slice;
+  
+};
+
+#endif //__IPV4_UDP_RECEIVE_AH__
+

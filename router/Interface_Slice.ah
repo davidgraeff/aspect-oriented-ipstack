@@ -1,0 +1,12 @@
+#ifndef __INTERFACE_SLICE__
+#define __INTERFACE_SLICE__
+
+#include "Interface.h"
+
+using namespace ipstack;
+
+slice class Interface_Slice {
+  Interface interface_;
+};
+
+#endif /* __INTERFACE_SLICE__ */

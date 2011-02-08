@@ -1,0 +1,64 @@
+#ifndef __IPV4_SOCKET_ETHERNET_ARP_AH__
+#define __IPV4_SOCKET_ETHERNET_ARP_AH__
+
+#include "../../router/Interface.h"
+#include "../ARP_Cache.h"
+#include "../../Eth_Frame.h"
+#include "../../ipv4/IPv4_Socket.h"
+#include "IPv4_Socket_Ethernet_ARP_Slice.ah"
+#include "../../router/Router.h"
+
+using namespace ipstack;
+
+
+aspect IPv4_Socket_Ethernet_ARP_Aspect {
+    
+  // *** Affect class: IPv4_Socket
+  advice "ipstack::IPv4_Socket" : slice IPv4_Socket_Ethernet_ARP_Slice;
+  
+  advice execution("void ipstack::IPv4_Socket::setupInterface()") &&
+         that(socket) : before(IPv4_Socket& socket) {
+    //initialise using_gateway at each setupInterface() call
+    socket.using_gateway = false;
+  }
+  
+  advice call("% ipstack::Router::ipv4_get_gateway_addr()") &&
+         that(socket) &&
+         within("void ipstack::IPv4_Socket::setupInterface()") :
+         after(IPv4_Socket& socket){
+    socket.using_gateway = true;
+  }
+  
+  advice call("void ipstack::Interface::send(const void*, unsigned)") &&
+         within("ipstack::IPv4_Socket") &&
+         args(frame, framesize) &&
+         that(socket) && target(interface) :
+         around(const void* frame, unsigned framesize, IPv4_Socket& socket, Interface& interface){
+
+    if(interface.getType() == Interface::ETHERNET) {
+      //we have an ethernet device
+      
+      UInt32 lookup_ipv4_addr;
+      if(socket.using_gateway == false){
+        lookup_ipv4_addr = socket.dst_ipv4_addr; //local
+      }
+      else{
+        lookup_ipv4_addr = Router::Inst().ipv4_get_gateway_addr(); //gateway
+      }
+      
+      ARP_Cache& cache = ARP_Cache::Inst(); //short name
+
+      const UInt8* dst_hw_addr = cache.ipv4_lookup(lookup_ipv4_addr, &interface);
+      if(dst_hw_addr == 0) {
+        return; //don't send this packet: destination MAC address unknown!
+      }
+    
+      Eth_Frame* eth_frame = (Eth_Frame*) frame;
+      eth_frame->set_dst_hwaddr(dst_hw_addr);
+      tjp->proceed(); //continue sending
+    }
+  }
+  
+};
+
+#endif // __IPV4_SOCKET_ETHERNET_ARP_AH__

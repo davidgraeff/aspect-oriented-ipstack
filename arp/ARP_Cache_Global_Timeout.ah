@@ -1,0 +1,34 @@
+#ifndef __ARP_CACHE_GLOBAL_TIMEOUT_AH__
+#define __ARP_CACHE_GLOBAL_TIMEOUT_AH__
+
+#include "util/types.h"
+#include "hw/hal/SystemClock.h"
+#include "ARP_Cache.h"
+
+using namespace ipstack;
+
+
+aspect ARP_Cache_Global_Timeout {
+  
+  enum { TIMEOUT = 20*60 }; //seconds
+  // BSD: if_ether.c: /* once resolved, good for 20 more minutes */
+
+  UInt64 timeout_window;
+
+  // *** Affect class: ARP_Cache
+  advice execution("% ipstack::ARP_Cache::%lookup(...)") &&
+         that(cache) :
+         before(ARP_Cache& cache) {
+
+    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
+    UInt64 curr_time = clock.value(); //in ticks
+    
+    if(curr_time > timeout_window){
+      timeout_window = curr_time + (TIMEOUT * ((UInt64)clock.freq()));
+      cache.clear(); //invalidate all cache entries
+    }
+  }
+  
+};
+
+#endif // __ARP_CACHE_GLOBAL_TIMEOUT_AH__

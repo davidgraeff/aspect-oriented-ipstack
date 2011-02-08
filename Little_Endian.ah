@@ -1,0 +1,74 @@
+#ifndef __LITTLE_ENDIAN_AH__
+#define __LITTLE_ENDIAN_AH__
+
+#include "util/types.h"
+
+//using namespace ipstack;
+
+
+aspect Little_Endian {
+  
+  UInt16 htons(UInt16 n){
+    return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
+  }
+
+  UInt16 ntohs(UInt16 n){
+    return htons(n);
+  }
+
+  UInt32 htonl(UInt32 n) {
+    return ((n & 0xff) << 24) |
+           ((n & 0xff00) << 8) |
+           ((n & 0xff0000UL) >> 8) |
+           ((n & 0xff000000UL) >> 24);
+  }
+
+  UInt32 ntohl(UInt32 n){
+    return htonl(n);
+  }
+  
+  pointcut Network_to_Host_Short() = "% ipstack::IPv4_Packet::get_%()" ||
+                                     "% ipstack::UDP_Packet::get_%()" ||
+                                     "% ipstack::TCP_Segment::get_%()" ||
+                                     "% ipstack::Eth_Frame::get_%()" ||
+                                     "% ipstack::ARP_Packet::get_%()";
+  
+  advice execution(Network_to_Host_Short()) &&
+         result(res) : // read only
+         after(UInt16 res){
+    *tjp->result() = ntohs(res);
+  }
+  
+  pointcut Host_to_Network_Short() = "void ipstack::IPv4_Packet::set_%(%)" ||
+                                     "void ipstack::UDP_Packet::set_%(%)" ||
+                                     "void ipstack::TCP_Segment::set_%(%)" ||
+                                     "void ipstack::Eth_Frame::set_%(%)" ||
+                                     "void ipstack::ARP_Packet::set_%(%)";
+  
+  advice execution(Host_to_Network_Short()) &&
+         args(val) : // read only
+         before(UInt16 val){
+    *((UInt16*)tjp->arg(0)) = htons(val);
+  }
+  
+  
+  pointcut Network_to_Host_Long() = "% ipstack::TCP_Segment::get_%()";
+  
+  advice execution(Network_to_Host_Long()) &&
+         result(res) : // read only
+         after(UInt32 res){
+    *tjp->result() = ntohl(res);
+  }
+  
+  pointcut Host_to_Network_Long() = "void ipstack::TCP_Segment::set_%(%)";
+  
+  advice execution(Host_to_Network_Long()) &&
+         args(val) : // read only
+         before(UInt32 val){
+    *((UInt32*)tjp->arg(0)) = htonl(val);
+  }
+  
+};
+
+#endif /*__LITTLE_ENDIAN_AH__ */
+

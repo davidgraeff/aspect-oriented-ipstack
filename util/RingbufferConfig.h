@@ -1,0 +1,6 @@
+#ifndef __RINGBUFFER_CONFIG_H__
+#define __RINGBUFFER_CONFIG_H__
+
+#define __IPSTACK_GENERIC_RINGBUFFER__ 1
+
+#endif // __RINGBUFFER_CONFIG_H__

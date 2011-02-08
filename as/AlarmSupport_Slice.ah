@@ -1,0 +1,13 @@
+#ifndef __IPSTACK_ALARM_SUPPORT_SLICE__
+#define __IPSTACK_ALARM_SUPPORT_SLICE__
+
+#include "as/autosar_types.h"
+
+slice class AlarmSupport_Slice {
+  AlarmType alarm;
+  
+  public:
+  void setAlarm(AlarmType a) { alarm = a; } 
+};
+
+#endif // __IPSTACK_ALARM_SUPPORT_SLICE__

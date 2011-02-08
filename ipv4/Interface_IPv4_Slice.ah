@@ -1,0 +1,49 @@
+#ifndef __INTERFACE_IPV4_SLICE__
+#define __INTERFACE_IPV4_SLICE__
+
+#include "util/types.h"
+#include "IPv4.h"
+
+using namespace ipstack;
+
+
+slice class Interface_IPv4_Slice {
+  private:
+  UInt32 ipv4_addr; //endian??
+  UInt32 ipv4_subnetmask;
+  //UInt32 ipv4_broadcast_addr;
+  bool ipv4_up;
+  
+  public:
+  void setIPv4Addr(UInt32 addr){
+    ipv4_addr = addr;
+  }
+  void setIPv4Addr(UInt8 a, UInt8 b, UInt8 c, UInt8 d){
+    setIPv4Addr(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
+  }
+  
+  UInt32 getIPv4Addr(){
+    return ipv4_addr;
+  }
+  
+  void setIPv4Subnetmask(UInt32 subnetmask){
+    ipv4_subnetmask = subnetmask;
+  }
+  void setIPv4Subnetmask(UInt8 a, UInt8 b, UInt8 c, UInt8 d){
+    setIPv4Subnetmask(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
+  }
+  
+  UInt32 getIPv4Subnetmask(){
+    return ipv4_subnetmask;
+  }
+  
+  void setIPv4Up(bool up){
+    ipv4_up = up;
+  }
+  
+  bool isIPv4Up(){
+    return ipv4_up;
+  }
+};
+
+#endif /* __INTERFACE_IPV4_SLICE__ */

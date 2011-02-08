@@ -1,0 +1,16 @@
+#ifndef __TCP_RECV_ELEMENT_SLIDING_WINDOW_SLICE__
+#define __TCP_RECV_ELEMENT_SLIDING_WINDOW_SLICE__
+
+using namespace ipstack;
+
+
+slice class TCP_RecvElement_SlidingWindow_Slice {
+  friend class TCP_ReceiveBuffer;
+  TCP_RecvElement* next;
+  
+  void setNext(TCP_RecvElement* n) { next = n; }
+  TCP_RecvElement* getNext() { return next; }
+};
+
+#endif // __TCP_RECV_ELEMENT_SLIDING_WINDOW_SLICE__
+

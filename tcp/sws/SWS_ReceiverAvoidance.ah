@@ -1,0 +1,44 @@
+#ifndef __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
+#define __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
+
+#include "util/types.h"
+#include "../TCP_Socket.h"
+
+using namespace ipstack;
+
+aspect SillyWindowSyndrome_Receiver_Avoidance {
+  
+  //reference:
+  //RFC 813: WINDOW AND ACKNOWLEDGEMENT STRATEGY IN TCP by David D. Clark
+  
+  advice execution("% ipstack::TCP_Socket::getReceiveWindow()") &&
+         that(socket) && result(window) :
+         after(TCP_Socket& socket, UInt16 window){
+    if(socket.state != TCP_Socket::SYNSENT && socket.state != TCP_Socket::CLOSED){
+      if( (window*2U < socket.maxReceiveWindow_Bytes) && (window < socket.mss) ) {
+        //artificially close the advertised window until
+        // 1) at least 1/2 buffer space is free OR
+        // 2) one full-sized segment can be accepted
+        *tjp->result() = 0;
+      }
+    }
+  }
+  
+  advice call("void ipstack::TCP_ReceiveBuffer::copyData(void*, unsigned)") &&
+         that(socket) && within("ipstack::TCP_Socket") :
+         around(TCP_Socket& socket) {
+    bool receiveWindowClosed = (socket.getReceiveWindow() == 0);
+    //remember if receive window is closed before copying data
+    tjp->proceed(); //remove data from ReceiveBuffer -> grow ReceiveWindow
+    if(receiveWindowClosed && (socket.getReceiveWindow() != 0)){
+      //receive window was closed, but we've made enough space (see above)
+      //-> send gratuitous ACK ('window update')
+      socket.sendACK();
+      //TODO: only triggerACK() ? --> but NO delayed ACK!
+    }
+  }
+  
+};
+
+#endif // __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
+
