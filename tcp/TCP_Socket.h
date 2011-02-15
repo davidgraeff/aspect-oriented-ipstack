@@ -105,6 +105,11 @@ class TCP_Socket{
   
   //returns actual length that has been read
   unsigned get_application_recv_len() { return application_recv_len; }
+
+  //return *all* bytes remaining in the receive buffer (for polling)
+  unsigned getRecvBytes(){
+    return receiveBuffer.getRecvBytes();
+  }
   
   public:
   void setMaxReceiveWindow(unsigned max) { maxReceiveWindow_MSS = max; }
@@ -158,8 +163,6 @@ class TCP_Socket{
     lwack = acknum;
   }
 
-  void updateHistory();
-  
   bool retransmit(TCP_Record* record, TCP_Segment* segment){
     if(segment->get_seqnum() == seqnum_unacked){
       //this is the first element that got lost.
@@ -186,6 +189,8 @@ class TCP_Socket{
   bool sendNextSegment();
   
   protected:
+  void updateHistory();
+
   void addSendData(const void* data, unsigned datasize){
     application_buf = (void*) data;
     application_buflen = datasize;
@@ -318,16 +323,17 @@ class TCP_Socket{
   
   void triggerACK(){ ACK_triggered = true; }
   
+  bool sendACK(UInt32 ackNum);
+  bool sendACK() { ACK_triggered = false; return sendACK(receiveBuffer.getAckNum()); }
+  
+  void handleACK(TCP_Segment* segment, UInt32 acknum);
+
+  protected:
   void processACK() {
     if(ACK_triggered == true){
       sendACK();
     }
   }
-  
-  bool sendACK(UInt32 ackNum);
-  bool sendACK() { ACK_triggered = false; return sendACK(receiveBuffer.getAckNum()); }
-  
-  void handleACK(TCP_Segment* segment, UInt32 acknum);
   
   
   // **************************************************************************
@@ -370,16 +376,16 @@ class TCP_Socket{
     seqnum_unacked = seqnum_next;
   }
   
-  //wait for incoming packet for a given time (timeout)
-  //false := packet arrived, true := timeout reached
-  bool block(UInt32 timeout) { return false; }  
-  void block() {} //wait for incoming packets only
-  
   void abort();
   
   protected:
   bool waiting_for_input() { return waiting; }
-  
+
+  //wait for incoming packet for a given time (timeout)
+  //false := packet arrived, true := timeout reached
+  bool block(UInt32 timeout) { return false; }  
+  void block() {} //wait for incoming packets only
+
   void setMSS(unsigned max_segment_size) {
     mss = max_segment_size;
     

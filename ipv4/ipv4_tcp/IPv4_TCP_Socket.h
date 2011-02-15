@@ -100,6 +100,36 @@ class IPv4_TCP_Socket : public IPv4_Socket, public TCP_Socket {
     }
     return -1;
   }
+
+  int poll(unsigned msec){
+    if( isEstablished() || isCloseWait() ){
+      IPv4_Packet* packet = IPv4_Socket::read(); //non-blocking read
+      if(packet == 0){
+        //no gratuitous packets received, yet
+        bool timeout_reached = TCP_Socket::block((UInt32)msec); //wait for max. msec
+        if(timeout_reached == false) {
+          packet = IPv4_Socket::read(); //check for new packet, since timeout was not reached
+        }
+      }
+      if(packet != 0){
+        do {
+          //process all gratuitous packets that have arrived
+          unsigned len = packet->get_total_len() - packet->get_ihl()*4;
+          TCP_Segment* segment = (TCP_Segment*) packet->get_data();
+          TCP_Socket::input(segment, len);
+          packet = IPv4_Socket::read();
+        } while(packet != 0);
+        updateHistory(); //cleanup packets which are not used anymore
+        processACK(); //send ACK if necessary
+      }
+
+      //return amount of received data bytes (payload) while polling
+      //zero out MSB, because return value is an int!
+      const unsigned msb = 1 << ((8*sizeof(unsigned))-1);
+      return (int) (TCP_Socket::getRecvBytes() & ~msb);
+    }
+    return -1;
+  }
   
 };
 
