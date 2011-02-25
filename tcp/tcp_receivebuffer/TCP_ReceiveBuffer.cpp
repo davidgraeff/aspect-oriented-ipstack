@@ -3,6 +3,15 @@
 
 namespace ipstack {
 
+UInt32 TCP_ReceiveBuffer::getAckNum(){
+  if(head == 0){
+    return read_firstSeqNum;
+  }
+  else{
+    return head->getNextSeqNum();
+  }
+}
+
 void TCP_ReceiveBuffer::socket_free(void* segment){
   socket->free(segment);
 }

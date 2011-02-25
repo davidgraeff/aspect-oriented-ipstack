@@ -17,32 +17,15 @@ class TCP_History{
   public:
   TCP_History() : head(0) {}
   
-  void add(TCP_Segment* segment, unsigned len, UInt32 msec){ //msec -> timeout for rexmit
-    //be sure to check isFull _BEFORE_ using this function!
-    
-    head = &records[0];
-    //fill in data
-    head->setSegment(segment);
-    head->setLength(len);
-    head->setTimeout(msec);
-  }
+  void add(TCP_Segment* segment, unsigned len, UInt32 msec);
   
   TCP_Record* get() { return head; }
   bool isEmpty() { return (head == 0); }
   bool isFull() { return !isEmpty(); }
   
-  void remove(TCP_Record* record){
-    head = 0;
-  }
+  void remove(TCP_Record* record);
   
-  UInt32 getNextTimeout(){ // relative value in msecs
-    if(head == 0){
-      return 0;
-    }
-    else{
-      return head->getRemainingTime();
-    }
-  }
+  UInt32 getNextTimeout(); // relative value in msecs
 
 };
 

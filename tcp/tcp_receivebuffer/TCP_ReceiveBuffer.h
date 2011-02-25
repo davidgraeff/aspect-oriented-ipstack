@@ -30,15 +30,6 @@ class TCP_ReceiveBuffer{
   
   bool isPushed() { return pushFlag; }
   
-  UInt32 getAckNum(){
-    if(head == 0){
-      return read_firstSeqNum;
-    }
-    else{
-      return head->getNextSeqNum();
-    }
-  }
-  
   unsigned getRecvBytes() {
     if(head == 0){
       return 0;
@@ -47,6 +38,8 @@ class TCP_ReceiveBuffer{
       return head->getLength();
     }
   }
+
+  UInt32 getAckNum();
   
   void socket_free(void* segment);
   

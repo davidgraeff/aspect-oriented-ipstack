@@ -23,15 +23,7 @@ class TCP_Record{
   void setLength(unsigned l){ len = l; }
   unsigned getLength() { return len; }
   
-  void setTimeout(UInt32 msec) {
-    if(msec != 0){
-      hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-      timeout = clock.value() + ( (clock.freq() / 1000) * (UInt64)msec );
-    }
-    else{
-      timeout = 0;
-    }
-  }
+  void setTimeout(UInt32 msec);
   
   UInt64 getTimeout() { return timeout; }
 
