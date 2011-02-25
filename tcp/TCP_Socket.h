@@ -282,8 +282,8 @@ class TCP_Socket{
 
   //wait for incoming packet for a given time (timeout)
   //false := packet arrived, true := timeout reached
-  bool block(UInt32 timeout) { return false; }  
-  void block() {} //wait for incoming packets only
+  bool block(UInt32 timeout);
+  void block(); //wait for incoming packets only
 
   void setMSS(unsigned max_segment_size);
   

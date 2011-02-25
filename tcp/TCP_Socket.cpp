@@ -275,4 +275,8 @@ void TCP_Socket::close(){
   //}
 }
 
+bool TCP_Socket::block(UInt32 timeout) { return false; }
+
+void TCP_Socket::block() {} //wait for incoming packets only
+
 } //namespace ipstack
