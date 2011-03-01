@@ -37,13 +37,18 @@ class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   #else
     Packetbuffer buf;
   #endif // __IPSTACK_GENERIC_RINGBUFFER__
-  
+
   public:
   IPv4_TCP_Socket(){
     set_Mempool(&pool);
     setMaxMTU(pool.SIZE_BIG);
     setMaxReceiveWindow(pool.COUNT_BIG);
     set_packetbuffer(&buf);
+  }
+
+  //for placement new: calling the constructor explicitly for global objects
+  void* operator new(__SIZE_TYPE__ size, void* mem) {
+    return mem;
   }
 };
 

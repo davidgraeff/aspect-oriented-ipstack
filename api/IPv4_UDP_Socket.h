@@ -43,6 +43,11 @@ class IPv4_UDP_Socket : public ipstack::IPv4_UDP_Socket {
     set_Mempool(&pool);
     set_packetbuffer(&buf);
   }
+
+  //for placement new: calling the constructor explicitly for global objects
+  void* operator new(__SIZE_TYPE__ size, void* mem) {
+    return mem;
+  }
 };
 
 }} // namespace ipstack::api
