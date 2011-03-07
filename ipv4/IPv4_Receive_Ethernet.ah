@@ -23,7 +23,7 @@ aspect IPv4_Ethernet_Receive {
       
       Eth_Frame* eth_frame = (Eth_Frame*) data;
     
-      if(eth_frame->get_type() == ETH_TYPE_IPV4){
+      if(eth_frame->get_type() == IPv4_Packet::ETH_TYPE_IPV4){
         //remove ethernet header
         IPv4_Packet* packet = (IPv4_Packet*) eth_frame->get_data();
 

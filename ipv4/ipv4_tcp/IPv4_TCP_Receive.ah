@@ -21,7 +21,7 @@ aspect IPv4_TCP_Receive {
 
     if(packet->get_protocol() == TCP_Segment::IPV4_TYPE_TCP){
       //we have a tcp packet
-      if(len < (IPV4_MIN_HEADER_SIZE + TCP_Segment::TCP_MIN_HEADER_SIZE)){
+      if(len < (IPv4_Packet::IPV4_MIN_HEADER_SIZE + TCP_Segment::TCP_MIN_HEADER_SIZE)){
         return; //len too small!
       }
       

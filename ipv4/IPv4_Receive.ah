@@ -34,7 +34,7 @@ aspect IPv4_Receive {
     *((unsigned*)(tjp->arg(1))) = len; //update function parameter (for other aspects)
     //packet length seems to be ok
     
-    if(packet->get_version() != IPV4_VERSION){
+    if(packet->get_version() != IPv4_Packet::IPV4_VERSION){
       //no ipv4 packet
       return;
     }
@@ -49,7 +49,7 @@ aspect IPv4_Receive {
       //this packet is destined for this local host
       
       UInt16 fragment_offset = packet->get_fragment_offset();
-      if( (packet->get_flags() == IPV4_MF_FLAG) || (fragment_offset != 0) ) {
+      if( (packet->get_flags() == IPv4_Packet::IPV4_MF_FLAG) || (fragment_offset != 0) ) {
         //this is a fragmented ipv4 packet. try to reassemble ...
         demux.ipv4_reassemble(packet, len, interface, fragment_offset * 8);
       }

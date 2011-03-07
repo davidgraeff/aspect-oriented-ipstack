@@ -25,16 +25,16 @@ aspect ARP_Ethernet {
     
       Eth_Frame* eth_frame = (Eth_Frame*) data;
     
-      if(eth_frame->get_type() == ETH_TYPE_ARP){
+      if(eth_frame->get_type() == ARP_Packet::ETH_TYPE_ARP){
         //remove ethernet header
         ARP_Packet* packet = (ARP_Packet*) eth_frame->get_data();
       
-        if(len < (Eth_Frame::ETH_HEADER_SIZE + ARP_HEADER_SIZE)){
+        if(len < (Eth_Frame::ETH_HEADER_SIZE + ARP_Packet::ARP_HEADER_SIZE)){
           //packet too small!
           return;
         }
       
-        if(packet->get_hw_type() == ARP_HW_TYPE_ETH){
+        if(packet->get_hw_type() == ARP_Packet::ARP_HW_TYPE_ETH){
           //we have an ARP packet over Ethernet
           demux.arp_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
         }

@@ -37,7 +37,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
   
   bool full_bitmap(){
     //check all bytes in the bitmap except the last one
-    for(int i=0; i < ((total_len / (8 * 8)) - 1); i++) {
+    for(unsigned i=0; i < ((total_len / (8 * 8)) - 1); i++) {
       if(bitmap[i] != 0xFF) {
         return false;
       }
@@ -116,7 +116,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
       memcpy(&buffer[data_start], packet->get_data(), data_len);
       update_bitmap(data_start, data_end);
       
-      if(packet->get_flags() != IPV4_MF_FLAG){ //TODO: flags as a parameter for ipv4_reassemble?
+      if(packet->get_flags() != IPv4_Packet::IPV4_MF_FLAG){ //TODO: flags as a parameter for ipv4_reassemble?
         //This is the last fragment. total length is known
         total_len = data_end;
       }

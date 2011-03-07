@@ -17,7 +17,7 @@ slice class Demux_IPv4_TCP_Reset_Slice {
 
   struct {
     UInt8 link_layer[LINK_LAYER_HEADER_SIZE];
-    UInt8 ipv4_packet[IPV4_MIN_HEADER_SIZE];
+    UInt8 ipv4_packet[IPv4_Packet::IPV4_MIN_HEADER_SIZE];
     UInt8 tcp_segment[TCP_Segment::TCP_MIN_HEADER_SIZE];
     Interface* interface; //for hasBeenSent()
     
@@ -30,14 +30,14 @@ slice class Demux_IPv4_TCP_Reset_Slice {
       }
       
       //IPv4
-      get_IPv4_Packet()->set_ihl(IPV4_MIN_HEADER_SIZE/4);
-      get_IPv4_Packet()->set_version(IPV4_VERSION);
-      get_IPv4_Packet()->set_tos(IPV4_DEFAULT_TOS);
-      get_IPv4_Packet()->set_total_len(IPV4_MIN_HEADER_SIZE + TCP_Segment::TCP_MIN_HEADER_SIZE);
+      get_IPv4_Packet()->set_ihl(IPv4_Packet::IPV4_MIN_HEADER_SIZE/4);
+      get_IPv4_Packet()->set_version(IPv4_Packet::IPV4_VERSION);
+      get_IPv4_Packet()->set_tos(IPv4_Packet::IPV4_DEFAULT_TOS);
+      get_IPv4_Packet()->set_total_len(IPv4_Packet::IPV4_MIN_HEADER_SIZE + TCP_Segment::TCP_MIN_HEADER_SIZE);
       get_IPv4_Packet()->set_id(0);
-      get_IPv4_Packet()->set_flags(IPV4_DEFAULT_FLAGS);
-      get_IPv4_Packet()->set_fragment_offset(IPV4_NO_FRAGMENT_OFFSET);
-      get_IPv4_Packet()->set_ttl(IPV4_DEFAULT_TTL);
+      get_IPv4_Packet()->set_flags(IPv4_Packet::IPV4_DEFAULT_FLAGS);
+      get_IPv4_Packet()->set_fragment_offset(IPv4_Packet::IPV4_NO_FRAGMENT_OFFSET);
+      get_IPv4_Packet()->set_ttl(IPv4_Packet::IPV4_DEFAULT_TTL);
       get_IPv4_Packet()->set_protocol(TCP_Segment::IPV4_TYPE_TCP);
       
       //TCP
@@ -102,7 +102,7 @@ slice class Demux_IPv4_TCP_Reset_Slice {
   void ipv4_tcp_reset(IPv4_Packet* packet, unsigned len, Interface* interface){    
     if(ipv4_tcp_rst_packet_isFree()){
       ipv4_tcp_reset_setup(packet, len, interface);
-      interface->send(ipv4_tcp_rst_packet.get_IPv4_Packet(), TCP_Segment::TCP_MIN_HEADER_SIZE + IPV4_MIN_HEADER_SIZE);
+      interface->send(ipv4_tcp_rst_packet.get_IPv4_Packet(), TCP_Segment::TCP_MIN_HEADER_SIZE + IPv4_Packet::IPV4_MIN_HEADER_SIZE);
     }
   }
   

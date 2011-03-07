@@ -21,7 +21,7 @@ aspect IPv4_UDP_Receive {
 
     if(packet->get_protocol() == UDP_Packet::IPV4_TYPE_UDP){
       //we have a udp packet
-      if(len < (IPV4_MIN_HEADER_SIZE + UDP_Packet::UDP_HEADER_SIZE)){
+      if(len < (IPv4_Packet::IPV4_MIN_HEADER_SIZE + UDP_Packet::UDP_HEADER_SIZE)){
         return; //len too small!
       }
       

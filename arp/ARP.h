@@ -5,20 +5,19 @@
 
 namespace ipstack {
 
-//TODO: put enum into class ARP_Packet
-enum { ETH_TYPE_ARP = 0x0806,
-       ARP_HW_TYPE_ETH = 0x0001,
-       ARP_REQUEST = 0x0001,
-       ARP_REPLY = 0x0002,
-       ARP_HEADER_SIZE = 8 };
-       
-enum { ARP_PROTOCOL_TYPE_IPV4 = 0x0800,
-       ARP_HW_ADDR_SIZE_ETH = 6,
-       ARP_PROTOCOL_ADDR_SIZE_IPV4 = 4,
-       ARP_IPV4_PACKETSIZE = ARP_HEADER_SIZE + 2*ARP_HW_ADDR_SIZE_ETH + 2*ARP_PROTOCOL_ADDR_SIZE_IPV4 };
-
-
 class ARP_Packet {
+  public:
+  enum{ ETH_TYPE_ARP = 0x0806,
+        ARP_HW_TYPE_ETH = 0x0001,
+        ARP_REQUEST = 0x0001,
+        ARP_REPLY = 0x0002,
+        ARP_HEADER_SIZE = 8 };
+       
+  enum{ ARP_PROTOCOL_TYPE_IPV4 = 0x0800,
+        ARP_HW_ADDR_SIZE_ETH = 6,
+        ARP_PROTOCOL_ADDR_SIZE_IPV4 = 4,
+        ARP_IPV4_PACKETSIZE = ARP_HEADER_SIZE + 2*ARP_HW_ADDR_SIZE_ETH + 2*ARP_PROTOCOL_ADDR_SIZE_IPV4 };
+
   private:
   UInt16 hw_type; //0x0001 for Ethernet
   UInt16 protocol_type; //0x0800 for IPv4

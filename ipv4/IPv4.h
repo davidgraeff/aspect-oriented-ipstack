@@ -5,26 +5,24 @@
 
 namespace ipstack {
 
-//TODO: put enum into class IPv4_Packet
-enum { ETH_TYPE_IPV4 = 0x0800, //Ethernet type value, 0x86DD for ipv6 (rfc2464)
-       IPV4_VERSION = 4,
-       IPV4_MIN_HEADER_SIZE = 20,
-       IPV4_DF_FLAG = 0x02,
-       IPV4_MF_FLAG = 0x01 };
-       
-enum{ IPV4_DEFAULT_TOS = 0,
-      IPV4_DEFAULT_TTL = 64,
-      IPV4_DEFAULT_FLAGS = 0,
-      IPV4_NO_FRAGMENT_OFFSET = 0 };
-      
-enum { IPV4_UNUSED_ADDR = 0 }; // http://www.rfc-editor.org/rfc/rfc5735.txt
-
 class IPv4_Packet{
+  public:
+  enum{ ETH_TYPE_IPV4 = 0x0800, //Ethernet type value, 0x86DD for ipv6 (rfc2464)
+        IPV4_VERSION = 4,
+        IPV4_MIN_HEADER_SIZE = 20,
+        IPV4_DF_FLAG = 0x02,
+        IPV4_MF_FLAG = 0x01 };
+       
+  enum{ IPV4_DEFAULT_TOS = 0,
+        IPV4_DEFAULT_TTL = 64,
+        IPV4_DEFAULT_FLAGS = 0,
+        IPV4_NO_FRAGMENT_OFFSET = 0 };
+      
+  enum{ IPV4_UNUSED_ADDR = 0 }; // http://www.rfc-editor.org/rfc/rfc5735.txt
+
   private:
-  union{
-    UInt8 ihl;
-    UInt8 version;
-  };
+  UInt8 ihl:4,
+        version:4;
   UInt8 tos; //type of service -> diff'serv
   UInt16 total_len;
   UInt16 id; //uniquely identifying fragments
@@ -60,17 +58,11 @@ class IPv4_Packet{
   UInt16 get_total_len() { return total_len; }
   void set_total_len(UInt16 len) { total_len = len; }
   
-  UInt8 get_ihl() { return (ihl & 0x0F); }
-  void set_ihl(UInt8 i) {
-    ihl &= 0xF0; //clean up lower bits
-    ihl |= (i & 0x0F);
-  }
+  UInt8 get_ihl() { return ihl; }
+  void set_ihl(UInt8 i) { ihl = i; }
   
-  UInt8 get_version() { return ((version & 0xF0) >> 4); }
-  void set_version(UInt8 ver) {
-    version &= 0x0F; //clean up higher bits
-    version |= ((ver << 4) & 0xF0);
-  }
+  UInt8 get_version() { return version; }
+  void set_version(UInt8 ver) { version = ver; }
   
   UInt8 get_tos() { return tos; }
   void set_tos(UInt8 t) { tos = t; }

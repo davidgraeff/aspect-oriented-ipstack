@@ -22,14 +22,14 @@ aspect IPv4_ARP_Receive {
        packet->interface = interface;
        
        //Ethernet type field
-       packet->get_Eth_Frame()->set_type(ETH_TYPE_ARP);
+       packet->get_Eth_Frame()->set_type(ARP_Packet::ETH_TYPE_ARP);
 
        //ARP Header
-       packet->get_ARP_Packet()->set_hw_type(ARP_HW_TYPE_ETH);
-       packet->get_ARP_Packet()->set_protocol_type(ARP_PROTOCOL_TYPE_IPV4);
-       packet->get_ARP_Packet()->set_hw_addr_size(ARP_HW_ADDR_SIZE_ETH);
-       packet->get_ARP_Packet()->set_protocol_addr_size(ARP_PROTOCOL_ADDR_SIZE_IPV4);
-       packet->get_ARP_Packet()->set_opcode(ARP_REPLY);
+       packet->get_ARP_Packet()->set_hw_type(ARP_Packet::ARP_HW_TYPE_ETH);
+       packet->get_ARP_Packet()->set_protocol_type(ARP_Packet::ARP_PROTOCOL_TYPE_IPV4);
+       packet->get_ARP_Packet()->set_hw_addr_size(ARP_Packet::ARP_HW_ADDR_SIZE_ETH);
+       packet->get_ARP_Packet()->set_protocol_addr_size(ARP_Packet::ARP_PROTOCOL_ADDR_SIZE_IPV4);
+       packet->get_ARP_Packet()->set_opcode(ARP_Packet::ARP_REPLY);
        
        //Source HW-Addr for this ARP reply packet:
        const UInt8* i_hw_addr = interface->getAddress();

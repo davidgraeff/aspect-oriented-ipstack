@@ -11,7 +11,7 @@ namespace ipstack {
 class IPv4_UDP_Socket : public IPv4_Socket, public UDP_Socket {
   public:
   IPv4_UDP_Socket() {
-    UDP_Socket::set_network_header_offset(IPV4_MIN_HEADER_SIZE);
+    UDP_Socket::set_network_header_offset(IPv4_Packet::IPV4_MIN_HEADER_SIZE);
   }
 };
 

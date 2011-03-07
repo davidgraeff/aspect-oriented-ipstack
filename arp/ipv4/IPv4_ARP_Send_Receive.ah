@@ -21,7 +21,7 @@ aspect IPv4_ARP_Send_Receive {
          args(packet, len, interface) && that(demux) :
          around(ARP_Packet* packet, unsigned len, Interface* interface, Demux& demux){
 
-    if(packet->get_protocol_type() == ARP_PROTOCOL_TYPE_IPV4){
+    if(packet->get_protocol_type() == ARP_Packet::ARP_PROTOCOL_TYPE_IPV4){
       //we have an ARP packet for IPv4
           
       //is the receiving interface running ipv4?
@@ -31,13 +31,13 @@ aspect IPv4_ARP_Send_Receive {
       }
           
       //check for correct packet size
-      if(len < ARP_IPV4_PACKETSIZE){
+      if(len < ARP_Packet::ARP_IPV4_PACKETSIZE){
         //packet size too small!
         return;
       }
 
       //extract destination ipv4_addr out of this ARP packet:
-      UInt8* dst_ipv4_addr_ptr = packet->get_payload() + (2*ARP_HW_ADDR_SIZE_ETH + ARP_PROTOCOL_ADDR_SIZE_IPV4);
+      UInt8* dst_ipv4_addr_ptr = packet->get_payload() + (2*ARP_Packet::ARP_HW_ADDR_SIZE_ETH + ARP_Packet::ARP_PROTOCOL_ADDR_SIZE_IPV4);
       UInt32 dst_ipv4_addr = *((UInt32*)dst_ipv4_addr_ptr);
 
       if(interface->getIPv4Addr() == dst_ipv4_addr){
@@ -45,13 +45,13 @@ aspect IPv4_ARP_Send_Receive {
         
         //extract source hw- and ipv4-addresses
         UInt8* src_hw_addr = packet->get_payload();
-        UInt8* src_ipv4_addr = packet->get_payload() + ARP_HW_ADDR_SIZE_ETH;
+        UInt8* src_ipv4_addr = packet->get_payload() + ARP_Packet::ARP_HW_ADDR_SIZE_ETH;
         
-        if(packet->get_opcode() == ARP_REQUEST){
+        if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
           //Send ARP-Reply
           ARP_Cache::Inst().ipv4_reply(src_hw_addr, (UInt32*) src_ipv4_addr, interface);
         }
-        else if(packet->get_opcode() == ARP_REPLY){
+        else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
           //Update ARP Cache entries
           ARP_Cache::Inst().ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
         }

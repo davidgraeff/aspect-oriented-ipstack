@@ -11,8 +11,8 @@ namespace ipstack {
 
 class Eth_ARP_IPv4_Packet {
   public:
-  enum { HEADER_SIZE = Eth_Frame::ETH_HEADER_SIZE + ARP_HEADER_SIZE,
-         FRAMESIZE = Eth_Frame::ETH_HEADER_SIZE + ARP_IPV4_PACKETSIZE };
+  enum { HEADER_SIZE = Eth_Frame::ETH_HEADER_SIZE + ARP_Packet::ARP_HEADER_SIZE,
+         FRAMESIZE = Eth_Frame::ETH_HEADER_SIZE + ARP_Packet::ARP_IPV4_PACKETSIZE };
     
   Eth_Frame* get_Eth_Frame(){ return (Eth_Frame*)header; }
   ARP_Packet* get_ARP_Packet() { return (ARP_Packet*) (header + Eth_Frame::ETH_HEADER_SIZE); }
@@ -27,10 +27,10 @@ class Eth_ARP_IPv4_Packet {
   public:
   //ARP Payload
   //Source (sender):
-  UInt8 arp_src_hwaddr[ARP_HW_ADDR_SIZE_ETH];
+  UInt8 arp_src_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
   UInt32 arp_src_ipv4_addr;
   //Destination (receiver):
-  UInt8 arp_dst_hwaddr[ARP_HW_ADDR_SIZE_ETH];
+  UInt8 arp_dst_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
   UInt32 arp_dst_ipv4_addr;
 
   //The sending interface (for hasBeenSent(...))

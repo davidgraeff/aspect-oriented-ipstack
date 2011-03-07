@@ -41,9 +41,9 @@ aspect IPv4_TCP_Reset_Ethernet {
         
         eth_frame->set_dst_hwaddr(mac_addresses->get_src_hwaddr());
         eth_frame->set_src_hwaddr(interface->getAddress()); //TODO: use senders dst_addr?
-        eth_frame->set_type(ETH_TYPE_IPV4);
+        eth_frame->set_type(IPv4_Packet::ETH_TYPE_IPV4);
         
-        interface->send(eth_frame, TCP_Segment::TCP_MIN_HEADER_SIZE + IPV4_MIN_HEADER_SIZE + Eth_Frame::ETH_HEADER_SIZE);
+        interface->send(eth_frame, TCP_Segment::TCP_MIN_HEADER_SIZE + IPv4_Packet::IPV4_MIN_HEADER_SIZE + Eth_Frame::ETH_HEADER_SIZE);
       }
     }
     else{

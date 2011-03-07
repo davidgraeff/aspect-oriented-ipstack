@@ -37,7 +37,7 @@ class IPv4_TCP_Socket : public IPv4_Socket, public TCP_Socket {
   
   public:
   IPv4_TCP_Socket() : TCP_Socket((IPv4_Socket*)this, IPv4_Socket::wrapper_send, IPv4_Socket::wrapper_hasBeenSent) {
-    TCP_Socket::set_network_header_offset(IPV4_MIN_HEADER_SIZE);
+    TCP_Socket::set_network_header_offset(IPv4_Packet::IPV4_MIN_HEADER_SIZE);
   }
 
   bool connect();

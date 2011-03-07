@@ -215,7 +215,7 @@ void TCP_Socket::setMSS(unsigned max_segment_size) {
     UInt64 maxRecvWnd = ((UInt64)maxReceiveWindow_MSS) * max_segment_size;
     if(maxRecvWnd > 0xFFFFFFFFUL){
       //limit to 32 bit (4 GByte)
-      maxReceiveWindow_Bytes = 0xFFFFFFFFUL;
+      maxReceiveWindow_Bytes = (unsigned) 0xFFFFFFFFUL;
     }
     else{
       maxReceiveWindow_Bytes = (unsigned) maxRecvWnd;
