@@ -50,9 +50,7 @@ aspect IPv4_TCP_Receive {
             }
           }
         }
-        else{
-          socket = socket->getNext(); //try next socket
-        }
+        socket = socket->getNext(); //try next socket
       }
     }
     tjp->proceed(); //try another 'ipv4_demux'-aspect

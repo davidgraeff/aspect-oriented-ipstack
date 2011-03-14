@@ -38,9 +38,7 @@ aspect IPv4_UDP_Receive {
           socket->put(packet, len);
           return; // dport match found
         }
-        else{
-          socket = socket->getNext(); //try next socket
-        }
+        socket = socket->getNext(); //try next socket
       }
       
       //TODO: send icmp destination port unreachable

@@ -54,9 +54,7 @@ aspect IPv4_TCP_Listen {
           demux.deaf(socket); //remove socket's 'listening' state
           return;
         }
-        else{
-          socket = socket->getNext(); //try next socket
-        }
+        socket = socket->getNext(); //try next socket
       }
     }
     tjp->proceed(); //try another 'ipv4_demux'-aspect
