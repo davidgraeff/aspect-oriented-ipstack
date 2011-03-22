@@ -1,0 +1,45 @@
+#ifndef __IPV4_ICMP_PROTOCOL_UNREACHABLE_AH__
+#define __IPV4_ICMP_PROTOCOL_UNREACHABLE_AH__
+
+#include "../IPv4.h"
+#include "../../icmp/ICMP.h"
+#include "../../demux/Demux.h"
+#include "../../router/Interface.h"
+
+
+
+using namespace ipstack;
+
+
+aspect IPv4_ICMP_Protocol_Unreachable {
+  // *** Affect class: Demux
+  // advice ordering: always execute this aspect as last for 'ipv4_demux' !
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
+         order(!"IPv4_ICMP_Protocol_Unreachable" , "IPv4_ICMP_Protocol_Unreachable");
+  
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+	if((packet->get_protocol() == ICMP_Packet::IPV4_TYPE_ICMP) || (packet->get_fragment_offset() != 0)){
+		return;
+	}
+
+    ICMP_Packet* icmp_packet = (ICMP_Packet*) packet->get_data();
+    memcpy(icmp_packet->get_data(), packet, packet->get_ihl()*4+8);
+    
+    icmp_packet->set_type(ICMP_Packet::ICMP_TYPE_DESTINATION_UNREACHABLE);
+    icmp_packet->set_code(ICMP_Packet::ICMP_CODE_PROTOCOL_UNREACHABLE);
+    icmp_packet->set_quench(0);
+    
+    IPv4_ICMP_Socket icmp_sock;
+    icmp_sock.set_dst_ipv4_addr(packet->get_src_ipaddr());
+      
+    icmp_sock.send(icmp_packet, ICMP_Packet::ICMP_HEADER_SIZE + packet->get_ihl()*4 + 8);
+    
+	return; // last aspect anyway
+  }
+  
+};
+
+#endif //__IPV4_ICMP_PROTOCOL_UNREACHABLE_AH__

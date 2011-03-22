@@ -66,6 +66,18 @@ class InternetChecksum {
   
     return invert(csum, interface); // one's complement
   }
+  
+  static UInt16 computePayloadChecksum(IPv4_Packet* packet, Interface* interface){
+    UInt16 len = packet->get_total_len() - (packet->get_ihl() * 4);
+
+    UInt32 csum = computePayload(packet, len, interface);
+
+    while (csum >> 16) {
+      csum = (csum & 0xFFFF) + (csum >> 16); // accumulate carry bits
+    }
+  
+    return invert(csum, interface); // one's complement
+  }
 
   static bool valid(IPv4_Packet* packet, Interface* interface){
     return (compute(packet, 0) == 0);

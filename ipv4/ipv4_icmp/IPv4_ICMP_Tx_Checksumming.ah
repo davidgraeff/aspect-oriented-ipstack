@@ -1,0 +1,34 @@
+#ifndef __IPV4_ICMP_TX_CHECKSUMMING_AH__
+#define __IPV4_ICMP_TX_CHECKSUMMING_AH__
+
+#include "../IPv4.h"
+#include "../../icmp/ICMP.h"
+#include "../../router/Interface.h"
+#include "../IPv4_Socket.h"
+
+#include "../InternetChecksum.h"
+
+using namespace ipstack;
+
+
+aspect IPv4_ICMP_Tx_Checksumming {
+  
+  advice execution("void ipstack::IPv4_Socket::setupHeader(ipstack::IPv4_Packet*, unsigned, %)") &&
+         args(packet, datasize, protocol_id) && that(socket) :
+         after(IPv4_Packet* packet, unsigned datasize, UInt8 protocol_id, IPv4_Socket& socket){
+    
+    if(protocol_id == ICMP_Packet::IPV4_TYPE_ICMP){
+      //we have a icmp packet
+      
+      ICMP_Packet* icmp_packet = (ICMP_Packet*) packet->get_data();
+      
+      icmp_packet->set_checksum(0);
+      UInt16 csum = InternetChecksum::computePayloadChecksum(packet, socket.interface);
+      icmp_packet->set_checksum(csum); // store checksum in ICMP checksum field
+    }
+  }
+  
+};
+
+#endif // __IPV4_ICMP_TX_CHECKSUMMING_AH__
+

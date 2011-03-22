@@ -1,0 +1,37 @@
+#ifndef __IPv4_ICMP_ECHO_REPLY_AH__
+#define __IPv4_ICMP_ECHO_REPLY_AH__
+
+#include "../../demux/Demux.h"
+#include "../../router/Interface.h"
+#include "IPv4_ICMP_Socket.h"
+
+#include "../../icmp/ICMP.h"
+
+using namespace ipstack;
+
+aspect IPv4_ICMP_Echo_Reply {
+	
+  // *** Affect class: Demux
+  advice execution("void ipstack::Demux::icmp_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+    ICMP_Packet* icmp_packet = (ICMP_Packet*) packet->get_data();
+    if((icmp_packet->get_type() == ICMP_Packet::ICMP_TYPE_ECHO_REQUEST) && (icmp_packet->get_code() == ICMP_Packet::ICMP_CODE_ECHO)){
+      //we have an echo request packet for IPv4
+    
+      icmp_packet->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY); 
+      
+      IPv4_ICMP_Socket icmp_sock;
+      icmp_sock.set_dst_ipv4_addr(packet->get_src_ipaddr());
+      
+      icmp_sock.send(icmp_packet, packet->get_total_len() - packet->get_ihl()*4);
+    }
+    else{
+      tjp->proceed();
+    }
+  }
+  
+};
+
+#endif // __IPv4_ICMP_ECHO_REPLY_AH__

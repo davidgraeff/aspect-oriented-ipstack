@@ -1,0 +1,20 @@
+#ifndef __DEMUX_IPV4_ICMP_SLICE__
+#define __DEMUX_IPV4_ICMP_SLICE__
+
+#include "util/types.h"
+#include "../../icmp/ICMP.h"
+#include "../../router/Interface.h"
+#include "IPv4_ICMP_Socket.h"
+
+using namespace ipstack;
+
+slice class Demux_IPv4_ICMP_Slice {
+  private:
+  void icmp_demux(IPv4_Packet* packet, unsigned len, Interface* interface){
+    //Aspects to be weaved here!
+    //printf("ICMP packet arrived\r\n");
+  }
+};
+
+#endif /* __DEMUX_IPV4_ICMP_SLICE__ */
+

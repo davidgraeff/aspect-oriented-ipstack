@@ -1,0 +1,36 @@
+#ifndef __IPV4_ICMP_RECEIVE_AH__
+#define __IPV4_ICMP_RECEIVE_AH__
+
+#include "../IPv4.h"
+#include "../../icmp/ICMP.h"
+#include "../../demux/Demux.h"
+#include "Demux_IPv4_ICMP_Slice.ah"
+#include "../../router/Interface.h"
+
+
+using namespace ipstack;
+
+aspect IPv4_ICMP_Receive {
+  // *** Affect class: Demux
+  advice "ipstack::Demux" : slice Demux_IPv4_ICMP_Slice;
+  
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+    if(packet->get_protocol() == ICMP_Packet::IPV4_TYPE_ICMP){
+
+      //we have a icmp packet
+      if(len < (IPv4_Packet::IPV4_MIN_HEADER_SIZE + ICMP_Packet::ICMP_HEADER_SIZE)){
+        return; //len too small!
+      }
+      
+      demux.icmp_demux(packet, len, interface);
+      return;
+    }
+    tjp->proceed(); //try another 'ipv4_demux'-aspect
+  }
+  
+};
+
+#endif //__IPV4_ICMP_RECEIVE_AH__
