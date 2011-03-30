@@ -21,10 +21,6 @@ slice class Demux_IPv4_Slice {
     //Aspects to be weaved here!
     //printf("IPv4 fragment arrived: offset = %u\n", fragment_offset);
   }
-  void ipv4_port_unreachable(IPv4_Packet* packet, unsigned len, Interface* interface, unsigned port){
-  	//Aspects to be weaved here!
-    //printf("IPv4 packet for unreachable port %u\n", port);
-  }
 };
 
 #endif /* __DEMUX_IPV4_SLICE__ */

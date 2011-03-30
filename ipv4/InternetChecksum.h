@@ -68,6 +68,7 @@ class InternetChecksum {
   }
   
   static UInt16 computePayloadChecksum(IPv4_Packet* packet, Interface* interface){
+    // for ICMP only
     UInt16 len = packet->get_total_len() - (packet->get_ihl() * 4);
 
     UInt32 csum = computePayload(packet, len, interface);

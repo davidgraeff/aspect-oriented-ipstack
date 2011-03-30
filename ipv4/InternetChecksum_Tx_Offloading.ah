@@ -13,7 +13,8 @@ using namespace ipstack;
 aspect InternetChecksum_Tx_Offloading {
   
   enum { IPV4_TYPE_UDP = 17,
-         IPV4_TYPE_TCP = 0x6};
+         IPV4_TYPE_TCP = 0x6,
+         IPV4_TYPE_ICMP = 0x1};
   
   // *** Affect class 'InternetChecksum'
   advice execution("% ipstack::InternetChecksum::computePayload(ipstack::IPv4_Packet*, %, ipstack::Interface*)") &&
@@ -77,6 +78,9 @@ aspect InternetChecksum_Tx_Offloading {
       }
       else if(protocol == IPV4_TYPE_TCP){
         tcp = true;
+      }
+      else if(protocol == IPV4_TYPE_ICMP){
+        tcp = false;
       }
       else{
         tjp->proceed(); //only support UDP and TCP checksum offloading

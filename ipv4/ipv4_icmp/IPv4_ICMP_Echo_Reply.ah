@@ -4,7 +4,7 @@
 #include "../../demux/Demux.h"
 #include "../../router/Interface.h"
 #include "IPv4_ICMP_Socket.h"
-
+#include "../InternetChecksum.h"
 #include "../../icmp/ICMP.h"
 
 using namespace ipstack;
@@ -20,7 +20,10 @@ aspect IPv4_ICMP_Echo_Reply {
     if((icmp_packet->get_type() == ICMP_Packet::ICMP_TYPE_ECHO_REQUEST) && (icmp_packet->get_code() == ICMP_Packet::ICMP_CODE_ECHO)){
       //we have an echo request packet for IPv4
     
-      icmp_packet->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY); 
+      icmp_packet->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY);
+
+      icmp_packet->set_checksum(0);
+      icmp_packet->set_checksum(InternetChecksum::computePayloadChecksum(packet, interface)); //TODO: Tx Offloading? [causes incorrect checksum!]
       
       IPv4_ICMP_Socket icmp_sock;
       icmp_sock.set_dst_ipv4_addr(packet->get_src_ipaddr());

@@ -41,9 +41,8 @@ aspect IPv4_UDP_Receive {
         socket = socket->getNext(); //try next socket
       }
       
+      //TODO: send icmp destination port unreachable
       //printf("Invalid UPD Packet arrived (on port %d)\n", udp_packet->get_dport());
-      demux.ipv4_port_unreachable(packet, len, interface, udp_packet_dport);
-      return;
     }
     tjp->proceed(); //try another 'ipv4_demux'-aspect
   }
