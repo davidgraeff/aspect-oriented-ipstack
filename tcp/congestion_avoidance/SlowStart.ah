@@ -45,8 +45,8 @@ aspect TCP_SlowStart {
          that(socket) : 
          around(TCP_Socket& socket) {
 
-    //check if congestion window allows sending more data
-    if(socket.cwnd_opened()){
+    //check if congestion window allows sending more data (and we are not in retransmission state)
+    if( (socket.cwnd_opened()) && (socket.isRetransmitting() == false) ){
       tjp->proceed(); //free space in congestion window -> continue
     }
     else{
@@ -54,16 +54,13 @@ aspect TCP_SlowStart {
     }
   }
   
-  advice execution("void ipstack::TCP_Socket::resend(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
-         args(record, segment) &&
+  advice execution("void ipstack::TCP_Socket::setRetransmitting()") &&
          that(socket) :
-         before(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+         before(TCP_Socket& socket){
 
-    if(record->hasFreeRetransmit() == false){
-      //only drop cwnd once per flight (free_retransmit == false)
-      socket.drop_cwnd();
-    } 
-  }  
+    //packet loss has occured the first time for this flight
+    socket.drop_cwnd();
+  }
   
   advice execution("void ipstack::TCP_Socket::setMSS(%)") &&
          that(socket) :
@@ -72,6 +69,31 @@ aspect TCP_SlowStart {
     //initialize congestion avoidance variables
     socket.initSlowStart();
   }
+
+  advice execution("void ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
+         args(record, segment) &&
+         that(socket) :
+         around(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+
+    if( (segment->get_seqnum() == socket.seqnum_unacked) || (socket.cwnd_opened()) ){
+      //this is the first element that got lost (this is always allowed to be retransmitted)
+
+      //reduce cwnd by payload length
+      unsigned payload_len = record->getLength() - segment->get_header_len();
+      socket.outstanding_bytes += payload_len; //TODO: multiple retransmissions of the same packet count more than once :-(
+
+      tjp->proceed();
+    }
+  }
+
+  advice execution("void ipstack::TCP_Socket::clearRetransmitting()") &&
+         that(socket) :
+         before(TCP_Socket& socket){
+
+    //reset outstanding_bytes because all sent packets are acknowledged, now 
+    socket.outstanding_bytes = 0;
+  }  
+
 
 };
 

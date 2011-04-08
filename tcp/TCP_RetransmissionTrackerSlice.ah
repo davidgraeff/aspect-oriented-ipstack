@@ -1,0 +1,16 @@
+#ifndef __TCP_RETRANSMISSION_TRACKER_SLICE__
+#define __TCP_RETRANSMISSION_TRACKER_SLICE__
+
+slice class TCP_RetransmissionTracker_Slice {
+private:
+  bool retransmitting;
+  
+public:
+  void setRetransmitting() { retransmitting = true; }
+  void clearRetransmitting() { retransmitting = false; }
+  bool isRetransmitting() { return retransmitting; }
+
+};
+
+#endif // __TCP_RETRANSMISSION_TRACKER_SLICE__
+

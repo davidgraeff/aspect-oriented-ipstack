@@ -118,17 +118,7 @@ class TCP_Socket{
   
   void updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum);
 
-  bool retransmit(TCP_Record* record, TCP_Segment* segment){
-    if(segment->get_seqnum() == seqnum_unacked){
-      //this is the first element that got lost.
-      //only retransmit this one
-      resend(record, segment);
-      return true;
-    }
-    return false;
-  }
-  
-  void resend(TCP_Record* record, TCP_Segment* segment){
+  void retransmit(TCP_Record* record, TCP_Segment* segment){
     send(segment, record->getLength());
     record->setTimeout(getRTO());
   }

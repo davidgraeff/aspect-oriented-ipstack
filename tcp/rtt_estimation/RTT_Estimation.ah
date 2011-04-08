@@ -33,20 +33,16 @@ aspect TCP_RTT_Estimation {
     socket.update_RTT_Estimation(acknum);
   }
   
-  advice execution("void ipstack::TCP_Socket::resend(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
-         args(record, segment) &&
+  advice execution("void ipstack::TCP_Socket::setRetransmitting()") &&
          that(socket) :
-         before(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+         before(TCP_Socket& socket){
 
     //abort any running rtt estimation if a retransmission occures
     //this is called 'Karn's Algorithm'
     socket.abort_RTT_Estimation();
     
-    if(record->hasFreeRetransmit() == false){
-      //exponential backoff (also 'Karn's Algorithm')
-      //only backoff once per flight (free_retransmit == false)
-      socket.rto_backoff();
-    } 
+    //exponential backoff (also 'Karn's Algorithm')
+    socket.rto_backoff(); //TODO: put that into abort_RTT_Est... (see above)
   }
   
   advice execution("void ipstack::TCP_Socket::gen_initial_seqnum()") &&

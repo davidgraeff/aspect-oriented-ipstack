@@ -20,8 +20,8 @@ class TCP_Record{
   void setSegment(TCP_Segment* s){ segment = s; }
   TCP_Segment* getSegment() { return segment; }
   
-  void setLength(unsigned l){ len = l; }
-  unsigned getLength() { return len; }
+  void setLength(unsigned l){ len = l; } //total lenght (including tcp header)
+  unsigned getLength() { return len; } //total lenght (including tcp header)
   
   void setTimeout(UInt32 msec);
   
@@ -50,8 +50,6 @@ class TCP_Record{
       return (UInt32)( (timeout - currentTime) / (clock.freq() / 1000) );
     }
   }
-  
-  bool hasFreeRetransmit() { return false; } //affected by TCP_Record_Retransmit.ah
   
 };
 

@@ -1,0 +1,44 @@
+#ifndef __TCP_RETRANSMISSION_TRACKER_AH__
+#define __TCP_RETRANSMISSION_TRACKER_AH__
+
+#include "TCP_RetransmissionTrackerSlice.ah"
+#include "tcp_history/TCP_Record.h"
+
+using namespace ipstack;
+
+aspect TCP_RetransmissionTracker {
+
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice TCP_RetransmissionTracker_Slice;
+
+  advice call("ipstack::TCP_Record* ipstack::TCP_History::get()") &&
+         within("void ipstack::TCP_Socket::updateHistory()") &&
+         that(socket) &&
+         result(res) :
+         after(TCP_Socket& socket, TCP_Record* res) {
+
+    if(res == 0){
+      //history is empty. retransmitting must be completed
+      socket.clearRetransmitting();
+    }
+  }
+
+  //this aspect must be executed before 'SlowStart'
+  advice execution ("void ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") : 
+         order("TCP_RetransmissionTracker" , "%" && !"TCP_RetransmissionTracker");
+
+  advice execution("void ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
+         args(record, segment) &&
+         that(socket) :
+         before(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket){
+
+    if( (socket.isRetransmitting() == false) && (segment->get_seqnum() == socket.seqnum_unacked) ){
+      //this is the first element that got lost.
+      //and we are not in retransmit state yet, so this is the 1st packet lost of this flight
+      socket.setRetransmitting(); //slow start + rtt aspects can bind to
+    }
+  }
+
+};
+
+#endif //__TCP_RETRANSMISSION_TRACKER_AH__
