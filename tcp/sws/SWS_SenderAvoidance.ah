@@ -27,7 +27,7 @@ aspect SillyWindowSyndrome_Sender_Avoidance {
     }
   }
   
-  advice execution("void ipstack::TCP_Socket::initSendWindow(ipstack::TCP_Segment*, %, %)") &&
+  advice execution("void ipstack::TCP_Socket::initSendWindow(...)") &&
          that(socket) :
          after(TCP_Socket& socket) {
     socket.max_sendWindow = 0;

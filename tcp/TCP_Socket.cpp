@@ -80,27 +80,25 @@ void TCP_Socket::updateHistory(){
   }
 }
 
-void TCP_Socket::handleACK(TCP_Segment* segment, UInt32 acknum){
-  if(segment->has_ACK()){
-    //this segments contains an acknowledgement number
-    if(TCP_Segment::SEQ_LEQ(acknum, seqnum_unacked)){
-      //acknum should be at least (seqnum_unacked+1)
-      //printf("duplicate ACK arrived\n");
-      return; //duplicate ACK
-    }
-    if(TCP_Segment::SEQ_GT(acknum, seqnum_next)){
-      //acknum must be smaller or equal to seqnum_next
-      //printf("ACK outside window arrived!\n");
-      if(state == SYNRCVD){
-        //TODO: send a reset (packet with RST flag, ACK?)
-      }
-      else{
-        //ACK outside window //TODO
-      }
-      return;
-    }
-    set_seqnum_unacked(acknum); // seqnums < seqnum_unacked are ack'ed now
+void TCP_Socket::handleACK(UInt32 acknum){
+  //this segments contains an acknowledgement number
+  if(TCP_Segment::SEQ_LEQ(acknum, seqnum_unacked)){
+    //acknum should be at least (seqnum_unacked+1)
+    //printf("duplicate ACK arrived\n");
+    return; //duplicate ACK
   }
+  if(TCP_Segment::SEQ_GT(acknum, seqnum_next)){
+    //acknum must be smaller or equal to seqnum_next
+    //printf("ACK outside window arrived!\n");
+    if(state == SYNRCVD){
+      //TODO: send a reset (packet with RST flag, ACK?)
+    }
+    else{
+      //ACK outside window //TODO
+    }
+    return;
+  }
+  set_seqnum_unacked(acknum); // seqnums < seqnum_unacked are ack'ed now
 }
 
 bool TCP_Socket::handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len){

@@ -11,7 +11,9 @@ void TCP_Socket::closewait(TCP_Segment* segment, unsigned len) {
     UInt32 seqnum = segment->get_seqnum();
     UInt32 acknum = segment->get_acknum();
     
-    handleACK(segment, acknum);
+    if(segment->has_ACK()){
+      handleACK(acknum);
+    }
     
     if(segment->has_FIN()){
       //Our ACK from state ESTABLISHED got lost. retransmit!

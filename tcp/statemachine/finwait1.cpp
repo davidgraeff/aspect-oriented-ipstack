@@ -13,7 +13,10 @@ void TCP_Socket::finwait1(TCP_Segment* segment, unsigned len) {
     UInt32 seqnum = segment->get_seqnum();
     UInt32 acknum = segment->get_acknum();
     
-    handleACK(segment, acknum);
+    if(segment->has_ACK()){
+      handleACK(acknum);
+    }
+    
     handleFIN(segment, seqnum, payload_len);
     bool needToFree = handleData(segment, seqnum, payload_len);
     

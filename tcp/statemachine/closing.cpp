@@ -8,8 +8,9 @@ void TCP_Socket::closing(TCP_Segment* segment, unsigned len) {
     if(handleRST(segment)){ return; }
     if(handleSYN_final(segment)){ return; }
     
-    UInt32 acknum = segment->get_acknum();
-    handleACK(segment, acknum); //Just wait for an ACK (for our FIN)
+    if(segment->has_ACK()){
+      handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
+    }
     
     if(segment->has_FIN()){
       //Our ACK from state FINWAIT1 got lost. retransmit!

@@ -103,8 +103,8 @@ class TCP_Socket{
   
   void set_seqnum_unacked(UInt32 acknum){ seqnum_unacked = acknum; }
   
-  void initSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum){
-    sendWindow = segment->get_window();
+  void initSendWindow(UInt16 window, UInt32 seqnum, UInt32 acknum){
+    sendWindow = window;
     lwseq = seqnum;
     lwack = acknum;
   }
@@ -219,8 +219,6 @@ class TCP_Socket{
     
   bool handleRST(TCP_Segment* segment);
   
-  void synsent_handle_other(TCP_Segment* segment, unsigned len);
-  
   
   // **************************************************************************
   // *** TCP Acknowledgements ***
@@ -233,7 +231,7 @@ class TCP_Socket{
   bool sendACK(UInt32 ackNum);
   bool sendACK() { ACK_triggered = false; return sendACK(receiveBuffer.getAckNum()); }
   
-  void handleACK(TCP_Segment* segment, UInt32 acknum);
+  void handleACK(UInt32 acknum);
 
   protected:
   void processACK();

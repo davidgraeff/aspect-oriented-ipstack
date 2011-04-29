@@ -7,9 +7,11 @@ void TCP_Socket::lastack(TCP_Segment* segment, unsigned len) {
     // new tcp segment received:
     if(handleRST(segment)){ return; }
     if(handleSYN_final(segment)){ return; }
-    UInt32 acknum = segment->get_acknum();
     
-    handleACK(segment, acknum); //Just wait for an ACK (for our FIN)
+    if(segment->has_ACK()){
+      handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
+    }
+    
     free(segment);
   }
   else{
