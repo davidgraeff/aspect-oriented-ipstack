@@ -54,6 +54,13 @@ void TCP_Socket::updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 ac
   lwack = acknum;
 }
 
+void TCP_Socket::clearHistory(){
+  while(TCP_Record* record = history.get()){
+    free(record->getSegment());
+    history.remove(record);
+  }
+}
+
 void TCP_Socket::updateHistory(){
   //remove TCP segments which are no longer useful from TCP_History
   //and retransmit timed out segements
@@ -245,7 +252,6 @@ void TCP_Socket::abort(){
   FIN_received = false;
   //TODO: clear receiveBuffer?
   //TODO: free & reset everything!!
-  //TODO: unbind??
   clearHistory(); //delete our SYN packet
 }
 

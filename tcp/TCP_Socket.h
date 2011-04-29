@@ -123,12 +123,7 @@ class TCP_Socket{
     record->setTimeout(getRTO());
   }
   
-  void clearHistory(){
-    while(TCP_Record* record = history.get()){
-      free(record->getSegment());
-      history.remove(record);
-    }
-  }
+  void clearHistory();
   
   void processSendData();
   bool sendNextSegment();
@@ -241,6 +236,8 @@ class TCP_Socket{
   // *** Common ***
   // **************************************************************************
   private:
+  TCP_Socket(const TCP_Socket &copy); //prevent copying
+  
   UInt16 dport;
   UInt16 sport;
   
