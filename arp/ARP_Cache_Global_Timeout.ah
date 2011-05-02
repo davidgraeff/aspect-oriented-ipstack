@@ -2,7 +2,7 @@
 #define __ARP_CACHE_GLOBAL_TIMEOUT_AH__
 
 #include "util/types.h"
-#include "hw/hal/SystemClock.h"
+#include "../Clock.h"
 #include "ARP_Cache.h"
 
 using namespace ipstack;
@@ -20,11 +20,10 @@ aspect ARP_Cache_Global_Timeout {
          that(cache) :
          before(ARP_Cache& cache) {
 
-    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-    UInt64 curr_time = clock.value(); //in ticks
+    UInt64 curr_time = Clock::now(); //in ticks
     
     if(curr_time > timeout_window){
-      timeout_window = curr_time + (TIMEOUT * ((UInt64)clock.freq()));
+      timeout_window = curr_time + Clock::ms_to_ticks(TIMEOUT * 1000UL);
       cache.clear(); //invalidate all cache entries
     }
   }

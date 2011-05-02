@@ -7,7 +7,7 @@
 #include "../../Eth_Frame.h"
 #include "Eth_ARP_IPv4_Packet.h"
 
-#include "hw/hal/SystemClock.h"
+#include "../../Clock.h"
 
 using namespace ipstack;
 
@@ -41,9 +41,8 @@ slice class ARP_Cache_IPv4_Send_Slice {
   }
   
   void ipv4_wait(UInt32 ipv4_addr){
-    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-    UInt64 timeout = clock.value() + ((UInt64)clock.freq()); //1 sec
-    while( (clock.value() < timeout) && (ipv4_find(ipv4_addr)==0) );
+    UInt64 timeout = Clock::now() + Clock::ms_to_ticks(1000U); //1 sec
+    while( (Clock::now() < timeout) && (ipv4_find(ipv4_addr)==0) );
   }
   
   public:

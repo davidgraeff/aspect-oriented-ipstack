@@ -3,7 +3,7 @@
 
 #include "util/types.h"
 #include "../TCP.h"
-#include "hw/hal/SystemClock.h"
+#include "../../Clock.h"
 
 namespace ipstack {
 
@@ -29,10 +29,7 @@ class TCP_Record{
 
   bool isTimedOut() {
     if(timeout != 0){
-      hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-      return (clock.value() > timeout);
-      //TODO: fuzzy timeout! (- some msecs)
-      //-> e.g. clock.value() > (timeout & 0xFFFFFFFFFF0000ULL)
+      return (Clock::now() > timeout);
     }
     else{
       return false;
@@ -40,14 +37,13 @@ class TCP_Record{
   }
   
   UInt32 getRemainingTime(){
-    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-    UInt64 currentTime = clock.value();
+    UInt64 currentTime = Clock::now();
     if(currentTime > timeout){
       return 0;
       //is timed out
     }
     else{
-      return (UInt32)( (timeout - currentTime) / (clock.freq() / 1000) );
+      return Clock::ticks_to_ms(timeout - currentTime);
     }
   }
   

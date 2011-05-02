@@ -6,7 +6,7 @@
 #include "tcp_history/TCP_History.h"
 #include "tcp_receivebuffer/TCP_ReceiveBuffer.h"
 
-#include "hw/hal/SystemClock.h"
+#include "../Clock.h"
 
 #include <string.h>
 
@@ -254,8 +254,7 @@ class TCP_Socket{
 
   void gen_initial_seqnum(){
     //RFC 793 (TCP Illustrated Vol.1 page 232)
-    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-    UInt64 usec = (clock.value() / (clock.freq() / 1000000)); // microseconds
+    UInt64 usec = Clock::ticks_to_ms(Clock::now()) * 1000UL; // microseconds
     seqnum_next = usec/4; // 'increment' every 4 usec ;-)
     seqnum_unacked = seqnum_next;
   }

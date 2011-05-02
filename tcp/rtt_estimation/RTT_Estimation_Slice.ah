@@ -2,7 +2,7 @@
 #define __TCP_RTT_ESTIMATION_SLICE__
 
 #include "util/types.h"
-#include "hw/hal/SystemClock.h"
+#include "../../Clock.h"
 
 slice class TCP_RTT_Estimation_Slice {
   private:
@@ -51,8 +51,7 @@ slice class TCP_RTT_Estimation_Slice {
     if(rrt_active == false){
       rrt_active = true;
       rtt_seqnum = seqnum_next;
-      hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-      rrt_time = clock.value();
+      rrt_time = Clock::now();
     }
   }
   
@@ -64,10 +63,7 @@ slice class TCP_RTT_Estimation_Slice {
     if(rrt_active == true){
       if(TCP_Segment::SEQ_LT(rtt_seqnum, acknum)){
         //rtt_seqnum is ack'ed now
-        hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-        UInt64 meassured_rtt = clock.value();
-        meassured_rtt -= rrt_time; //in clock ticks
-        meassured_rtt /= (clock.freq() / 1000); //in milliseconds
+        UInt32 meassured_rtt = Clock::ticks_to_ms(Clock::now() - rrt_time); //in milliseconds
         
         //crazy cast :-)
         Int32 msec = (Int32) (((UInt32) meassured_rtt) & 0x7FFFFFFFUL);

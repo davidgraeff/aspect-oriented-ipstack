@@ -5,7 +5,7 @@
 #include "../demux/Demux.h"
 #include "../router/Interface.h"
 
-#include "hw/hal/SystemClock.h"
+#include "../Clock.h"
 
 #include <string.h> //for memcpy and memset
 
@@ -66,8 +66,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
          args(packet, len, interface, fragment_offset) && that(demux) :
          after(IPv4_Packet* packet, unsigned len, Interface* interface, UInt16 fragment_offset, Demux& demux){
 
-    hw::hal::SystemClock& clock = hw::hal::SystemClock::Inst();
-    UInt64 curr_time = clock.value(); //in ticks
+    UInt64 curr_time = Clock::now(); //in ticks
     
     bool copy_data = false; //is set if the current packet shall be copied into buffer
     
@@ -138,7 +137,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
       }
       
       //restart timeout (until next fragment must arrive)
-      expired_time = curr_time + (TIMEOUT * ((UInt64)clock.freq()));   
+      expired_time = curr_time + Clock::ms_to_ticks(TIMEOUT * 1000UL);   
     }
   }
   
