@@ -188,7 +188,7 @@ void TCP_Socket::setupHeader(TCP_Segment* segment){
   segment->set_sport(sport);
   segment->set_checksum(0);
   segment->set_seqnum(seqnum_next);
-  segment->set_acknum(0);
+  //segment->set_acknum(0); //mostly overridden by caller. A packet without ACK is seldom used
   segment->set_header_len(TCP_Segment::TCP_MIN_HEADER_SIZE/4);
   segment->set_flags(0);
   segment->set_window(getReceiveWindow());
@@ -235,6 +235,8 @@ void TCP_Socket::connect(){
     TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
     if(packet != 0){
       setupHeader(packet);
+      packet->set_acknum(0); //clear ACK number ("a standard conforming implementation 
+                             //must set ACK in all packets except for the initial SYN packet")
       seqnum_next++; // 1 seqnum consumed
       packet->set_SYN();
       state = SYNSENT; // next state

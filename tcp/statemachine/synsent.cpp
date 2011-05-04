@@ -49,6 +49,7 @@ void TCP_Socket::synsent(TCP_Segment* segment, unsigned len){
       TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
       if(packet != 0){
         setupHeader(packet);
+        packet->set_acknum(0); //clear ACK number (setupHeader() doesn't do that anymore)
         packet->set_seqnum(acknum);
         packet->set_RST();
         send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
