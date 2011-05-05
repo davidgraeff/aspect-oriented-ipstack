@@ -37,7 +37,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
   
   bool full_bitmap(){
     //check all bytes in the bitmap except the last one
-    for(unsigned i=0; i < ((total_len / (8 * 8)) - 1); i++) {
+    for(unsigned i=0; i < (unsigned) ((total_len / (8 * 8)) - 1); i++) {
       if(bitmap[i] != 0xFF) {
         return false;
       }
