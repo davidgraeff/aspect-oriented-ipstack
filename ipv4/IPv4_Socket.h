@@ -51,6 +51,7 @@ class IPv4_Socket{
   void set_packetbuffer(Packetbuffer* pb) { packetbuffer = pb; }
   Packetbuffer* get_packetbuffer() { return packetbuffer; }
   
+  protected:
   // ***************************************************************************************
   static void wrapper_send(void* socket, void* data, unsigned datasize, UInt8 protocol_id){
     ((IPv4_Socket*)socket)->send(data, datasize, protocol_id);
