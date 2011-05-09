@@ -60,11 +60,9 @@ class UDP_Socket{
     }
   }
   
-  void free(UDP_Packet* packet){
-    //void* buffer = (((UInt8*)packet) - network_header_offset);
-    //mempool->free(buffer);
-    //new Mempool allows not-aligned frees ;-)
-    mempool->free(packet);
+  public:
+  void free(void* packet){
+    mempool->free(packet); //new Mempool allows not-aligned frees ;-)
   }
   
 };

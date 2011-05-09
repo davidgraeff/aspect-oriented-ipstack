@@ -16,7 +16,7 @@ slice class IPv4_UDP_Socket_Receive_Slice {
     if(IPv4_Socket::get_packetbuffer()->isFull() == false){
       void* clone = UDP_Socket::get_Mempool()->alloc(len);
       if(clone != 0){
-        memcpy(clone, packet, len); //TODO: don't use memcpy?
+        memcpy(clone, packet, len);
         IPv4_Socket::get_packetbuffer()->put(clone);
         return true;
       }
@@ -31,15 +31,7 @@ slice class IPv4_UDP_Socket_Receive_Slice {
   
   IPv4_Packet* read(){
     return IPv4_Socket::read(); //non-blocking
-  }
-  
-  void free(IPv4_Packet* packet){
-    UDP_Socket::get_Mempool()->free(packet);
-  }
-  
-  // explicit join-points: affected by 'IPv4_UDP_Receive.ah' aspect.
-  bool bind() { return false; } // register a new udp socket at Demux
-  void unbind() {} // remove this udp socket at Demux
+  }  
 };
 
 #endif // __IPV4_UDP_SOCKET_RECEIVE_SLICE__ 
