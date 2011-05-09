@@ -2,6 +2,10 @@
 
 namespace ipstack {
 
+IPv4_TCP_Socket::IPv4_TCP_Socket() : TCP_Socket((IPv4_Socket*)this, IPv4_Socket::wrapper_send, IPv4_Socket::wrapper_hasBeenSent) {
+  TCP_Socket::set_network_header_offset(IPv4_Packet::IPV4_MIN_HEADER_SIZE);
+}
+
 bool IPv4_TCP_Socket::connect(){
   if(IPv4_Socket::get_dst_ipv4_addr() == 0 || IPv4_Socket::get_src_ipv4_addr() == 0){
     return false; //no (valid) dst_ipv4_addr set

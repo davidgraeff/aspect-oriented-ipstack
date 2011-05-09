@@ -10,14 +10,8 @@ namespace ipstack {
 
 class IPv4_UDP_Socket : public IPv4_Socket, public UDP_Socket {
   public:
-  IPv4_UDP_Socket() {
-    UDP_Socket::set_network_header_offset(IPv4_Packet::IPV4_MIN_HEADER_SIZE);
-  }
+  IPv4_UDP_Socket();
   
-  // explicit join-points: affected by 'IPv4_UDP_Receive.ah' aspect.
-  bool bind(); // register a new udp socket at Demux
-  void unbind(); // remove this udp socket at Demux
-  // the prototypes are placed here as a workaround to avoid inlining
 };
 
 } //namespace ipstack

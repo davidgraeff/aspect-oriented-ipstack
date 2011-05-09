@@ -31,8 +31,16 @@ slice class IPv4_UDP_Socket_Receive_Slice {
   
   IPv4_Packet* read(){
     return IPv4_Socket::read(); //non-blocking
-  }  
+  }
+  
+  // explicit join-points: affected by 'IPv4_UDP_Receive.ah' aspect.
+  bool bind(); // register a new udp socket at Demux
+  void unbind(); // remove this udp socket at Demux
 };
+
+slice bool IPv4_UDP_Socket_Receive_Slice::bind() { return false; }
+
+slice void IPv4_UDP_Socket_Receive_Slice::unbind() {}
 
 #endif // __IPV4_UDP_SOCKET_RECEIVE_SLICE__ 
 
