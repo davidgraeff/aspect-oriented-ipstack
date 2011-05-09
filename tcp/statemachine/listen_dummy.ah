@@ -1,0 +1,23 @@
+#ifndef __TCP_LISTEN_DUMMY_AH
+#define __TCP_LISTEN_DUMMY_AH
+
+#include "../TCP_Socket.h"
+
+using namespace ipstack;
+
+
+aspect TCP_Listen_Dummy {
+  
+  advice call("void ipstack::TCP_Socket::listen(ipstack::TCP_Segment*, unsigned)") &&
+         within("void ipstack::TCP_Socket::input(...)") &&
+         target(socket) &&
+         args(segment, len) :
+         around(TCP_Socket& socket, TCP_Segment* segment, unsigned len) {
+
+    socket.closed(segment, len);
+  }
+  
+};
+
+#endif // __TCP_LISTEN_DUMMY_AH
+

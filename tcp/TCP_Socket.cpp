@@ -16,7 +16,6 @@ void TCP_Socket::input(TCP_Segment* segment, unsigned len){
     case LASTACK: lastack(segment, len); break;
     case CLOSING: closing(segment, len); break;
     case TIMEWAIT: timewait(segment, len); break;
-    //default: CLOSED ?
   }
 }
 
