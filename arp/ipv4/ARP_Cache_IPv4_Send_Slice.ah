@@ -31,15 +31,7 @@ slice class ARP_Cache_IPv4_Send_Slice {
     }
   }
   
-  UInt8* ipv4_find(UInt32 ipv4_addr){ //TODO: no-inline
-    for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
-      cache_entry& entry = entries[i];
-      if(entry.ipv4_addr == ipv4_addr){
-        return entry.hw_addr;
-      }
-    }
-    return 0;
-  }
+  UInt8* ipv4_find(UInt32 ipv4_addr);
   
   void ipv4_wait(UInt32 ipv4_addr){
     UInt64 timeout = Clock::now() + Clock::ms_to_ticks(1000U); //1 sec
@@ -85,5 +77,15 @@ slice class ARP_Cache_IPv4_Send_Slice {
   }
 
 };
+
+slice UInt8* ARP_Cache_IPv4_Send_Slice::ipv4_find(UInt32 ipv4_addr){
+  for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
+    cache_entry& entry = entries[i];
+    if(entry.ipv4_addr == ipv4_addr){
+      return entry.hw_addr;
+    }
+  }
+  return 0;
+}
 
 #endif /* __ARP_CACHE_IPV4_SEND_SLICE__ */

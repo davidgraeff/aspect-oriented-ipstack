@@ -4,6 +4,7 @@
 namespace ipstack {
 
 class ARP_Cache{
+  void foo(); //workaround for AspectC++ Bug: link-once slices require a method BEFORE attributes ;-)
   private:
   //singleton design pattern
   static ARP_Cache inst_;
