@@ -1,6 +1,8 @@
 #ifndef __IPV4_ARP_SEND_AH__
 #define __IPV4_ARP_SEND_AH__
 
+#include "util/types.h"
+#include <string.h> //for memcpy
 #include "../../router/Interface.h"
 #include "../ARP.h"
 #include "../ARP_Cache.h"
@@ -53,9 +55,7 @@ aspect IPv4_ARP_Send {
 
     ARP_Cache::cache_entry& entry = cache.entries[selected_index];
     entry.ipv4_addr = *ipv4_addr;
-    for(int j=0; j<6; j++){
-      entry.hw_addr[j] = hw_addr[j];
-    }
+    memcpy(entry.hw_addr, hw_addr, 6);
   }
   
  

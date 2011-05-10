@@ -1,6 +1,8 @@
 #ifndef __IPv4_ARP_RECEIVE_AH__
 #define __IPv4_ARP_RECEIVE_AH__
 
+#include "util/types.h"
+#include <string.h> //for memcpy
 #include "../../router/Interface.h"
 #include "../ARP.h"
 #include "../ARP_Cache.h"
@@ -33,18 +35,14 @@ aspect IPv4_ARP_Receive {
        
        //Source HW-Addr for this ARP reply packet:
        const UInt8* i_hw_addr = interface->getAddress();
-       for(int i=0; i<6; i++){
-         packet->arp_src_hwaddr[i] = i_hw_addr[i];
-       }
+       memcpy(packet->arp_src_hwaddr, i_hw_addr, 6);
        packet->get_Eth_Frame()->set_src_hwaddr(i_hw_addr);
        
        //Source IP-Addr
        packet->arp_src_ipv4_addr = interface->getIPv4Addr();
        
        //Destination HW-Addr
-       for(int i=0; i<6; i++){
-         packet->arp_dst_hwaddr[i] = src_hwaddr[i];
-       }
+       memcpy(packet->arp_dst_hwaddr, src_hwaddr, 6);
        packet->get_Eth_Frame()->set_dst_hwaddr(src_hwaddr);
        
        //Destination IP-Addr

@@ -2,6 +2,7 @@
 #define __ARP_CACHE_IPV4_SEND_SLICE__
 
 #include "util/types.h"
+#include <string.h> //for memcpy
 #include "../../router/Interface.h"
 #include "../ARP.h"
 #include "../../Eth_Frame.h"
@@ -30,7 +31,7 @@ slice class ARP_Cache_IPv4_Send_Slice {
     }
   }
   
-  UInt8* ipv4_find(UInt32 ipv4_addr){
+  UInt8* ipv4_find(UInt32 ipv4_addr){ //TODO: no-inline
     for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
       cache_entry& entry = entries[i];
       if(entry.ipv4_addr == ipv4_addr){
@@ -65,18 +66,14 @@ slice class ARP_Cache_IPv4_Send_Slice {
        
        //Source HW-Addr for this ARP reply packet:
        const UInt8* i_hw_addr = interface->getAddress();
-       for(int i=0; i<6; i++){
-         packet->arp_src_hwaddr[i] = i_hw_addr[i];
-       }
+       memcpy(packet->arp_src_hwaddr, i_hw_addr, 6);
        packet->get_Eth_Frame()->set_src_hwaddr(i_hw_addr);
        
        //Source IP-Addr
        packet->arp_src_ipv4_addr = interface->getIPv4Addr();
        
        //Destination HW-Addr
-       for(int i=0; i<6; i++){
-         packet->arp_dst_hwaddr[i] = 0xFF; //Broadcast ethernet address
-       }
+       memset(packet->arp_dst_hwaddr, 0xFF, 6); //Broadcast ethernet address
        packet->get_Eth_Frame()->set_dst_hwaddr_broadcast();
        
        //Destination IP-Addr

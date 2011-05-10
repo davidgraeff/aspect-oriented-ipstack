@@ -17,7 +17,7 @@ slice class ARP_Cache_IPv4_Send_Receive_Slice {
   
   Eth_ARP_IPv4_Packet packet_pool[MAX_PACKETS]; //the packet pool
 
-  Eth_ARP_IPv4_Packet* getNextFreePacket(){
+  Eth_ARP_IPv4_Packet* getNextFreePacket(){ //TODO: no-inline
     for(unsigned i=0; i<MAX_PACKETS; i++){
       Eth_ARP_IPv4_Packet& packet = packet_pool[i];
       if(packet.isFree()){

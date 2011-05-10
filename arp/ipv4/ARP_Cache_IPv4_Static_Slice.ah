@@ -2,6 +2,7 @@
 #define __ARP_CACHE_IPV4_STATIC_SLICE__
 
 #include "util/types.h"
+#include <string.h> //for memcpy
 
 using namespace ipstack;
 
@@ -20,14 +21,12 @@ slice class ARP_Cache_IPv4_Static_Slice {
   
   public:
   
-  bool ipv4_insert(UInt32 ipv4_addr, const UInt8* hw_addr){
+  bool ipv4_insert(UInt32 ipv4_addr, const UInt8* hw_addr){ //TODO: no-inline
     for(int i=0; i<MAX_STATIC_ENTRIES; i++){
       static_entry& entry = static_entries[i];
       if(entry.ipv4_addr == 0){
         entry.ipv4_addr = ipv4_addr;
-        for(int j=0; j<6; j++){
-          entry.hw_addr[j] = hw_addr[j];
-        }
+        memcpy(entry.hw_addr, hw_addr, 6);
         return true;
       }
     }
