@@ -29,6 +29,7 @@ class IPv4_Socket{
   IPv4_Packet* receive();
   IPv4_Packet* read(); //non-blocking
   unsigned getMTU();
+  bool hasValidInterface() { return (interface != 0); }
   
   public:
   void set_dst_ipv4_addr(UInt32 dst){

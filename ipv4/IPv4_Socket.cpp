@@ -28,9 +28,9 @@ void IPv4_Socket::setupHeader(IPv4_Packet* packet, unsigned datasize, UInt8 prot
 }
   
 void IPv4_Socket::send(void* data, unsigned datasize, UInt8 protocol_id){
-  if(interface == 0){
+  /*if(interface == 0){
     return;  // no route found
-  }
+  }*/ //temporary commented out: can be removed at all if no further null pointer dereferences occur ;-)
 
   //be sure to reserve enough space in front of *data
   IPv4_Packet* packet = (IPv4_Packet*) (((UInt8*)data) - IPv4_Packet::IPV4_MIN_HEADER_SIZE);

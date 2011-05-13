@@ -10,6 +10,9 @@ slice class IPv4_UDP_Socket_Send_Slice {
 };
 
 slice bool IPv4_UDP_Socket_Send_Slice::send(const void* data, unsigned datasize){
+  if(!IPv4_Socket::hasValidInterface()){
+    return false;
+  }
   UDP_Packet* packet = UDP_Socket::createPacket(data, datasize);
   if(packet != 0){
     IPv4_Socket::send(packet, datasize + UDP_Packet::UDP_HEADER_SIZE, UDP_Packet::IPV4_TYPE_UDP);
