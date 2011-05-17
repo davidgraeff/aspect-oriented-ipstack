@@ -8,7 +8,8 @@ namespace ipstack {
 class ICMP_Packet{
   public:
   enum { ICMP_HEADER_SIZE = 8,
-         ICMP_MAX_DATA_SIZE = 1500-20-8, // echo data can be large
+         //ICMP_MAX_DATA_SIZE = 576-20-ICMP_HEADER_SIZE, // echo data can be large ... but not that large :-)
+         ICMP_MAX_DATA_SIZE = 56, //dafault values: linux: 56, windows: 32 ... hopefully 56 will be sufficient
          IPV4_TYPE_ICMP = 1,
          ICMP_TYPE_DESTINATION_UNREACHABLE = 3,
          ICMP_CODE_PROTOCOL_UNREACHABLE = 2,

@@ -29,6 +29,7 @@ aspect IPv4_ICMP_Echo_Reply {
     	reply_icmp->set_quench(icmp_packet->get_quench());
     	
     	unsigned datalen = packet->get_total_len() - packet->get_ihl()*4 - ICMP_Packet::ICMP_HEADER_SIZE;
+    	if(datalen > ICMP_Packet::ICMP_MAX_DATA_SIZE) { datalen = ICMP_Packet::ICMP_MAX_DATA_SIZE; }
     	memcpy(reply_icmp->get_data(), icmp_packet->get_data(), datalen);
     	
     	reply_packet->set_total_len(datalen + ICMP_Packet::ICMP_HEADER_SIZE + reply_packet->get_ihl()*4); 
