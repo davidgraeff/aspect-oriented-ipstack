@@ -31,7 +31,7 @@ aspect IPv4_Receive {
       //invalid packet length
       return;
     }
-    *((unsigned*)(tjp->arg(1))) = len; //update function parameter (for other aspects)
+    *(tjp->arg<1>()) = len; //update function parameter (for other aspects)
     //packet length seems to be ok
     
     if(packet->get_version() != IPv4_Packet::IPV4_VERSION){

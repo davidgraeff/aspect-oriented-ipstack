@@ -63,7 +63,7 @@ aspect TCP_Option_MSS {
          before(unsigned datasize, TCP_Socket& socket) {
 
     //alloc additional bytes for the MSS option
-    *((unsigned*)tjp->arg(0)) = datasize + MSS_OPTION_BYTES;
+    *(tjp->arg<0>()) = datasize + MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_Socket::send(void*, unsigned)") &&
@@ -73,7 +73,7 @@ aspect TCP_Option_MSS {
          before(void* data, unsigned datasize, TCP_Socket& socket) {
 
     //send additional bytes for the MSS option
-    *((unsigned*)tjp->arg(1)) = datasize + MSS_OPTION_BYTES;
+   *(tjp->arg<1>()) = datasize + MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_History::add(ipstack::TCP_Segment*, unsigned, %)") &&
@@ -83,7 +83,7 @@ aspect TCP_Option_MSS {
          before(TCP_Segment* segment, unsigned len, UInt32 msec, TCP_Socket& socket) {
 
     //remember the additional bytes for the MSS option
-    *((unsigned*)tjp->arg(1)) = len + MSS_OPTION_BYTES;
+    *(tjp->arg<1>()) = len + MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_Segment::set_SYN()") &&

@@ -31,8 +31,8 @@ aspect IPv4_Socket_Ethernet_Aspect {
       //dst_hwaddr is set by ARP
     
       //manipulate relevant arguments:
-      *(void**)tjp->arg(0) = eth_frame;
-      *((unsigned*)tjp->arg(1)) = framesize + Eth_Frame::ETH_HEADER_SIZE;
+      *(tjp->arg<0>()) = eth_frame;
+      *(tjp->arg<1>()) = framesize + Eth_Frame::ETH_HEADER_SIZE;
     }
   }
   
@@ -44,7 +44,7 @@ aspect IPv4_Socket_Ethernet_Aspect {
 
     if(interface.getType() == Interface::ETHERNET) {
       Eth_Frame* eth_frame = (Eth_Frame*) (((UInt8*) frame) - Eth_Frame::ETH_HEADER_SIZE);
-      *(void**)tjp->arg(0) = eth_frame;
+      *(tjp->arg<0>()) = eth_frame;
     }
   }
   
@@ -53,7 +53,7 @@ aspect IPv4_Socket_Ethernet_Aspect {
          args(offset) :
          before(unsigned offset){
     //add ethernet header offset for allocating memory
-    *((unsigned*)tjp->arg(0)) = offset + Eth_Frame::ETH_HEADER_SIZE;
+    *(tjp->arg<0>()) = offset + Eth_Frame::ETH_HEADER_SIZE;
   }
   
 };

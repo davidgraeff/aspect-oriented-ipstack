@@ -50,7 +50,7 @@ aspect Little_Endian {
   advice execution(Host_to_Network_Short()) &&
          args(val) : // read only
          before(UInt16 val){
-    *((UInt16*)tjp->arg(0)) = htons_(val);
+    *(tjp->arg<0>()) = htons_(val);
   }
   
   
@@ -67,7 +67,7 @@ aspect Little_Endian {
   advice execution(Host_to_Network_Long()) &&
          args(val) : // read only
          before(UInt32 val){
-    *((UInt32*)tjp->arg(0)) = htonl_(val);
+    *(tjp->arg<0>()) = htonl_(val);
   }
   
 };
