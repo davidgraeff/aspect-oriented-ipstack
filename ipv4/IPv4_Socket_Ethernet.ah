@@ -49,11 +49,9 @@ aspect IPv4_Socket_Ethernet_Aspect {
   }
   
   // *** Affect class: UDP_Socket, TCP_Socket
-  advice execution("void ipstack::%_Socket::set_network_header_offset(unsigned)") &&
-         args(offset) :
-         before(unsigned offset){
+  advice execution("void ipstack::%_Socket::set_network_header_offset(unsigned)") : before(){
     //add ethernet header offset for allocating memory
-    *(tjp->arg<0>()) = offset + Eth_Frame::ETH_HEADER_SIZE;
+    *(tjp->arg<0>()) += Eth_Frame::ETH_HEADER_SIZE;
   }
   
 };

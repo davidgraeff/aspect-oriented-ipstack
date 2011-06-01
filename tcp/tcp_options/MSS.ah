@@ -57,33 +57,21 @@ aspect TCP_Option_MSS {
                           "% ipstack::TCP_Socket::listen(ipstack::TCP_Segment*, unsigned)";
   
   advice call("void* ipstack::TCP_Socket::alloc(unsigned)") &&
-         within(SYN_create()) &&
-         that(socket) &&
-         args(datasize) :
-         before(unsigned datasize, TCP_Socket& socket) {
-
+         within(SYN_create()) : before() {
     //alloc additional bytes for the MSS option
-    *(tjp->arg<0>()) = datasize + MSS_OPTION_BYTES;
+    *(tjp->arg<0>()) += MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_Socket::send(void*, unsigned)") &&
-         within(SYN_create()) &&
-         that(socket) &&
-         args(data, datasize) :
-         before(void* data, unsigned datasize, TCP_Socket& socket) {
-
+         within(SYN_create()) : before() {
     //send additional bytes for the MSS option
-   *(tjp->arg<1>()) = datasize + MSS_OPTION_BYTES;
+   *(tjp->arg<1>()) += MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_History::add(ipstack::TCP_Segment*, unsigned, %)") &&
-         within(SYN_create()) &&
-         that(socket) &&
-         args(segment, len, msec) :
-         before(TCP_Segment* segment, unsigned len, UInt32 msec, TCP_Socket& socket) {
-
+         within(SYN_create()) : before() {
     //remember the additional bytes for the MSS option
-    *(tjp->arg<1>()) = len + MSS_OPTION_BYTES;
+    *(tjp->arg<1>()) += MSS_OPTION_BYTES;
   }
   
   advice call("void ipstack::TCP_Segment::set_SYN()") &&
