@@ -83,30 +83,29 @@ class BasicMempool : public tBASE{
 // *** There are two versions of this Mempool available:
 // *** ======================================================================================
 // *** 1) A polymorphic version, which allows using different Mempool instances concurrently.
-// ***    -> Run-time decision by virtual "alloc" function. Adds 788 bytes to the binary.
+// ***    -> Run-time decision by virtual "alloc" and "free" functions. Increases binary size.
 // ***
 // *** 2) A static typed version, which allows only using one specific Mempool instance.
 // ***    -> All types are known at compile time, no virtual function needed. Less overhead.
 
-#if __IPSTACK_GENERIC_MEMPOOL__
-// 1) The polymorphic version:
-typedef PolymorphMempoolBase Mempool;
-typedef BasicMempool<PolymorphMempoolBase,
-                     ipstack::BLOCKSIZE_BIG,
-                     ipstack::COUNT_BIG,
-                     ipstack::BLOCKSIZE_SMALL,
-                     ipstack::COUNT_SMALL> SimpleMempool;
-
-#else
-// 2) The static typed version:
-typedef BasicMempool<EmptyMempoolBase,
+template<unsigned tGENERIC=0>
+class MempoolType {
+  public:
+  typedef BasicMempool<EmptyMempoolBase,
                      ipstack::BLOCKSIZE_BIG,
                      ipstack::COUNT_BIG,
                      ipstack::BLOCKSIZE_SMALL,
                      ipstack::COUNT_SMALL> Mempool;
-typedef Mempool SimpleMempool;
+};
 
-#endif // __IPSTACK_GENERIC_MEMPOOL__
+template<> // Template specialization for '1'
+class MempoolType<1> {
+  public:
+  typedef PolymorphMempoolBase Mempool;
+};
+
+// The 'Mempool' type used everywhere
+typedef MempoolType<__IPSTACK_GENERIC_MEMPOOL__>::Mempool Mempool;
 
 //} //namespace ipstack
 

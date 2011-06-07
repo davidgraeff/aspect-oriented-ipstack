@@ -50,13 +50,21 @@ public:
 
 };
 
-#if __IPSTACK_GENERIC_RINGBUFFER__
-typedef PolymorphRingbufferBase Packetbuffer;
 
-#else
-typedef BasicRingbuffer<EmptyRingbufferBase, __IPSTACK_MAX_PACKETS__> Packetbuffer;
+template<unsigned tGENERIC=0>
+class RingbufferType {
+  public:
+  typedef BasicRingbuffer<EmptyRingbufferBase, __IPSTACK_MAX_PACKETS__> Packetbuffer;
+};
 
-#endif // __IPSTACK_GENERIC_RINGBUFFER__
+template<> // template specialization for '1'
+class RingbufferType<1> {
+  public:
+  typedef PolymorphRingbufferBase Packetbuffer;
+};
+
+// The 'Packetbuffer' type used everywhere
+typedef RingbufferType<__IPSTACK_GENERIC_RINGBUFFER__>::Packetbuffer Packetbuffer;
 
 
 #endif // __IPSTACK_RINGBUFFER_H__
