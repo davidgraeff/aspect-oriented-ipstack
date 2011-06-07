@@ -19,24 +19,16 @@ template<unsigned tBLOCKSIZE_1 = ipstack::BLOCKSIZE_BIG,
 class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   private:
   
-  #if __IPSTACK_GENERIC_MEMPOOL__
-    BasicMempool<PolymorphMempoolBase, tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2> pool;
-  #else
-    Mempool pool;
-  #endif // __IPSTACK_GENERIC_MEMPOOL__
+  typename MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, __IPSTACK_GENERIC_MEMPOOL__>::Type pool;
   
-  #if __IPSTACK_GENERIC_RINGBUFFER__
-    //if tRINGBUFFERSIZE is specified (= no default paramater), use it.
-    //else choose max{ __IPSTACK_MAX_PACKETS__, tCOUNT_1+tCOUNT_2 }
-    enum { RING_BUF_SIZE = (tRINGBUFFERSIZE != __IPSTACK_MAX_PACKETS__) ?
-                            tRINGBUFFERSIZE :
-                           (__IPSTACK_MAX_PACKETS__ >= tCOUNT_1+tCOUNT_2) ?
-                            __IPSTACK_MAX_PACKETS__ : tCOUNT_1+tCOUNT_2 };
-    
-    BasicRingbuffer<PolymorphRingbufferBase, RING_BUF_SIZE> buf;
-  #else
-    Packetbuffer buf;
-  #endif // __IPSTACK_GENERIC_RINGBUFFER__
+  //if tRINGBUFFERSIZE is specified (= no default paramater), use it.
+  //else choose max{ __IPSTACK_MAX_PACKETS__, tCOUNT_1+tCOUNT_2 }
+  enum { RING_BUF_SIZE = (tRINGBUFFERSIZE != __IPSTACK_MAX_PACKETS__) ?
+                          tRINGBUFFERSIZE :
+                         (__IPSTACK_MAX_PACKETS__ >= tCOUNT_1+tCOUNT_2) ?
+                          __IPSTACK_MAX_PACKETS__ : tCOUNT_1+tCOUNT_2 };
+  
+  typename PacketbufferAPI<RING_BUF_SIZE, __IPSTACK_GENERIC_RINGBUFFER__>::Type buf;
 
   public:
   IPv4_TCP_Socket(){

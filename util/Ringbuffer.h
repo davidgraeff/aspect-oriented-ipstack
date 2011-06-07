@@ -67,5 +67,19 @@ class RingbufferType<1> {
 typedef RingbufferType<__IPSTACK_GENERIC_RINGBUFFER__>::Packetbuffer Packetbuffer;
 
 
+// only used for the API
+template<UInt8 tBUFFERSIZE, unsigned tGENERIC=0>
+class PacketbufferAPI {
+  public:
+  typedef Packetbuffer Type;
+};
+
+template<UInt8 tBUFFERSIZE>
+class PacketbufferAPI<tBUFFERSIZE, 1> {
+  public:
+  typedef BasicRingbuffer<PolymorphRingbufferBase, tBUFFERSIZE> Type;
+};
+
+
 #endif // __IPSTACK_RINGBUFFER_H__
 

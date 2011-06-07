@@ -107,6 +107,20 @@ class MempoolType<1> {
 // The 'Mempool' type used everywhere
 typedef MempoolType<__IPSTACK_GENERIC_MEMPOOL__>::Mempool Mempool;
 
+
+// only used for the API
+template<unsigned tBLOCKSIZE_1, unsigned tCOUNT_1, unsigned tBLOCKSIZE_2, unsigned tCOUNT_2, unsigned tGENERIC=0>
+class MempoolAPI {
+  public:
+  typedef Mempool Type;
+};
+
+template<unsigned tBLOCKSIZE_1, unsigned tCOUNT_1, unsigned tBLOCKSIZE_2, unsigned tCOUNT_2>
+class MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, 1> {
+  public:
+  typedef BasicMempool<PolymorphMempoolBase, tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2> Type;
+};
+
 //} //namespace ipstack
 
 #endif /* __IPSTACK_MEMPOOL_H__ */
