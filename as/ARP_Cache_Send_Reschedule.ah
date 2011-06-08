@@ -1,0 +1,17 @@
+#ifndef __ARP_CACHE_IPV4_SEND_RESCHEDULE__
+#define __ARP_CACHE_IPV4_SEND_RESCHEDULE__
+
+#include "as/AS.h"
+
+aspect ARP_Cache_IPv4_Send_Reschedule {
+
+  advice call("% ...::ipv4_find(%)") && within("void ...::ipv4_wait(%)") : after() {
+    if(*tjp->result() == 0) {
+      // no ARP entry yet, let other tasks run while waiting ...
+      AS::Schedule();
+    }
+  }
+
+};
+
+#endif //__ARP_CACHE_IPV4_SEND_RESCHEDULE__

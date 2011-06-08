@@ -1,0 +1,17 @@
+#ifndef __IPV4_UDP_SOCKET_SEND_RESCHEDULE__
+#define __IPV4_UDP_SOCKET_SEND_RESCHEDULE__
+
+#include "as/AS.h"
+
+aspect IPv4_UDP_Socket_Send_Reschedule {
+
+  advice call("bool ipstack::IPv4_Socket::hasBeenSent(const void*)") && within("ipstack::IPv4_UDP_Socket") : after() {
+    if(*tjp->result() == false) {
+      // packet not send yet, let other tasks run while waiting ...
+      AS::Schedule();
+    }
+  }
+
+};
+
+#endif //__IPV4_UDP_SOCKET_SEND_RESCHEDULE__
