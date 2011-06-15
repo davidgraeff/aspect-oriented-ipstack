@@ -5,7 +5,7 @@
 #include "MempoolConfig.h"
 #include "../IPStack_Config.h"
 
-//namespace ipstack {
+namespace ipstack {
 
 template<unsigned BLOCKSIZE, unsigned COUNT>
 class SingleMempool {
@@ -121,7 +121,7 @@ class MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, 1> {
   typedef BasicMempool<PolymorphMempoolBase, tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2> Type;
 };
 
-//} //namespace ipstack
+} //namespace ipstack
 
 #endif /* __IPSTACK_MEMPOOL_H__ */
 

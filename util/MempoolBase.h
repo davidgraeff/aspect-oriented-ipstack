@@ -1,7 +1,7 @@
 #ifndef __MEMPOOL_BASE_H__
 #define __MEMPOOL_BASE_H__
 
-//namespace ipstack {
+namespace ipstack {
 
 class PolymorphMempoolBase {
 public:
@@ -11,7 +11,7 @@ public:
 
 class EmptyMempoolBase {};
 
-//} //namespace ipstack
+} //namespace ipstack
 
 #endif /* __MEMPOOL_BASE_H__ */
 

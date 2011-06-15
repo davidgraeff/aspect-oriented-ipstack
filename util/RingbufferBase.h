@@ -1,7 +1,7 @@
 #ifndef __RINGBUFFER_BASE_H__
 #define __RINGBUFFER_BASE_H__
 
-//namespace ipstack {
+namespace ipstack {
 
 class PolymorphRingbufferBase {
 public:
@@ -12,7 +12,7 @@ public:
 
 class EmptyRingbufferBase {};
 
-//} //namespace ipstack
+} //namespace ipstack
 
 #endif // __RINGBUFFER_BASE_H__
 

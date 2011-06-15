@@ -7,6 +7,8 @@
 #include "RingbufferConfig.h"
 #include "../IPStack_Config.h"
 
+namespace ipstack {
+
 template<typename tBASE, UInt8 tBUFFERSIZE>
 class BasicRingbuffer : public tBASE {
 
@@ -79,6 +81,8 @@ class PacketbufferAPI<tBUFFERSIZE, 1> {
   public:
   typedef BasicRingbuffer<PolymorphRingbufferBase, tBUFFERSIZE> Type;
 };
+
+} //namespace ipstack
 
 
 #endif // __IPSTACK_RINGBUFFER_H__
