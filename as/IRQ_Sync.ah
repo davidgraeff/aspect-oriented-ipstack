@@ -25,8 +25,10 @@ aspect IRQ_Sync{
   }
   
   //Mempools must be synchronized:
-  pointcut toSync() = "% ipstack::%_Socket::alloc(%)" ||
-                      "% ipstack::%_Socket::free(%)" ||
+  pointcut toSync() = "% ipstack::TCP_Socket::alloc(%)" ||
+                      "% ipstack::TCP_Socket::free(%)" ||
+                      "% ipstack::UDP_Socket::alloc(%)" ||
+                      "% ipstack::UDP_Socket::free(%)" || //"% ipstack::IPv4_UDP_Socket::free(%)" MUST NOT be synchronized!
                       "% ipstack::%_Socket::%bind()" || //sync linked-list operations
                       "% ipstack::%_Socket::_listen()" || //sync linked-list operations
                       "% ipstack::%_Socket::deaf()";  //sync linked-list operations

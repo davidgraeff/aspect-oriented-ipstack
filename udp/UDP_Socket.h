@@ -60,7 +60,6 @@ class UDP_Socket{
     }
   }
   
-  public:
   void free(void* packet){
     mempool->free(packet); //new Mempool allows not-aligned frees ;-)
   }
