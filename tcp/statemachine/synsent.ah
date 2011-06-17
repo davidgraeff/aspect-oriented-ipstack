@@ -1,8 +1,11 @@
-#include "../TCP_Socket.h"
+#ifndef __TCP_STATE_SYNSENT_AH__
+#define __TCP_STATE_SYNSENT_AH__
 
-namespace ipstack {
-  
-void TCP_Socket::synsent(TCP_Segment* segment, unsigned len){
+using namespace ipstack;
+
+slice class TCP_State_Synsent {
+private:  
+void synsent(TCP_Segment* segment, unsigned len){
   if(segment != 0){
     // new tcp segment received:
     // waiting for SYN+ACK
@@ -84,4 +87,6 @@ void TCP_Socket::synsent(TCP_Segment* segment, unsigned len){
   }
 }
 
-} //namespace ipstack
+};
+
+#endif // __TCP_STATE_SYNSENT_AH__

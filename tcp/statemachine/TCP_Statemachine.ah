@@ -1,0 +1,35 @@
+#ifndef __TCP_STATEMACHINE_AH__
+#define __TCP_STATEMACHINE_AH__
+
+#include "closed.ah"
+#include "closewait.ah"
+#include "closing.ah"
+#include "established.ah"
+#include "finwait1.ah"
+#include "finwait2.ah"
+#include "lastack.ah"
+#include "listen.ah"
+#include "synrcvd.ah"
+#include "synsent.ah"
+#include "timewait.ah"
+
+using namespace ipstack;
+
+aspect TCP_Statemachine {
+
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice TCP_State_Closed;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Closewait;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Closing;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Established;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Finwait1;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Finwait2;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Lastack;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Listen;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Synrcvd;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Synsent;
+  advice "ipstack::TCP_Socket" : slice TCP_State_Timewait;
+
+};
+
+#endif // __TCP_STATEMACHINE_AH__

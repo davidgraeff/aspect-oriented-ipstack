@@ -24,18 +24,6 @@ class TCP_Socket{
          CLOSEWAIT, LASTACK, CLOSING, TIMEWAIT
        } state;
          
-  void closed(TCP_Segment* segment, unsigned len);
-  void listen(TCP_Segment* segment, unsigned len);
-  void synsent(TCP_Segment* segment, unsigned len);
-  void synrcvd(TCP_Segment* segment, unsigned len);
-  void established(TCP_Segment* segment, unsigned len);
-  void finwait1(TCP_Segment* segment, unsigned len);
-  void finwait2(TCP_Segment* segment, unsigned len);
-  void closewait(TCP_Segment* segment, unsigned len);
-  void lastack(TCP_Segment* segment, unsigned len);
-  void closing(TCP_Segment* segment, unsigned len);
-  void timewait(TCP_Segment* segment, unsigned len);
-  
   protected:
   bool isEstablished(){ return state == ESTABLISHED; }
   bool isCloseWait(){ return state == CLOSEWAIT; }

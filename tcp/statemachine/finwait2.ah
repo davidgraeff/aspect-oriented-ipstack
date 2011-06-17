@@ -1,8 +1,11 @@
-#include "../TCP_Socket.h"
+#ifndef __TCP_STATE_FINWAIT2_AH__
+#define __TCP_STATE_FINWAIT2_AH__
 
-namespace ipstack {
-  
-void TCP_Socket::finwait2(TCP_Segment* segment, unsigned len) {
+using namespace ipstack;
+
+slice class TCP_State_Finwait2 {
+private:
+void finwait2(TCP_Segment* segment, unsigned len) {
   if(segment != 0){
     // new tcp segment received:
     
@@ -38,4 +41,6 @@ void TCP_Socket::finwait2(TCP_Segment* segment, unsigned len) {
   }
 }
 
-} //namespace ipstack
+};
+
+#endif //__TCP_STATE_FINWAIT1_AH__

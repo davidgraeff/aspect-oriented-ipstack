@@ -1,8 +1,11 @@
-#include "../TCP_Socket.h"
+#ifndef __TCP_STATE_CLOSEWAIT_AH__
+#define __TCP_STATE_CLOSEWAIT_AH__
 
-namespace ipstack {
+using namespace ipstack;
   
-void TCP_Socket::closewait(TCP_Segment* segment, unsigned len) {
+slice class TCP_State_Closewait {
+private:
+void closewait(TCP_Segment* segment, unsigned len) {
   if(segment != 0){
     // new tcp segment received:
     if(handleRST(segment)){ return; }
@@ -54,4 +57,6 @@ void TCP_Socket::closewait(TCP_Segment* segment, unsigned len) {
   }
 }
 
-} //namespace ipstack
+};
+
+#endif // __TCP_STATE_CLOSEWAIT_AH__

@@ -1,8 +1,11 @@
-#include "../TCP_Socket.h"
+#ifndef __TCP_STATE_ESTABLISHED_AH__
+#define __TCP_STATE_ESTABLISHED_AH__
 
-namespace ipstack {
-  
-void TCP_Socket::established(TCP_Segment* segment, unsigned len) {
+using namespace ipstack;
+
+slice class TCP_State_Established {
+private:
+void established(TCP_Segment* segment, unsigned len) {
   if(segment != 0){
     // new tcp segment received:
     
@@ -91,4 +94,6 @@ void TCP_Socket::established(TCP_Segment* segment, unsigned len) {
   }
 }
 
-} //namespace ipstack
+};
+
+#endif // __TCP_STATE_ESTABLISHED_AH__
