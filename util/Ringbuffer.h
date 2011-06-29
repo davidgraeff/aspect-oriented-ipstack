@@ -22,7 +22,7 @@ class BasicRingbuffer : public tBASE {
 public:
 	BasicRingbuffer() : inpos_(0), outpos_(0) {}
 
-	void put(void* val) volatile {
+	void put(void* val) volatile __attribute__ ((noinline)) {
 		if (((inpos_ + 1) % BUFFERSIZE) != outpos_) {
 			buffer[inpos_] = val;
 			inpos_ = (inpos_ + 1) % BUFFERSIZE;
@@ -31,7 +31,7 @@ public:
 		}
 	}
 
-	void* get() volatile {
+	void* get() volatile __attribute__ ((noinline)) {
 		if (outpos_ != inpos_) {
 			void* val = buffer[outpos_];
 			outpos_ = (outpos_ + 1) % BUFFERSIZE;
@@ -46,7 +46,7 @@ public:
 		return outpos_ == inpos_ ? true : false;
 	}*/
 
-	bool isFull() volatile const {
+	bool isFull() volatile const __attribute__ ((noinline)) {
 		return ((inpos_ + 1) % BUFFERSIZE) != outpos_ ? false : true;
 	}
 
