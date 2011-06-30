@@ -61,7 +61,7 @@ aspect IPv4_ARP_Send {
  
   advice execution("% ipstack::ARP_Cache::ipv4_lookup(%, ipstack::Interface*)") &&
          args(ipv4_addr, interface) && that(cache) :
-         around(UInt32 ipv4_addr, Interface* interface, ARP_Cache& cache) {
+         after(UInt32 ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
     UInt8* hw_addr = cache.ipv4_find(ipv4_addr);
     for(int retries=0; (hw_addr==0) && (retries<3); retries++){

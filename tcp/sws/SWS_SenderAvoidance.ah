@@ -50,8 +50,6 @@ aspect SillyWindowSyndrome_Sender_Avoidance {
           //timeout reached, no new packet arrived
           //override sender SWS avoidance to prevent deadlocks
           //TODO: reduce socket.max_sendWindow ? //socket.max_sendWindow = socket.mss;
-          tjp->proceed();
-          return;
         }
         else{
           //a new packet has arrived meanwhile
