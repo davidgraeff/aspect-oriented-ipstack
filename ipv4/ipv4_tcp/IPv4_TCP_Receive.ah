@@ -15,6 +15,10 @@ aspect IPv4_TCP_Receive {
   // *** Affect class: Demux
   advice "ipstack::Demux" : slice Demux_IPv4_TCP_Slice;
   
+  // first, look at TCP
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
+    order("%TCP%", "%UDP%");
+  
   advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
          args(packet, len, interface) && that(demux) :
          around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){

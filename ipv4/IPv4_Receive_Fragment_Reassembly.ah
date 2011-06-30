@@ -62,9 +62,9 @@ aspect IPv4_Receive_Fragment_Reassembly {
   
 
   // *** Affect class: Demux
-  advice execution("void ipstack::Demux::ipv4_reassemble(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*, %)") &&
+  advice execution("bool ipstack::Demux::ipv4_reassemble(ipstack::IPv4_Packet*&, unsigned&, ipstack::Interface*, %)") &&
          args(packet, len, interface, fragment_offset) && that(demux) :
-         after(IPv4_Packet* packet, unsigned len, Interface* interface, UInt16 fragment_offset, Demux& demux){
+         after(IPv4_Packet* &packet, unsigned &len, Interface* interface, UInt16 fragment_offset, Demux& demux){
 
     UInt64 curr_time = Clock::now(); //in ticks
     
@@ -124,14 +124,18 @@ aspect IPv4_Receive_Fragment_Reassembly {
         //try to reassemble ...
         if(full_bitmap()){
           //reassembly complete :-)          
-          IPv4_Packet* packet = (IPv4_Packet*) buffer;
+          //IPv4_Packet* packet = (IPv4_Packet*) buffer;
+          packet = (IPv4_Packet*) buffer; //overwrite reference parameter
           packet->set_fragment_offset(0); //no more fragments
           packet->set_flags(0); // no flags
           packet->set_total_len(total_len); //overall length
-          packet->computeChecksum(); //Insert IPv4 header checksum (TODO: don't do that!)
-          demux.ipv4_demux(packet, total_len, interface);
+          //packet->computeChecksum(); //Insert IPv4 header checksum (TODO: don't do that!)
+          //demux.ipv4_demux(packet, total_len, interface);
+          len = total_len; //overwrite reference parameter
           
           expired_time = 0; //buffer empty
+          
+          *tjp->result() = true;
           return;
         }
       }

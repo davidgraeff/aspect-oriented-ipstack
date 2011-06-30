@@ -27,8 +27,10 @@ aspect IPv4_Ethernet_Receive {
         //remove ethernet header
         IPv4_Packet* packet = (IPv4_Packet*) eth_frame->get_data();
 
-        demux.ipv4_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
-        return; //ipv4 packet over ethernet processed
+        //demux.ipv4_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
+        //return; //ipv4 packet over ethernet processed
+        *(tjp->arg<0>()) = (const void*) packet;
+        *(tjp->arg<1>()) = len - Eth_Frame::ETH_HEADER_SIZE;
       }
     }
     tjp->proceed(); //try another 'demux'-receive aspect

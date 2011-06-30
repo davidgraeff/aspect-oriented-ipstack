@@ -17,9 +17,10 @@ slice class Demux_IPv4_Slice {
     //Aspects to be weaved here!
     //printf("IPv4 packet to be forwarded\n");
   }
-  void ipv4_reassemble(IPv4_Packet* packet, unsigned len, Interface* interface, UInt16 fragment_offset){
+  bool ipv4_reassemble(IPv4_Packet* &packet, unsigned &len, Interface* interface, UInt16 fragment_offset){
     //Aspects to be weaved here!
     //printf("IPv4 fragment arrived: offset = %u\n", fragment_offset);
+    return false; // Packet not completely reassembled, yet. This is not the last fragment!
   }
 };
 

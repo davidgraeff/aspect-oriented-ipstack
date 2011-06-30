@@ -26,18 +26,15 @@ aspect IPv4_TCP_Reset {
     if(packet->get_protocol() == TCP_Segment::IPV4_TYPE_TCP){
       TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
       //do not reply resets with resets
-      if(tcp_segment->has_RST() == true){
-        return;
-      }
-      else{
+      if(tcp_segment->has_RST() == false){
         //"Active Side Causes Half-Open Connection Discovery"
         //rfc793 page 35 (Figure 11.)
         demux.ipv4_tcp_reset(packet, len, interface);
-        return;
       }
     }
-    
-    tjp->proceed(); //try another 'ipv4_demux'-aspect
+    else{
+      tjp->proceed(); //try another 'ipv4_demux'-aspect
+    }
   }
   
 };

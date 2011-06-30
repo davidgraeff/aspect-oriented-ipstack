@@ -51,12 +51,13 @@ aspect IPv4_Receive {
       UInt16 fragment_offset = packet->get_fragment_offset();
       if( (packet->get_flags() == IPv4_Packet::IPV4_MF_FLAG) || (fragment_offset != 0) ) {
         //this is a fragmented ipv4 packet. try to reassemble ...
-        demux.ipv4_reassemble(packet, len, interface, fragment_offset * 8);
+        if(demux.ipv4_reassemble(packet, len, interface, fragment_offset * 8) == false) {
+          return; //reassembling failed
+        }
       }
-      else{
-        //no fragment
-        tjp->proceed(); // continue ipv4_demux(...)
-      }
+      
+      //no fragment or reassembled fragment
+      tjp->proceed(); // continue ipv4_demux(...)
     }
     else{
       //this packet has to be routed elsewhere
