@@ -32,11 +32,12 @@ class IPv4_TCP_Socket : public IPv4_Socket, public TCP_Socket {
   void recv_loop();
   
   // explicit join-points: affected by 'IPv4_TCP_Receive.ah' aspect.
-  bool bind() { return false; } // register a new client socket at Demux
-  void unbind() {} // remove this client socket at Demux
+  bool bind(); // register a new client socket at Demux
+  void unbind(); // remove this client socket at Demux
   
   public:
   IPv4_TCP_Socket();
+  ~IPv4_TCP_Socket(){ unbind(); } // remove this socket at Demux on destruction
 
   bool connect();
   

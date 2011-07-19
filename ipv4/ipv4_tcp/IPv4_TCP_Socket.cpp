@@ -99,5 +99,9 @@ int IPv4_TCP_Socket::poll(unsigned msec){
   return -1;
 }
 
+// explicit join-points: affected by 'IPv4_TCP_Receive.ah' aspect.
+bool IPv4_TCP_Socket::bind() { return false; } // register a new client socket at Demux
+void IPv4_TCP_Socket::unbind() {} // remove this client socket at Demux
+
 } //namespace ipstack 
 

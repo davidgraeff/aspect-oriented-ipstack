@@ -62,6 +62,12 @@ aspect IPv4_UDP_Receive {
     Demux::Inst().unbind(&socket);
   }
   
+  advice destruction("ipstack::IPv4_UDP_Socket") &&
+         that(socket) : before(IPv4_UDP_Socket& socket){
+    // remove this socket at Demux on destruction
+    socket.unbind();
+  }
+  
 };
 
 #endif //__IPV4_UDP_RECEIVE_AH__
