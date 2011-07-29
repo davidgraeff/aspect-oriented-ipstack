@@ -59,7 +59,7 @@ aspect TCP_SlowStart {
          before(TCP_Socket& socket){
          
     //check if we are not in retransmit state, yet
-    if(socket.isRetransmitting() == false){ //TODO: maybe, this check should be removed? (more agressive)
+    if(socket.isRetransmitting() == false){
       //packet loss has occured the first time for this flight
       socket.drop_cwnd();
     }
@@ -83,7 +83,9 @@ aspect TCP_SlowStart {
 
       //reduce cwnd by payload length
       unsigned payload_len = record->getLength() - segment->get_header_len();
-      socket.outstanding_bytes += payload_len; //TODO: multiple retransmissions of the same packet count more than once :-(
+      socket.outstanding_bytes += payload_len; /* Multiple retransmissions of the same packet count more than once.
+                                                  This seems to be unavoidable, because 'TCP_History' is processed
+                                                  from tail to front, so that checks against seqnums cannot be made. */
 
       tjp->proceed();
     }
