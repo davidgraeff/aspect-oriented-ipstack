@@ -1,0 +1,12 @@
+#ifndef __TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
+#define __TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
+
+using namespace ipstack;
+
+
+slice class TCP_Record_RetransmissionCounter_Slice {
+  UInt8 retransmission_counter;
+};
+
+#endif //__TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
+

@@ -34,7 +34,7 @@ bool IPv4_TCP_Socket::send(const void* data, unsigned datasize){
   if( isEstablished() || isCloseWait() ){
     TCP_Socket::addSendData(data, datasize);
     recv_loop();
-    return true;
+    return (isEstablished() || isCloseWait()); //we are still is a state that allows sending
   }
   return false;
 }

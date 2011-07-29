@@ -57,9 +57,12 @@ aspect TCP_SlowStart {
   advice execution("void ipstack::TCP_Socket::setRetransmitting()") &&
          that(socket) :
          before(TCP_Socket& socket){
-
-    //packet loss has occured the first time for this flight
-    socket.drop_cwnd();
+         
+    //check if we are not in retransmit state, yet
+    if(socket.isRetransmitting() == false){ //TODO: maybe, this check should be removed? (more agressive)
+      //packet loss has occured the first time for this flight
+      socket.drop_cwnd();
+    }
   }
   
   advice execution("void ipstack::TCP_Socket::setMSS(%)") &&

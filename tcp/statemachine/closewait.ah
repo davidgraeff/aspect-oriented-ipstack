@@ -43,8 +43,8 @@ void closewait(TCP_Segment* segment, unsigned len) {
       return;
       //TODO: urgend data?
     }
-    else{
-      //Sending (TODO: sending == true?)
+    else if(waiting == true) {
+      //Sending
       processSendData(); //try to send new segments if possible
       if( (application_buflen == 0) && history.isEmpty()){
         waiting = false;

@@ -79,7 +79,7 @@ void established(TCP_Segment* segment, unsigned len) {
       //TODO: no buffering requested, urgend data?!
       block();
     }
-    else{
+    else if(waiting == true) {
       //Sending
       processACK();
       processSendData(); //try to send new segments if possible
