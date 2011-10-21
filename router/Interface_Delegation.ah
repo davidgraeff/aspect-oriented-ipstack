@@ -1,0 +1,51 @@
+#ifndef __INTERFACE_DELEGATION_AH__
+#define __INTERFACE_DELEGATION_AH__
+
+#include "hw/hal/NetworkDevice.h"
+
+using namespace ipstack;
+
+aspect Interface_Delegation_Aspect {
+
+  //delegation to NetworkDevice
+  typedef hw::hal::NetworkDevice Derived;
+  
+  advice execution("const char* ipstack::Interface::getName()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->getName();
+  }
+  
+  advice execution("unsigned char ipstack::Interface::getType()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->getType();
+  }
+  
+  advice execution("const unsigned char* ipstack::Interface::getAddress()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->getAddress();
+  }
+  
+  advice execution("unsigned ipstack::Interface::getMTU()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->getMTU();
+  }
+  
+  advice execution("bool ipstack::Interface::hasTransmitterHardwareChecksumming()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->hasTransmitterHardwareChecksumming();
+  }
+  
+  advice execution("bool ipstack::Interface::hasReceiverHardwareChecksumming()") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->hasReceiverHardwareChecksumming();
+  }
+  
+  advice execution("void ipstack::Interface::send(const void*, unsigned)") : around() {
+    static_cast<Derived*>(tjp->that())->send(*tjp->arg<0>(), *tjp->arg<1>());
+  }
+  
+  advice execution("void ipstack::Interface::send(const void*, unsigned, bool, unsigned)") : around() {
+    static_cast<Derived*>(tjp->that())->send(*tjp->arg<0>(), *tjp->arg<1>(), *tjp->arg<2>(), *tjp->arg<3>());
+  }
+  
+  advice execution("bool ipstack::Interface::hasBeenSent(const void*)") : around() {
+    *tjp->result() = static_cast<Derived*>(tjp->that())->hasBeenSent(*tjp->arg<0>());
+  }
+  
+};
+
+#endif /* __INTERFACE_DELEGATION_AH__ */

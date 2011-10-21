@@ -3,7 +3,6 @@
 
 #include "Router.h"
 #include "Interface.h"
-#include "hw/hal/NetworkDevice.h"
 
 using namespace ipstack;
 
@@ -12,19 +11,15 @@ aspect Router_Aspect {
 
   // *** Binding Aspect: loose coupling
   advice execution("% ...::init()") &&
-         within(derived("hw::hal::NetworkDevice")) &&
-         that(device) : after(hw::hal::NetworkDevice& device){
+         within(derived("ipstack::Interface")) &&
+         that(interface) : after(Interface& interface){
     
     Router& router = Router::Inst(); //short name
-    
-    //Initialize Interface:
-    Interface& interface = device.interface_; //each NetworkDevice has such a member
-    interface.setNetworkDevice(&device); //initialize for delegation
     
     //insert at front of linked list
     interface.next_interface = router.head_interface;
     router.head_interface = &interface;
-  }
+  }  
 };
 
 #endif /*__ROUTER_AH__ */

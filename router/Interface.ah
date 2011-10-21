@@ -1,10 +1,12 @@
 #ifndef __INTERFACE_AH__
 #define __INTERFACE_AH__
 
-#include "Interface_Slice.ah"
+#include "Interface.h"
 
-aspect Interface_Inst_Aspect {
-  advice "hw::hal::NetworkDevice" : slice Interface_Slice;
+aspect Interface_Aspect {
+
+  // Make Interface a base class of hw::hal::NetworkDevice
+  advice "hw::hal::NetworkDevice" : slice class : public ipstack::Interface; 
 };
 
 
