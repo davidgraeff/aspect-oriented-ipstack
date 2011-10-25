@@ -10,20 +10,29 @@ void TCP_Socket::processSendData(){
     if(sendWindow == 0){ // (!) do NOT use getSendWindow(), because it may be affected by congestion avoidance aspects!
       //sendWindow is closed. we cannot send any data
       //probe for 'window update'
-      //send a 'linux-style' zero window probe
-      //(sequence number one less than expected, no data)
       if(history.getNextTimeout() == 0){
         //only probe for zero window if there is no other packet
         //in history which triggers an timeout event soon
-        TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
+        // -> send BSD style zero window probe
+        //    (expected sequence number but only one byte of data)
+        TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE + 1);
         if(packet != 0){
           setupHeader_withACK(packet);
-          packet->set_seqnum(seqnum_next-1U); // one less than expected
-          waiting = true;
-          send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
-          //TODO: no R1, R2 value for zero window probes:
-          //"Allow window stay zero indefinitely"
-          history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE, getRTO()); //TODO: Timeout of persist timer??
+          seqnum_next += 1;
+    
+          //payload:
+          memcpy(packet->get_data(), application_buf, 1);
+  
+          application_buflen -= 1;
+          application_buf = (void*) ( ((UInt8*)application_buf) + 1 );
+  
+          //set PUSH flag on last segment
+          if(application_buflen == 0){
+            packet->set_PSH();
+          }
+
+          send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE + 1);
+          history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE + 1, getRTO());
         }
       }
       return;
