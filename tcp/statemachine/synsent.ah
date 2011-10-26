@@ -28,6 +28,9 @@ void synsent(TCP_Segment* segment, unsigned len){
           initSendWindow(window, seqnum, acknum);
           receiveBuffer.setFirstSeqNum(seqnum + 1U);
           
+          clearHistory(); //delete our SYN packet (and thus make sure the following ACK can be allocated)
+          //TODO: alternatively, just 'triggerACK()' and let ESTABLISHED transmit it??
+          
           if(sendACK()){
             waiting = false; //TODO: do that in established? (to clean up the ringbuffer)
           }
@@ -49,7 +52,7 @@ void synsent(TCP_Segment* segment, unsigned len){
       //-- AND --
       //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
       //Send a RST an continue connecting (resend SYN after its timeout)
-      TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
+      TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE); //TODO: cleanup history??! [This won't work with History==1] //FIXME!
       if(packet != 0){
         setupHeader(packet);
         packet->set_acknum(0); //clear ACK number (setupHeader() doesn't do that anymore)
