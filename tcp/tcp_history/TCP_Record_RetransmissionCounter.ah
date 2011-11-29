@@ -26,7 +26,7 @@ aspect TCP_RetransmissionCounter {
 
     if(record->retransmission_counter > __TCP_MAX_RETRANSMISSIONS__) {
       /* DO NOT call abort() here, because the linked-list 'TCP_History'
-         is under modification and will be corrupted. Wait for 'updateHistory()' to complete (see below).
+         is under modification and will be corrupted. Wait for 'updateHistory(...)' to complete (see below).
          Just remember that we want to kill the connection (use state for storage) */
       socket.state = TCP_Socket::CLOSED;
     }
@@ -36,7 +36,7 @@ aspect TCP_RetransmissionCounter {
     }
   }
   
-  advice execution("void ipstack::TCP_Socket::updateHistory()") &&
+  advice execution("void ipstack::TCP_Socket::updateHistory(...)") &&
          that(socket) : after(TCP_Socket& socket) {
     //check if max. number of retransmissions was exceeded (see above)
     if(socket.state == TCP_Socket::CLOSED) {

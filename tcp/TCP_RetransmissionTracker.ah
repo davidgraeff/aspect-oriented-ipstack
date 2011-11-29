@@ -12,7 +12,7 @@ aspect TCP_RetransmissionTracker {
   advice "ipstack::TCP_Socket" : slice TCP_RetransmissionTracker_Slice;
 
   advice call("ipstack::TCP_Record* ipstack::TCP_History::get()") &&
-         within("void ipstack::TCP_Socket::updateHistory()") &&
+         within("void ipstack::TCP_Socket::updateHistory(...)") &&
          that(socket) &&
          result(res) :
          after(TCP_Socket& socket, TCP_Record* res) {

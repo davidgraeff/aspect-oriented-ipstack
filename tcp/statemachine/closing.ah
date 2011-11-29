@@ -17,6 +17,7 @@ void closing(TCP_Segment* segment, unsigned len) {
     
     if(segment->has_FIN()){
       //Our ACK from state FINWAIT1 got lost. retransmit!
+      //updateHistory(false); // free unused segments stored in history //XXX: now done in alloc()
       sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
     }
     

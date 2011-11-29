@@ -86,7 +86,7 @@ class TCP_Socket{
   UInt16 sendWindow; //advertised window of remote peer
   UInt32 lwack, lwseq; //Acknum and Seqnum of last window update (sendWindow)
   
-  enum { DEFAULT_RTO = 5000U }; //the default (5 sec) 'retransmission timeout'
+  enum { DEFAULT_RTO = 6000U }; //the default (6 sec) 'retransmission timeout'
   UInt32 getRTO() { return DEFAULT_RTO; } //overwritten by "RTT estimation'
   
   void set_seqnum_unacked(UInt32 acknum){ seqnum_unacked = acknum; }
@@ -117,7 +117,7 @@ class TCP_Socket{
   bool sendNextSegment();
   
   protected:
-  void updateHistory();
+  void updateHistory(bool do_retransmit=true);
 
   void addSendData(const void* data, unsigned datasize){
     application_buf = (void*) data;
@@ -135,10 +135,10 @@ class TCP_Socket{
   
   void* alloc(unsigned datasize){
     if(history.isFull()){
-      //updateHistory(); //update history ...
-      //if(history.isFull()){ // ... and try again
+      updateHistory(false); //update history ... (false := do not trigger any retransmissions)
+      if(history.isFull()){ // ... and try again
         return 0;
-      //}
+      }
     }
     void* buffer = mempool->alloc(datasize + network_header_offset);
     if(buffer != 0){

@@ -60,7 +60,7 @@ void TCP_Socket::clearHistory(){
   }
 }
 
-void TCP_Socket::updateHistory(){
+void TCP_Socket::updateHistory(bool do_retransmit){
   //remove TCP segments which are no longer useful from TCP_History
   //and retransmit timed out segements
   TCP_Record* record = history.get();
@@ -77,7 +77,7 @@ void TCP_Socket::updateHistory(){
       record = next;
     }
     else{
-      if(record->isTimedOut()){
+      if( (do_retransmit == true) && record->isTimedOut() ){
         //a retransmission timeout was reached
         retransmit(record, segment);
       }
@@ -253,7 +253,7 @@ void TCP_Socket::abort(){
   FIN_received = false;
   //TODO: clear receiveBuffer?
   //TODO: free & reset everything!!
-  clearHistory(); //delete our SYN packet
+  clearHistory(); //free all pending packets
 }
 
 void TCP_Socket::close(){
