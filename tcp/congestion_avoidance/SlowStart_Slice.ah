@@ -10,30 +10,23 @@ slice class TCP_SlowStart_Slice {
   UInt32 sstresh; //slow start threshold
   
   UInt16 outstanding_bytes; //unacknowledged data (UInt32?)
-  UInt32 mss_X_mss; //mss * mss
   
   void initSlowStart(){
     cwnd = mss;
     sstresh = 0xFFFFFFFFUL;
     outstanding_bytes = 0;
-    UInt64 mss_X_mss_tmp = ((UInt64)mss) * mss; //overflow protection
-    if(mss_X_mss_tmp > 0xFFFFFFFFUL){
-      mss_X_mss = 0xFFFFFFFFUL;
-    }
-    else{
-      mss_X_mss = mss_X_mss_tmp;
-    }
   }
   
-  void increment_cwnd(){
+  void increment_cwnd(UInt16 bytes_acked){
     UInt32 cwnd_old = cwnd;
     if(cwnd <= sstresh){
       //slow start
-      cwnd += mss; //exponential grow
+      cwnd += bytes_acked; //exponential grow
     }
     else{
       //congestion avoidance
-      cwnd += (mss_X_mss / cwnd); //linear increase
+      cwnd += (bytes_acked * (UInt32)mss) / cwnd; //linear increase
+      //TODO: overflow check the multiplication above?
     }
     //overflow check
     if(cwnd < cwnd_old){

@@ -38,7 +38,7 @@ aspect TCP_SlowStart {
       socket.outstanding_bytes = 0;
     }
     
-    socket.increment_cwnd(); // ... because an ACK arrived
+    socket.increment_cwnd(acked); // ... because an ACK arrived
   }
   
   advice execution("% ipstack::TCP_Socket::getSendWindow()") &&
