@@ -1,7 +1,7 @@
 #ifndef __IPSTACK_RINGBUFFER_H__
 #define __IPSTACK_RINGBUFFER_H__
 
-#include "util/types.h" //TODO: unsigned instead of UInt8 ?
+#include "util/types.h"
 
 #include "RingbufferBase.h"
 #include "RingbufferConfig.h"
@@ -9,10 +9,12 @@
 
 namespace ipstack {
 
-template<typename tBASE, UInt8 tBUFFERSIZE>
+template<typename tBASE, unsigned tBUFFERSIZE>
 class BasicRingbuffer : public tBASE {
 
-	static const UInt8 BUFFERSIZE = tBUFFERSIZE;
+	// limit actual buffer size to [2...255] (8 bit)
+	enum { BUFFERSIZE = (tBUFFERSIZE < 2) ? 2 :
+	                    ((tBUFFERSIZE > 255) ? 255 : tBUFFERSIZE) };
 
 	void* buffer[BUFFERSIZE];
 
