@@ -1,4 +1,5 @@
 #include "IPv4_Socket.h"
+#include "ipstack/router/Router.h"
 
 namespace ipstack {
   

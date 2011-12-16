@@ -4,7 +4,6 @@
 #include "util/types.h"
 #include "../util/Ringbuffer.h"
 #include "../router/Interface.h"
-#include "../router/Router.h"
 #include "IPv4.h"
 
 namespace ipstack {
