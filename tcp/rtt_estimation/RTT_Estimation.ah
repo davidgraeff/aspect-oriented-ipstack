@@ -22,7 +22,6 @@
 #include "util/types.h"
 #include "../TCP_Socket.h"
 #include "../TCP.h"
-#include "../tcp_history/TCP_Record.h"
 #include "RTT_Estimation_Slice.ah"
 
 using namespace ipstack;
@@ -58,9 +57,6 @@ aspect TCP_RTT_Estimation {
     //abort any running rtt estimation if a retransmission occures
     //this is called 'Karn's Algorithm'
     socket.abort_RTT_Estimation();
-    
-    //exponential backoff (also 'Karn's Algorithm')
-    socket.rto_backoff(); //TODO: put that into abort_RTT_Est... (see above)
   }
   
   advice execution("void ipstack::TCP_Socket::gen_initial_seqnum()") &&

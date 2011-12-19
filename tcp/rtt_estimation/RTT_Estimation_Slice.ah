@@ -24,9 +24,7 @@
 
 slice class TCP_RTT_Estimation_Slice {
   private:
-  enum { //LOWER_RTO_BOUND = 1000U, //rfc 2988
-         LOWER_RTO_BOUND = 200U, //Linux uses 200ms min RTO
-         UPPER_RTO_BOUND = 64000U }; //only used for exponential backoff (max. 64sec)
+  enum { LOWER_RTO_BOUND = 200U }; //Linux uses 200ms min RTO (rfc 2988: min 1sec)
   
   UInt32 rtt_seqnum; //the sequence number for current measuring
   UInt64 rrt_time; //when was 'rtt_seqnum' send
@@ -91,16 +89,6 @@ slice class TCP_RTT_Estimation_Slice {
         }
         rrt_active = false;
       }
-    }
-  }
-  
-  void rto_backoff(){
-    if(rto < UPPER_RTO_BOUND){
-      rto = rto << 1; //double estimated RTO
-    }
-    else{
-      rto = UPPER_RTO_BOUND;
-      srtt = 0; //restart RTO estimation
     }
   }
   
