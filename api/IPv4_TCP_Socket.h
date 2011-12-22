@@ -29,6 +29,14 @@
 namespace ipstack {
 namespace api {
 
+//static template metaprogram assertion
+template<unsigned BUFFER_COUNT>
+class TCP_Buffer_Assertion{ public: typedef void CONFIGURATION_ERROR__TCP_requires_at_least_2_buffers; };
+template<>class TCP_Buffer_Assertion<0>{};
+template<>class TCP_Buffer_Assertion<1>{};
+
+
+//the actual API
 template<unsigned tBLOCKSIZE_1 = ipstack::BLOCKSIZE_BIG,
          unsigned tCOUNT_1 = ipstack::COUNT_BIG,
          unsigned tBLOCKSIZE_2 = ipstack::BLOCKSIZE_SMALL,
@@ -37,7 +45,14 @@ template<unsigned tBLOCKSIZE_1 = ipstack::BLOCKSIZE_BIG,
 class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   private:
   
-  typename MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, __IPSTACK_GENERIC_MEMPOOL__>::Type pool;
+  //create the type for the following mempool instantiation
+  typedef typename MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, __IPSTACK_GENERIC_MEMPOOL__>::Type TCP_Mempool;
+ 
+  //static assertion: check whether at least 2 buffer are available for this TCP Socket. If not, throw a compile-time error.
+  typedef typename TCP_Buffer_Assertion<TCP_Mempool::COUNT_BIG + TCP_Mempool::COUNT_SMALL>::CONFIGURATION_ERROR__TCP_requires_at_least_2_buffers buf_assert;
+
+  //the mempool attribute
+  TCP_Mempool pool;
   
   //if tRINGBUFFERSIZE is specified (= no default paramater), use it.
   //else choose max{ __IPSTACK_MAX_PACKETS__, tCOUNT_1+tCOUNT_2 }
@@ -51,8 +66,8 @@ class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   public:
   IPv4_TCP_Socket(){
     set_Mempool(&pool);
-    setMaxMTU(pool.SIZE_BIG);
-    setMaxReceiveWindow(pool.COUNT_BIG);
+    setMaxMTU(TCP_Mempool::SIZE_BIG);
+    setMaxReceiveWindow(TCP_Mempool::COUNT_BIG);
     set_packetbuffer(&buf);
   }
 
