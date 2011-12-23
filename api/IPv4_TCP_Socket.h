@@ -24,8 +24,7 @@
 #include "../util/Ringbuffer.h"
 #include "../IPStack_Config.h"
 
-namespace ipstack {
-namespace api {
+namespace IP {
 
 //static template metaprogram assertions
 
@@ -54,7 +53,7 @@ class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   private:
   
   //create the type for the following mempool instantiation
-  typedef typename MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, MEMORY_GENERIC>::Type TCP_Mempool;
+  typedef typename ipstack::MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, ipstack::MEMORY_GENERIC>::Type TCP_Mempool;
  
   //static assertion: check whether at least 2 buffers (a big and small one) are available for this TCP Socket. If not, throw a compile-time error.
   typedef typename TCP_Buffer_Count_Assertion<TCP_Mempool::COUNT_BIG>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 big_buf_cnt_assert;
@@ -68,7 +67,7 @@ class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   TCP_Mempool pool;
   
   //size of ringbuffer: tCOUNT_1+tCOUNT_2 (if generic api is enabled, else PACKET_LIMIT)
-  typename PacketbufferAPI<tCOUNT_1+tCOUNT_2, MEMORY_GENERIC>::Type buf;
+  typename ipstack::PacketbufferAPI<tCOUNT_1+tCOUNT_2, ipstack::MEMORY_GENERIC>::Type buf;
 
   public:
   IPv4_TCP_Socket(){
@@ -84,6 +83,6 @@ class IPv4_TCP_Socket : public ipstack::IPv4_TCP_Socket {
   }
 };
 
-}} // namespace ipstack::api
+} // namespace IP
 
 #endif // __IPSTACK_API_IPV4_TCP_SOCKET_H__

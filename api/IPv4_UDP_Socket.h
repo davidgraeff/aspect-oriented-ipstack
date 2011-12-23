@@ -24,8 +24,7 @@
 #include "../util/Ringbuffer.h"
 #include "../IPStack_Config.h"
 
-namespace ipstack {
-namespace api {
+namespace IP {
 
 //static template metaprogram assertions
 
@@ -49,7 +48,7 @@ class IPv4_UDP_Socket : public ipstack::IPv4_UDP_Socket {
   private:
   
   //create the type for the following mempool instantiation
-  typedef typename MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, MEMORY_GENERIC>::Type UDP_Mempool;
+  typedef typename ipstack::MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, ipstack::MEMORY_GENERIC>::Type UDP_Mempool;
   
   //static assertion: check whether at least 1 buffer is available for this UDP Socket. If not, throw a compile-time error.
   typedef typename UDP_Buffer_Count_Assertion<UDP_Mempool::COUNT_BIG+UDP_Mempool::COUNT_SMALL>::CONFIGURATION_ERROR_FOR_UDP__Count_of_buffer_must_not_be_0 buf_cnt_assert;
@@ -62,7 +61,7 @@ class IPv4_UDP_Socket : public ipstack::IPv4_UDP_Socket {
   UDP_Mempool pool;
   
   //size of ringbuffer: tCOUNT_1+tCOUNT_2 (if generic api is enabled, else PACKET_LIMIT)
-  typename PacketbufferAPI<tCOUNT_1+tCOUNT_2, MEMORY_GENERIC>::Type buf;
+  typename ipstack::PacketbufferAPI<tCOUNT_1+tCOUNT_2, ipstack::MEMORY_GENERIC>::Type buf;
   
   public:
   IPv4_UDP_Socket(){
@@ -76,6 +75,6 @@ class IPv4_UDP_Socket : public ipstack::IPv4_UDP_Socket {
   }
 };
 
-}} // namespace ipstack::api
+} // namespace IP
 
 #endif // __IPSTACK_API_IPV4_UDP_SOCKET_H__
