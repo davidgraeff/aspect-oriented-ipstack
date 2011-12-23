@@ -22,7 +22,6 @@
 #include "util/types.h"
 
 #include "RingbufferBase.h"
-#include "RingbufferConfig.h"
 #include "../IPStack_Config.h"
 
 namespace ipstack {
@@ -76,7 +75,7 @@ public:
 template<unsigned tGENERIC=0>
 class RingbufferType {
   public:
-  typedef BasicRingbuffer<EmptyRingbufferBase, __IPSTACK_MAX_PACKETS__> Packetbuffer;
+  typedef BasicRingbuffer<EmptyRingbufferBase, PACKET_LIMIT> Packetbuffer;
 };
 
 template<> // template specialization for '1'
@@ -86,7 +85,7 @@ class RingbufferType<1> {
 };
 
 // The 'Packetbuffer' type used everywhere
-typedef RingbufferType<__IPSTACK_GENERIC_RINGBUFFER__>::Packetbuffer Packetbuffer;
+typedef RingbufferType<MEMORY_GENERIC>::Packetbuffer Packetbuffer;
 
 
 // only used for the API

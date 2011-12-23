@@ -21,19 +21,22 @@
 
 namespace ipstack{
 
+// *** Default mempool configuration
+enum {
+  BLOCKSIZE_BIG = 1514,
+  COUNT_BIG = 4, //a power of 2 is most efficient
+  BLOCKSIZE_SMALL = 64,
+  COUNT_SMALL = 4 //a power of 2 is most efficient
+};
+
+// Configuration of the template API, whether generic template parameter are supported
+enum { MEMORY_GENERIC = 0 };
+
 //This specifies the maximum amount of packets that
 //can be buffered for each connection. This affects
 //TCP sending and receiving and UDP receiving.
 //A power of 2 is most efficient.
-#define __IPSTACK_MAX_PACKETS__ 64
-
-// *** Default mempool configuration
-enum {
-  BLOCKSIZE_BIG = 1514,
-  COUNT_BIG = 64, //a power of 2 is most efficient
-  BLOCKSIZE_SMALL = 128,
-  COUNT_SMALL = 32 //a power of 2 is most efficient
-};
+enum { PACKET_LIMIT = COUNT_BIG+COUNT_SMALL };
 
 } //namespace ipstack
 

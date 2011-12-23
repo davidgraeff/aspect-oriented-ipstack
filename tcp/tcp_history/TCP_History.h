@@ -29,7 +29,7 @@ namespace ipstack {
 
 class TCP_History{
   private:
-  TCP_Record records[__TCP_HISTORY_MAX_PACKETS__];
+  TCP_Record records[TCP_HISTORY_MAX_PACKETS];
   TCP_Record* head; //doubly linked (for quick remove) if TCP_History_SlidingWindow.ah
 
   public:

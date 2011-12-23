@@ -42,7 +42,7 @@ aspect TCP_RetransmissionCounter {
          that(socket) :
          around(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket) {
 
-    if(record->retransmission_counter > __TCP_MAX_RETRANSMISSIONS__) {
+    if(record->retransmission_counter > TCP_MAX_RETRANSMISSIONS) {
       /* DO NOT call abort() here, because the linked-list 'TCP_History'
          is under modification and will be corrupted. Wait for 'updateHistory(...)' to complete (see below).
          Just remember that we want to kill the connection (use state for storage) */

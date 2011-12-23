@@ -20,7 +20,6 @@
 #define __IPSTACK_MEMPOOL_H__
 
 #include "MempoolBase.h"
-#include "MempoolConfig.h"
 #include "../IPStack_Config.h"
 
 namespace ipstack {
@@ -123,7 +122,7 @@ class MempoolType<1> {
 };
 
 // The 'Mempool' type used everywhere
-typedef MempoolType<__IPSTACK_GENERIC_MEMPOOL__>::Mempool Mempool;
+typedef MempoolType<MEMORY_GENERIC>::Mempool Mempool;
 
 
 // only used for the API

@@ -33,7 +33,7 @@ class TCP_Socket; //Forward declaration solves include cycle problem
 
 class TCP_ReceiveBuffer{
   private:
-  TCP_RecvElement elements[__TCP_RECEIVEBUFFER_MAX_PACKETS__];
+  TCP_RecvElement elements[TCP_RECEIVEBUFFER_MAX_PACKETS];
   TCP_RecvElement* head;
   
   UInt32 read_firstSeqNum;

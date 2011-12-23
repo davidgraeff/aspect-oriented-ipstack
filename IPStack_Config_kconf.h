@@ -23,16 +23,6 @@
 
 namespace ipstack{
 
-//This specifies the maximum amount of packets that
-//can be buffered for each connection. This affects
-//TCP sending and receiving and UDP receiving.
-//A power of 2 is most efficient.
-#ifdef cfIPSTACK_MAX_PACKETS
-  #define __IPSTACK_MAX_PACKETS__ cfIPSTACK_MAX_PACKETS
-#else
-  #define __IPSTACK_MAX_PACKETS__ 64
-#endif
-
 // *** Default mempool configuration (from kconf)
 enum {
   BLOCKSIZE_BIG = cfIPSTACK_BLOCKSIZE_BIG,
@@ -41,11 +31,18 @@ enum {
   COUNT_SMALL = cfIPSTACK_COUNT_SMALL
 };
 
-// Max number of TCP retransmissions set by kconfig (default 10)
-#ifdef cfTCP_MAX_RETRANSMISSIONS
-  #define __TCP_MAX_RETRANSMISSIONS__ cfTCP_MAX_RETRANSMISSIONS
+
+#ifdef cfIPSTACK_MEMORY_GENERIC
+  enum { MEMORY_GENERIC = 1,
+         PACKET_LIMIT = cfIPSTACK_PACKET_LIMIT };
 #else
-  #define __TCP_MAX_RETRANSMISSIONS__ 10
+  enum { MEMORY_GENERIC = 0,
+         PACKET_LIMIT = COUNT_BIG+COUNT_SMALL };
+#endif
+
+
+#ifdef cfTCP_MAX_RETRANSMISSIONS
+  enum { TCP_MAX_RETRANSMISSIONS = cfTCP_MAX_RETRANSMISSIONS };
 #endif
 
 } //namespace ipstack
