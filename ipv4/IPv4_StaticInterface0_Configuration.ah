@@ -1,0 +1,20 @@
+#ifndef __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
+#define __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
+
+#include "../cfAttribs.h"
+#include "ipstack/api/Setup.h"
+
+using namespace ipstack;
+
+aspect ipstack_ifcfg0_init  {
+	advice execution( "void os::init()" ) : after() {
+		Interface* interface = IP::getInterface(0);
+		if(interface) {
+			interface->setIPv4Addr(cfIPSTACK_IFCFG0_IP);
+			interface->setIPv4Subnetmask(cfIPSTACK_IFCFG0_SUBNET);
+			interface->setIPv4Up(true);
+		}
+	}
+};
+
+#endif
