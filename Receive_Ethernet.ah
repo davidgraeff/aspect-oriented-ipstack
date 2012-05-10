@@ -16,18 +16,18 @@
 // Copyright (C) 2011 Christoph Borchert
 
 
-#ifndef __IPV4_RECEIVE_ETHERNET_AH__
-#define __IPV4_RECEIVE_ETHERNET_AH__
+#ifndef __RECEIVE_ETHERNET_AH__
+#define __RECEIVE_ETHERNET_AH__
 
-#include "../Eth_Frame.h"
-#include "IPv4.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
+#include "Eth_Frame.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 
-aspect IPv4_Ethernet_Receive {
+aspect Ethernet_Receive {
 
+  // Use ":around" for Data Link Layer Protocols such as Ethernet (in contrast to higher protocols like IP)
   advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
          args(data, len, interface) && that(demux) :
          around(const void* data, unsigned len, Interface* interface, Demux& demux){
@@ -40,21 +40,14 @@ aspect IPv4_Ethernet_Receive {
       }
       
       Eth_Frame* eth_frame = (Eth_Frame*) data;
-    
-      if(eth_frame->get_type() == IPv4_Packet::ETH_TYPE_IPV4){
-        //remove ethernet header
-        IPv4_Packet* packet = (IPv4_Packet*) eth_frame->get_data();
-
-        //demux.ipv4_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
-        //return; //ipv4 packet over ethernet processed
-        *(tjp->arg<0>()) = (const void*) packet;
-        *(tjp->arg<1>()) = len - Eth_Frame::ETH_HEADER_SIZE;
-      }
+      //remove ethernet header; a higher level protocol packet like IP is now accessable
+      *(tjp->arg<0>()) = (const void*) eth_frame->get_data();
+      *(tjp->arg<1>()) = len - Eth_Frame::ETH_HEADER_SIZE;
     }
-    tjp->proceed(); //try another 'demux'-receive aspect
+    // only go on with demuxing if it is not an ethernet packet or if the ethernet packet is valid
+    tjp->proceed();
   }
-  
 };
 
-#endif // __IPV4_RECEIVE_ETHERNET_AH__
+#endif // __RECEIVE_ETHERNET_AH__
 
