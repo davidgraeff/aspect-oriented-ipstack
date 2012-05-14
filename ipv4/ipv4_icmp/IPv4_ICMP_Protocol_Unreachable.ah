@@ -20,11 +20,10 @@
 #define __IPV4_ICMP_PROTOCOL_UNREACHABLE_AH__
 
 #include "../IPv4.h"
-#include "../../icmp/ICMP.h"
+#include "../InternetChecksum.h"
 #include "../../demux/Demux.h"
 #include "../../router/Interface.h"
-
-
+#include "../../icmp/ICMP.h"
 
 using namespace ipstack;
 

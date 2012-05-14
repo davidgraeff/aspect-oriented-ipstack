@@ -19,12 +19,14 @@
 #ifndef __IPv4_ICMP_ECHO_REPLY_AH__
 #define __IPv4_ICMP_ECHO_REPLY_AH__
 
+#include "../IPv4.h"
+#include "../InternetChecksum.h"
 #include "../../demux/Demux.h"
 #include "../../router/Interface.h"
-#include "../InternetChecksum.h"
 #include "../../icmp/ICMP.h"
 
 using namespace ipstack;
+
 
 aspect IPv4_ICMP_Echo_Reply {
 	
