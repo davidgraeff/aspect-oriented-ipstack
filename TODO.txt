@@ -1,0 +1,4 @@
+Things to do:
+=============
+ * IPv4 routing support (routing tables)
+ * Memory allocation safety (incoming packets should not be able to steal buffers for acknowledgements in TCP)
