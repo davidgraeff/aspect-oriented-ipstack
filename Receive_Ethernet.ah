@@ -45,9 +45,10 @@ aspect Ethernet_Receive {
       Eth_Frame* eth_frame = (Eth_Frame*) data;
       //propgate data without ethernet header; a higher level protocol packet like IP is accessable now.
       demux.ethernet_demux(eth_frame->get_data(), len - Eth_Frame::ETH_HEADER_SIZE, interface, eth_frame->get_type());
+    } else {
+      // only go on with demuxing if it is not an ethernet packet
+      tjp->proceed();
     }
-    // only go on with demuxing if it is not an ethernet packet or if the ethernet packet is valid
-    tjp->proceed();
   }
 };
 

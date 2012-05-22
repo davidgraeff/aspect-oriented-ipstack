@@ -1,4 +1,6 @@
 Things to do:
 =============
  * IPv4 routing support (routing tables)
- * Memory allocation safety (incoming packets should not be able to steal buffers for acknowledgements in TCP)
+ * Memory allocation safety
+   -> Incoming packets should not be able to steal buffers for acknowledgements in TCP
+   -> ICMP should always be able to generate a response to a request
