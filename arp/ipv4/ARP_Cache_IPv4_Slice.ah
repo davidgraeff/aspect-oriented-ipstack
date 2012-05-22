@@ -19,11 +19,10 @@
 #ifndef __ARP_CACHE_IPV4_SLICE__
 #define __ARP_CACHE_IPV4_SLICE__
 
-#include "util/types.h"
 #include "../../router/Interface.h"
+#include "util/types.h"
 
 using namespace ipstack;
-
 
 slice class ARP_Cache_IPv4_Slice {
   public:

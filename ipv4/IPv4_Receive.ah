@@ -82,15 +82,6 @@ aspect IPv4_Receive {
       demux.ipv4_forward(packet, len, interface);
     }
   }
-  
-  advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
-         args(data, len, interface) && that(demux) :
-         after(const void* data, unsigned len, Interface* interface, Demux& demux){
-    
-    //try to demux raw ipv4 packet (without any additional link-layer headers)
-    demux.ipv4_demux((IPv4_Packet*) data, len, interface);
-  }
-   
 };
 
 #endif // __IPV4_RECEIVE_AH__

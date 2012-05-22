@@ -21,6 +21,7 @@
 
 #include "TCP_RetransmissionTrackerSlice.ah"
 #include "tcp_history/TCP_Record.h"
+#include "TCP_Socket.h"
 
 using namespace ipstack;
 

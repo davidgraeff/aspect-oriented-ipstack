@@ -23,45 +23,31 @@
 #include "../demux/Demux.h"
 #include "../router/Interface.h"
 #include "ARP.h"
+#include "util/types.h"
 
 using namespace ipstack;
 
 
 aspect ARP_Ethernet {
 
-  /* Affect class: Demux */  
-  advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
-         args(data, len, interface) && that(demux) :
-         around(const void* data, unsigned len, Interface* interface, Demux& demux){
-    
-    if(interface->getType() == Interface::ETHERNET){
+  /* Affect class: Demux. ARP is only defined on ethernet link layer -> Use ethernet_demux. */  
+  advice execution("void ipstack::Demux::ethernet_demux(...)") &&
+         args(data, len, interface, type) && that(demux) :
+         after(const void* data, unsigned len, Interface* interface, UInt16 type, Demux& demux){
+
+	if(type != ARP_Packet::ETH_TYPE_ARP)
+	  return;
+
+	ARP_Packet* packet = (ARP_Packet*) data;
       
-      //check for correct ethernet frame length
-      if( (len < Eth_Frame::ETH_HEADER_SIZE) || (len > Eth_Frame::MAX_FRAME_SIZE) ){
-        return; //length too small or too big
-      }
-    
-      Eth_Frame* eth_frame = (Eth_Frame*) data;
-    
-      if(eth_frame->get_type() == ARP_Packet::ETH_TYPE_ARP){
-        //remove ethernet header
-        ARP_Packet* packet = (ARP_Packet*) eth_frame->get_data();
+        if(len < ARP_Packet::ARP_HEADER_SIZE)
+          return; //packet too small!
       
-        if(len < (Eth_Frame::ETH_HEADER_SIZE + ARP_Packet::ARP_HEADER_SIZE)){
-          //packet too small!
-          return;
-        }
-      
-        if(packet->get_hw_type() == ARP_Packet::ARP_HW_TYPE_ETH){
-          //we have an ARP packet over Ethernet
-          demux.arp_demux(packet, len - Eth_Frame::ETH_HEADER_SIZE, interface);
-        }
-        return; //arp packet over ethernet processed
-      }
-    }
-    tjp->proceed(); //try another 'demux'-receive aspect
+        if(packet->get_hw_type() != ARP_Packet::ARP_HW_TYPE_ETH)
+	  return; //we do not have an ARP packet over Ethernet
+
+	demux.arp_demux(packet, len, interface);
   }
-  
 };
 
 #endif // __ARP_ETHERNET_AH__
