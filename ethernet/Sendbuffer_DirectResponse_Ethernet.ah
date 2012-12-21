@@ -1,0 +1,53 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/ethernet/Eth_Frame.h"
+#include "ipstack/SendBuffer.h"
+#include "util/types.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
+
+aspect Sendbuffer_DirectResponse_Ethernet {
+	// Before ARP or NDP
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : 
+		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_DirectResponse_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_Aspect");
+
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer)  :
+		around(SendBuffer* sendbuffer) {
+
+		Interface* interface = tjp->that()->getUsedInterface();
+		if (interface->getType() != Interface::ETHERNET) {
+			tjp->proceed();
+			return;
+		}
+
+
+		Demux& demux = Demux::Inst(); //short name
+		// Get input ethernet frame from "direct response"-stored input data pointer.
+		Eth_Frame* remote_eth_frame = (Eth_Frame*)(demux.directResponseInputDate());
+		// Get destination ethernet frame from sendbuffer.
+		Eth_Frame* dest_eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+		// Set destination addr := remote src addr
+		dest_eth_frame->set_dst_hwaddr(remote_eth_frame->get_src_hwaddr());
+
+		//printf("ethernet direct response: remote %u %u %u %u %u %u\n",dest_eth_frame->get_dst_hwaddr()[0],dest_eth_frame->get_dst_hwaddr()[1],dest_eth_frame->get_dst_hwaddr()[2],dest_eth_frame->get_dst_hwaddr()[3],dest_eth_frame->get_dst_hwaddr()[4],dest_eth_frame->get_dst_hwaddr()[5]);
+		tjp->proceed();
+	}
+};
