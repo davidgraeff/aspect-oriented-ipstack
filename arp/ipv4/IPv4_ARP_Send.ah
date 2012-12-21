@@ -21,7 +21,7 @@
 
 #include "util/types.h"
 #include <string.h> //for memcpy
-#include "../../router/Interface.h"
+#include "ipstack/router/Interface.h"
 #include "../ARP.h"
 #include "../ARP_Cache.h"
 #include "ARP_Cache_IPv4_Send_Slice.ah"

@@ -19,13 +19,13 @@
 #ifndef __IPv4_ARP_SEND_RECEIVE_AH__
 #define __IPv4_ARP_SEND_RECEIVE_AH__
 
-#include "../../demux/Demux.h"
-#include "../../router/Interface.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
 
 #include "../ARP.h"
 #include "../ARP_Cache.h"
 #include "ARP_Cache_IPv4_Send_Receive_Slice.ah"
-#include "../../Eth_Frame.h"
+#include "ipstack/ethernet/Eth_Frame.h"
 
 using namespace ipstack;
 
@@ -68,7 +68,11 @@ aspect IPv4_ARP_Send_Receive {
         if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
           //Send ARP-Reply
           ARP_Cache::Inst().ipv4_reply(src_hw_addr, (UInt32*) src_ipv4_addr, interface);
-        }
+		  // DG: If a host ask for our mac address, it probably want to send something to us
+		  // so remember its ip.
+		  //Update ARP Cache entries
+		  ARP_Cache::Inst().ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
+		}
         else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
           //Update ARP Cache entries
           ARP_Cache::Inst().ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);

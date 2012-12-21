@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_SLICE__
 #define __ARP_CACHE_IPV4_SLICE__
 
-#include "../../router/Interface.h"
+#include "ipstack/router/Interface.h"
 #include "util/types.h"
 
 using namespace ipstack;

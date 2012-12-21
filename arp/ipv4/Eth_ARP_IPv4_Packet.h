@@ -20,9 +20,9 @@
 #define __ETH_ARP_IPV4_PACKET__
 
 #include "util/types.h"
-#include "../../Eth_Frame.h"
+#include "ipstack/ethernet/Eth_Frame.h"
 #include "../ARP.h"
-#include "../../router/Interface.h"
+#include "ipstack/router/Interface.h"
 
 
 namespace ipstack {
