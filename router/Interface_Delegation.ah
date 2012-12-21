@@ -44,6 +44,10 @@ aspect Interface_Delegation_Aspect {
     *tjp->result() = static_cast<Derived*>(tjp->that())->getMTU();
   }
   
+  advice execution("unsigned ipstack::Interface::getMaxMTU()") : around() {
+	  *tjp->result() = static_cast<Derived*>(tjp->that())->getMaxMTU();
+  }
+  
   advice execution("bool ipstack::Interface::hasTransmitterHardwareChecksumming()") : around() {
     *tjp->result() = static_cast<Derived*>(tjp->that())->hasTransmitterHardwareChecksumming();
   }
@@ -55,7 +59,7 @@ aspect Interface_Delegation_Aspect {
   advice execution("void ipstack::Interface::send(const void*, unsigned)") : around() {
     static_cast<Derived*>(tjp->that())->send(*tjp->arg<0>(), *tjp->arg<1>());
   }
-  
+
   advice execution("void ipstack::Interface::send(const void*, unsigned, bool, unsigned)") : around() {
     static_cast<Derived*>(tjp->that())->send(*tjp->arg<0>(), *tjp->arg<1>(), *tjp->arg<2>(), *tjp->arg<3>());
   }

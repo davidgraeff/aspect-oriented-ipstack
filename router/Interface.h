@@ -13,19 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2011-2012 Christoph Borchert, David Gräff
 
-
-#ifndef __INTERFACE__
-#define __INTERFACE__
+#pragma once
 
 namespace ipstack {
 
 class Interface {
   private:
   Interface* next_interface; //linked list
-  //IPv4 Attributes to be sliced in by IPv4-Aspect
-  
+
   public:
   enum { ETHERNET = 1,
          LOOPBACK = 2,
@@ -39,17 +36,16 @@ class Interface {
   unsigned char getType() { return 0; }
   const unsigned char* getAddress() { return 0; }
   unsigned getMTU() { return 0; }
+  unsigned getMaxMTU() { return 0; }
   
   bool hasTransmitterHardwareChecksumming() { return false; }
   bool hasReceiverHardwareChecksumming() { return false; }
   
   void send(const void* frame, unsigned framesize) {}
+  // For checksum offloading and networc card send offloading
   void send(const void* data, unsigned datasize, bool tcp, unsigned ip_hdl) {}
   bool hasBeenSent(const void* frame){ return true; }
 
 };
 
 } // namespace ipstack
-
-#endif /* INTERFACE */
-

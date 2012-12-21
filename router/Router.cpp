@@ -17,10 +17,19 @@
 
 
 #include "Router.h"
+#include "Interface.h"
 
 namespace ipstack {
 
 Router Router::inst_; //create singleton instance
 
+Interface* Router::get_interface(int index)
+{
+	Interface* interface = head_interface;
+	for (int i = 0; (i < index) && (interface != 0); i++) {
+		interface = interface->getNext();
+	}
+	return interface;
+}
 } // namespace ipstack
 
