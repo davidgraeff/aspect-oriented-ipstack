@@ -1,0 +1,95 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+/**
+ * Purspose: add bind/unbind (specific to udp sockets) to demux. This
+ * will introduce a head pointer for a linked list for binded sockets.
+ */
+
+#include "util/types.h"
+#include "UDP_Socket.h"
+#include "UDP.h"
+
+using namespace ipstack;
+
+slice class Demux_UDP_Slice
+{
+	private:
+		UInt16 udp_last_default_port;
+		UDP_Socket* udp_head_socket;
+
+		bool bind(UDP_Socket* socket) {
+			UInt16 sport = socket->get_sport();
+			if (sport == UDP_Packet::UNUSED_PORT) {
+				//choose 'random' source port number
+				socket->set_sport(udp_get_free_port());
+			} else {
+				//verify if sport is not used already
+				UDP_Socket* current = udp_head_socket;
+				while (current != 0) {
+					if (current->get_sport() == sport) {
+						//error, sport already in use
+						return false;
+					}
+					current = current->getNext();
+				}
+			}
+			//insert at front
+			socket->setNext(udp_head_socket);
+			udp_head_socket = socket;
+			return true;
+		}
+
+		void unbind(UDP_Socket* socket) {
+			if (socket == udp_head_socket) {
+				udp_head_socket = socket->getNext();
+			} else {
+				UDP_Socket* current = udp_head_socket;
+				UDP_Socket* next = current->getNext();
+				while (next != 0) {
+					if (next == socket) {
+						current->setNext(next->getNext());
+						return;
+					}
+					current = next;
+					next = current->getNext();
+				}
+			}
+		}
+
+
+		UInt16 udp_get_free_port() {
+			udp_last_default_port++;
+			if (udp_last_default_port < 1024U) {
+				udp_last_default_port = 1024U;
+			}
+			UDP_Socket* current = udp_head_socket;
+			while (current != 0) {
+				if (current->get_sport() == udp_last_default_port) {
+					udp_last_default_port++;
+					if (udp_last_default_port < 1024U) {
+						udp_last_default_port = 1024U;
+					}
+					current = udp_head_socket; //start once again
+				} else {
+					current = current->getNext();
+				}
+			}
+			return udp_last_default_port;
+		}
+};

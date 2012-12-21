@@ -26,7 +26,7 @@ namespace ipstack {
 class UDP_Packet{
   public:
   enum { UDP_HEADER_SIZE = 8,
-         IPV4_TYPE_UDP = 17,
+         IP_TYPE_UDP = 17, //same for IPv4/IPv6
          UNUSED_PORT = 0 }; // http://www.iana.org/assignments/port-numbers
 
   private:
