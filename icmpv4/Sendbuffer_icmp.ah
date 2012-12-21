@@ -1,0 +1,40 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "../router/Interface.h"
+
+using namespace ipstack;
+
+/**
+ * Set the IPv4 next header protocol to ICMPv4
+ */
+aspect Sendbuffer_ICMPv4_aspect  {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_ICMPv4_aspect");
+
+	advice execution("% ipstack::ICMPv4_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+		around(SendBuffer* sendbuffer) {
+
+		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
+		sendbuffer->memstart_transport = sendbuffer->data;
+		*(sendbuffer->nextheaderfield_ip) = ICMP_Packet::IPV4_TYPE_ICMP;
+		tjp->proceed();
+		return;
+	}
+};

@@ -1,0 +1,34 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "ICMPv4_Socket.h"
+
+using namespace ipstack;
+
+/**
+ * ICMPv4 support
+ */
+aspect IPCMPv4  {
+	// Initialize this management socket -> we have to do this because the
+	// global constructor of this class is not called
+	advice execution( "void os::init()" ) : after() {
+		new(&(ICMPv4_Socket::instance())) ICMPv4_Socket;
+	}
+};

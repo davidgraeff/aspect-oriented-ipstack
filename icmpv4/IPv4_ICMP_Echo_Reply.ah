@@ -1,0 +1,73 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "../ipv4/IPv4.h"
+#include "../ipv4/InternetChecksum.h"
+#include "../demux/Demux.h"
+#include "../router/Interface.h"
+#include "ICMP.h"
+#include "ICMPv4_Socket.h"
+
+using namespace ipstack;
+
+
+aspect IPv4_ICMP_Echo_Reply {
+
+	// *** Affect class: Demux
+	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, payloadlen, interface) && that(demux) :
+		around(IPv4_Packet* packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+
+		ICMP_Packet* icmp_packet = (ICMP_Packet*) packet->get_data();
+		if ((icmp_packet->get_type() == ICMP_Packet::ICMP_TYPE_ECHO_REQUEST) && (icmp_packet->get_code() == ICMP_Packet::ICMP_CODE_ECHO)) {
+			
+			ICMPv4_Socket &icmpv4instance = ICMPv4_Socket::instance();
+			
+			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
+			// the destination interface into account
+			icmpv4instance.ipv4.set_dst_addr(packet->get_src_ipaddr());
+			UInt16 maxlen = icmpv4instance.getMaxPayloadLength();
+			if (payloadlen > maxlen) {
+				payloadlen = maxlen;
+			}
+						
+			payloadlen -= ICMP_Packet::ICMP_HEADER_SIZE;
+
+			demux.setDirectResponse(true);
+			SendBufferWithInterface* sbi = icmpv4instance.requestSendBufferICMP(interface, payloadlen);
+			//we have an echo request packet for IPv4
+			if (sbi) {
+				ICMP_Packet* reply_icmp = (ICMP_Packet*)sbi->sendbuffer.data;
+
+				reply_icmp->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY);
+				reply_icmp->set_code(0);
+				reply_icmp->set_quench(icmp_packet->get_quench());
+
+				sbi->sendbuffer.writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
+				// append original payload of the source icmp packet
+				sbi->sendbuffer.write(icmp_packet->get_data(), payloadlen);
+
+				icmpv4instance.send(&(sbi->sendbuffer), sbi->interface);
+			}
+		} else {
+			tjp->proceed();
+		}
+	}
+
+};

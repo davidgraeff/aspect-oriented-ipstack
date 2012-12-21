@@ -1,0 +1,58 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "ICMP.h"
+#include "../ipv4/IPv4.h"
+#include "../ipv4/InternetChecksum.h"
+#include "../demux/Demux.h"
+#include "../router/Interface.h"
+#include "Demux_IPv4_ICMP_Slice.ah"
+
+
+using namespace ipstack;
+
+aspect IPv4_ICMP_Receive {
+  // *** Affect class: Demux
+  advice "ipstack::Demux" : slice Demux_IPv4_ICMP_Slice;
+  
+  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+         args(packet, len, interface) && that(demux) :
+         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+
+    if(packet->get_protocol() == ICMP_Packet::IPV4_TYPE_ICMP){
+      unsigned payloadlen = packet->get_total_len() - packet->get_ihl() * 4; // remove ipv4 header size
+	  
+	  //we have a icmp packet
+	  if(payloadlen < ICMP_Packet::ICMP_HEADER_SIZE){
+        return; //len too small!
+      }
+      
+      //verify icmp checksum
+      if(!InternetChecksum::validPayloadChecksum(packet->get_data(), payloadlen,  interface)) {
+		  //printf("icmp checksum wrong!\n");
+        return;
+      }
+	  
+	  demux.icmpv4_demux(packet, payloadlen, interface);
+      return; //icmpv4 packet dispatched now
+    }
+    tjp->proceed(); //try another 'ipv4_demux'-aspect
+  }
+  
+};

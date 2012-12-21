@@ -1,0 +1,41 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../ipv4/IPv4.h"
+#include "../ipv4/InternetChecksum.h"
+#include "../demux/Demux.h"
+#include "../router/Interface.h"
+#include "ICMP.h"
+#include "ICMPv4_Socket.h"
+
+using namespace ipstack;
+
+
+aspect IPv4_ICMP_ReceiveOutput {
+
+	// *** Affect class: Demux
+	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, payloadlen, interface) && that(demux) :
+		around(IPv4_Packet* packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+
+		ICMP_Packet* icmp = (ICMP_Packet*) packet->get_data();
+		printf("ICMPv4 received: Len %u, Type: %u, Code: %u\n", payloadlen, icmp->get_type(), icmp->get_code());
+		tjp->proceed();
+	}
+};
