@@ -4,16 +4,16 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
 
 #ifndef __LITTLE_ENDIAN_AH__
@@ -25,69 +25,78 @@
 
 
 aspect Little_Endian {
-  
-  static UInt16 htons_(UInt16 n){
-    return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
-  }
 
-  static inline UInt16 ntohs_(UInt16 n){
-    return htons_(n);
-  }
+	static UInt16 htons_(UInt16 n) {
+		return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
+	}
 
-  static UInt32 htonl_(UInt32 n) {
-    return ((n & 0xff) << 24) |
-           ((n & 0xff00) << 8) |
-           ((n & 0xff0000UL) >> 8) |
-           ((n & 0xff000000UL) >> 24);
-  }
+	static inline UInt16 ntohs_(UInt16 n) {
+		return htons_(n);
+	}
 
-  static inline UInt32 ntohl_(UInt32 n){
-    return htonl_(n);
-  }
-  
-  pointcut Network_to_Host_Short() = "% ipstack::IPv4_Packet::get_%()" ||
-                                     "% ipstack::ICMP_Packet::get_%()" ||
-                                     "% ipstack::UDP_Packet::get_%()" ||
-                                     "% ipstack::TCP_Segment::get_%()" ||
-                                     "% ipstack::Eth_Frame::get_%()" ||
-                                     "% ipstack::ARP_Packet::get_%()";
-  
-  advice execution(Network_to_Host_Short()) &&
-         result(res) : // read only
-         after(UInt16 res){
-    *tjp->result() = ntohs_(res);
-  }
-  
-  pointcut Host_to_Network_Short() = "void ipstack::IPv4_Packet::set_%(%)" ||
-                                     "void ipstack::ICMP_Packet::set_%(%)" ||
-                                     "void ipstack::UDP_Packet::set_%(%)" ||
-                                     "void ipstack::TCP_Segment::set_%(%)" ||
-                                     "void ipstack::Eth_Frame::set_%(%)" ||
-                                     "void ipstack::ARP_Packet::set_%(%)";
-  
-  advice execution(Host_to_Network_Short()) &&
-         args(val) : // read only
-         before(UInt16 val){
-    *(tjp->arg<0>()) = htons_(val);
-  }
-  
-  
-  pointcut Network_to_Host_Long() = "% ipstack::TCP_Segment::get_%()";
-  
-  advice execution(Network_to_Host_Long()) &&
-         result(res) : // read only
-         after(UInt32 res){
-    *tjp->result() = ntohl_(res);
-  }
-  
-  pointcut Host_to_Network_Long() = "void ipstack::TCP_Segment::set_%(%)";
-  
-  advice execution(Host_to_Network_Long()) &&
-         args(val) : // read only
-         before(UInt32 val){
-    *(tjp->arg<0>()) = htonl_(val);
-  }
-  
+	static UInt32 htonl_(UInt32 n) {
+		return ((n & 0xff) << 24) |
+		((n & 0xff00) << 8) |
+		((n & 0xff0000UL) >> 8) |
+		((n & 0xff000000UL) >> 24);
+	}
+
+	static inline UInt32 ntohl_(UInt32 n) {
+		return htonl_(n);
+	}
+
+	pointcut Network_to_Host_Short() =
+	"% ipstack::IPv4_Packet::get_%()" ||
+	"% ipstack::IPv6_Packet::get_%()" ||
+	"% ipstack::IPv6hc_Packet::get_%()" ||
+	"% ipstack::ICMP_Packet::get_%()" ||
+	"% ipstack::UDP_Packet::get_%()" ||
+	"% ipstack::TCP_Segment::get_%()" ||
+	"% ipstack::Eth_Frame::get_%()" ||
+	"% ipstack::ARP_Packet::get_%()";
+
+	advice execution(Network_to_Host_Short()) &&
+	result(res) : // read only
+		after(UInt16 res) {
+		*tjp->result() = ntohs_(res);
+	}
+
+	pointcut Host_to_Network_Short() =
+	"void ipstack::IPv4_Packet::set_%(%)" ||
+	"void ipstack::IPv6_Packet::set_%()" ||
+	"void ipstack::IPv6hc_Packet::set_%()" ||
+	"void ipstack::ICMP_Packet::set_%(%)" ||
+	"void ipstack::UDP_Packet::set_%(%)" ||
+	"void ipstack::TCP_Segment::set_%(%)" ||
+	"void ipstack::Eth_Frame::set_%(%)" ||
+	"void ipstack::ARP_Packet::set_%(%)";
+
+	advice execution(Host_to_Network_Short()) &&
+	args(val) : // read only
+		before(UInt16 val) {
+		*(tjp->arg<0>()) = htons_(val);
+	}
+
+
+	pointcut Network_to_Host_Long() =
+	"% ipstack::TCP_Segment::get_%()" ||
+	"% ipstack::NDPMessages::OptionPrefixInformation::get_%()";
+
+	advice execution(Network_to_Host_Long()) &&
+	result(res) : // read only
+		after(UInt32 res) {
+		*tjp->result() = ntohl_(res);
+	}
+
+	pointcut Host_to_Network_Long() =
+	"void ipstack::TCP_Segment::set_%(%)";
+
+	advice execution(Host_to_Network_Long()) &&
+	args(val) : // read only
+		before(UInt32 val) {
+		*(tjp->arg<0>()) = htonl_(val);
+	}
+
 };
 
 #endif /*__LITTLE_ENDIAN_AH__ */
