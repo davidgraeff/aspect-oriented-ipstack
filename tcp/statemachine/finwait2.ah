@@ -38,7 +38,7 @@ void finwait2(TCP_Segment* segment, unsigned len) {
     bool needToFree = handleData(segment, seqnum, payload_len);
     
     if(needToFree == true){
-      free(segment);
+		freeReceivedSegment(segment);
     }
     
     // **********************************************

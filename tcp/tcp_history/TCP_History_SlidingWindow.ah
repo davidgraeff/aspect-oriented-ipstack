@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -30,107 +30,104 @@ using namespace ipstack;
 
 
 aspect TCP_History_SlidingWindow {
-  
-  // *** Affect class: TCP_History
-  advice "ipstack::TCP_History" : slice TCP_History_SlidingWindow_Slice;
-  
-  advice construction("ipstack::TCP_History") &&
-         that(history) :
-         before(TCP_History& history) {
-    
-    //Initialize single linked list
-    history.freelist = &history.records[0]; //init freelist
-    for(unsigned i=0; i<(sizeof(history.records)/sizeof(TCP_Record))-1; i++){
-      history.records[i].setNext(&history.records[i+1]); //single linked list
-    }
-    history.records[(sizeof(history.records)/sizeof(TCP_Record))-1].setNext(0);
-  }
-  
-  advice execution("void ipstack::TCP_History::add(ipstack::TCP_Segment*, unsigned, %)") &&
-         that(history) &&
-         args(segment, len, msec) :
-         around(TCP_History& history, TCP_Segment* segment, unsigned len, UInt32 msec) {
-    
-    //remove from freelist
-    TCP_Record* record = history.freelist;
-    history.freelist = record->getNext();
-    //add to head list
-    if(history.head != 0){
-      history.head->setPrev(record);
-    }
-    record->setPrev(0);
-    record->setNext(history.head);
-    history.head = record;
-    //fill in data
-    record->setSegment(segment);
-    record->setLength(len);
-    record->setTimeout(msec);
-  }
-  
-  advice execution("void ipstack::TCP_History::remove(ipstack::TCP_Record*)") &&
-         that(history) &&
-         args(record) :
-         around(TCP_History& history, TCP_Record* record) {
-    
-    if(record == history.head){
-      history.head = record->getNext();
-      if(history.head != 0){
-        history.head->setPrev(0);
-      }
-    }
-    else{
-      TCP_Record* next = record->getNext();
-      TCP_Record* prev = record->getPrev();
-      prev->setNext(next);
-      if(next != 0){
-        next->setPrev(prev);
-      }
-    }
-    //add to freelist:
-    record->setNext(history.freelist);
-    history.freelist = record;
-  }
-  
-  advice execution("% ipstack::TCP_History::getNextTimeout()") &&
-         that(history) :
-         around(TCP_History& history) {
-    
-    TCP_Record* min = history.get();
-    if(min == 0){
-      *tjp->result() = 0;
-      return;
-    }
-    else{
-      TCP_Record* current = min->getNext();
-      while(current != 0){
-        UInt64 timeout = current->getTimeout();
-        if(timeout != 0){
-          if(timeout < min->getTimeout()){
-            min = current;
-          }
-        }
-        current = current->getNext();
-      }
-      *tjp->result() = min->getRemainingTime();
-      return;
-    }
-  }
-  
-  advice execution("bool ipstack::TCP_History::isFull()") &&
-         that(history) :
-         around(TCP_History& history) {
-    *tjp->result() = (history.freelist == 0);
-  }
-  
-  // *** Affect class: TCP_Record
-  advice "ipstack::TCP_Record" : slice TCP_Record_SlidingWindow_Slice;
-  
-  advice execution("ipstack::TCP_Record* ipstack::TCP_Record::getNext()") &&
-         that(record) :
-         around(TCP_Record& record){
-    *tjp->result() = record.next;
-  }  
-  
+
+	// *** Affect class: TCP_History
+advice "ipstack::TCP_History" : slice TCP_History_SlidingWindow_Slice;
+
+	advice construction("ipstack::TCP_History") &&
+	that(history) :
+		before(TCP_History& history) {
+
+		//Initialize single linked list
+		history.freelist = &history.records[0]; //init freelist
+		for (unsigned i = 0; i < (sizeof(history.records) / sizeof(TCP_Record)) - 1; i++) {
+			history.records[i].setNext(&history.records[i + 1]); //single linked list
+		}
+		history.records[(sizeof(history.records) / sizeof(TCP_Record)) - 1].setNext(0);
+	}
+
+	advice execution("void ipstack::TCP_History::add(SendBuffer*, %)") &&
+	that(history) &&
+	args(sendbuffer, msec) :
+		around(TCP_History& history, SendBuffer* sendbuffer, UInt32 msec) {
+
+		//remove from freelist
+		TCP_Record* record = history.freelist;
+		history.freelist = record->getNext();
+		//add to head list
+		if (history.head != 0) {
+			history.head->setPrev(record);
+		}
+		record->setPrev(0);
+		record->setNext(history.head);
+		history.head = record;
+		//fill in data
+		record->setSendBuffer(sendbuffer);
+		record->setTimeout(msec);
+	}
+
+	advice execution("void ipstack::TCP_History::remove(ipstack::TCP_Record*)") &&
+	that(history) &&
+	args(record) :
+		around(TCP_History& history, TCP_Record* record) {
+
+		if (record == history.head) {
+			history.head = record->getNext();
+			if (history.head != 0) {
+				history.head->setPrev(0);
+			}
+		} else {
+			TCP_Record* next = record->getNext();
+			TCP_Record* prev = record->getPrev();
+			prev->setNext(next);
+			if (next != 0) {
+				next->setPrev(prev);
+			}
+		}
+		//add to freelist:
+		record->setNext(history.freelist);
+		history.freelist = record;
+	}
+
+	advice execution("% ipstack::TCP_History::getNextTimeout()") &&
+	that(history) :
+		around(TCP_History& history) {
+
+		TCP_Record* min = history.get();
+		if (min == 0) {
+			*tjp->result() = 0;
+			return;
+		} else {
+			TCP_Record* current = min->getNext();
+			while (current != 0) {
+				UInt64 timeout = current->getTimeout();
+				if (timeout != 0) {
+					if (timeout < min->getTimeout()) {
+						min = current;
+					}
+				}
+				current = current->getNext();
+			}
+			*tjp->result() = min->getRemainingTime();
+			return;
+		}
+	}
+
+	advice execution("bool ipstack::TCP_History::isFull()") &&
+	that(history) :
+		around(TCP_History& history) {
+		*tjp->result() = (history.freelist == 0);
+	}
+
+	// *** Affect class: TCP_Record
+advice "ipstack::TCP_Record" : slice TCP_Record_SlidingWindow_Slice;
+
+	advice execution("ipstack::TCP_Record* ipstack::TCP_Record::getNext()") &&
+	that(record) :
+		around(TCP_Record& record) {
+		*tjp->result() = record.next;
+	}
+
 };
 
 #endif // __TCP_HISTORY_SLIDING_WINDOW_AH__

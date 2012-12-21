@@ -39,7 +39,7 @@ void closing(TCP_Segment* segment, unsigned len) {
       sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
     }
     
-    free(segment);
+    freeReceivedSegment(segment);
   }
   else{
     // there are no more segments in the input buffer

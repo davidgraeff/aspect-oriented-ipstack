@@ -30,13 +30,20 @@ class TCP_RecvElement{
   unsigned len;
   UInt32 seqNum;
   UInt8* data;
+  TCP_Segment* segmentPtr;
   
   public:
   void setSegment(TCP_Segment* segment, unsigned length, UInt32 sequenceNumber){
     len = length;
     seqNum = sequenceNumber;
     data = segment->get_data();
+	segmentPtr = segment;
   }
+  /**
+   * The associated segment for this data. This is neccessary to know for freeing this
+   * memory later on.
+   */
+  TCP_Segment* getSegmentPtr() {return segmentPtr;}
     
   void setLength(unsigned l) { len = l; }
   unsigned getLength() { return len; }

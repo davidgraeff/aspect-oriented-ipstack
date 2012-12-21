@@ -45,7 +45,7 @@ void finwait1(TCP_Segment* segment, unsigned len) {
     bool FIN_acked = (segment->has_ACK()) && (acknum == seqnum_next);
     
     if(needToFree == true){
-      free(segment);
+		freeReceivedSegment(segment);
     }
     
     // **********************************************

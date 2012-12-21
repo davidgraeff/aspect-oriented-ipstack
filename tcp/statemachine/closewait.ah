@@ -43,7 +43,7 @@ void closewait(TCP_Segment* segment, unsigned len) {
     }
     
     updateSendWindow(segment, seqnum, acknum);
-    free(segment);
+	freeReceivedSegment(segment);
   }
   else{
     // there are no more segments in the input buffer

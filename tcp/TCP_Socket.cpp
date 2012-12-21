@@ -4,302 +4,592 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
 #include "TCP_Socket.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ReceiveBuffer.h"
+#include "../Clock.h"
 
-namespace ipstack {
+namespace ipstack
+{
 
-void TCP_Socket::input(TCP_Segment* segment, unsigned len){
-  // *THE* state machine switch
-  switch(state){
-    case CLOSED: closed(segment, len); break;
-    case LISTEN: listen(segment, len); break;
-    case SYNSENT: synsent(segment, len); break;
-    case SYNRCVD: synrcvd(segment, len); break;
-    case ESTABLISHED: established(segment, len); break;
-    case FINWAIT1: finwait1(segment, len); break;
-    case FINWAIT2: finwait2(segment, len); break;
-    case CLOSEWAIT: closewait(segment, len); break;
-    case LASTACK: lastack(segment, len); break;
-    case CLOSING: closing(segment, len); break;
-    case TIMEWAIT: timewait(segment, len); break;
-  }
+void TCP_Socket::input(TCP_Segment* segment, unsigned len)
+{
+	// *THE* state machine switch
+	switch (state) {
+		case CLOSED: closed(segment, len); break;
+		case LISTEN: listen(segment, len); break;
+		case SYNSENT: synsent(segment, len); break;
+		case SYNRCVD: synrcvd(segment, len); break;
+		case ESTABLISHED: established(segment, len); break;
+		case FINWAIT1: finwait1(segment, len); break;
+		case FINWAIT2: finwait2(segment, len); break;
+		case CLOSEWAIT: closewait(segment, len); break;
+		case LASTACK: lastack(segment, len); break;
+		case CLOSING: closing(segment, len); break;
+		case TIMEWAIT: timewait(segment, len); break;
+	}
 }
 
-UInt16 TCP_Socket::getReceiveWindow(){
-  if(state == SYNSENT || state == CLOSED){
-    return (UInt16)TCP_Segment::DEFAULT_MSS; //no mss negotiated so far
-  }
-  else{
-    unsigned currRecvWnd = maxReceiveWindow_Bytes - receiveBuffer.getRecvBytes();
-    if(currRecvWnd > 0xFFFFU){
-      //advertised window is only 16 bit wide
-      return 0xFFFFU;
-    }
-    else{
-      return (UInt16)currRecvWnd;
-    }
-  }
+UInt16 TCP_Socket::getReceiveWindow()
+{
+	if (state == SYNSENT || state == CLOSED) {
+		return (UInt16)TCP_Segment::DEFAULT_MSS; //no mss negotiated so far
+	} else {
+		unsigned currRecvWnd = maxReceiveWindow_Bytes - receiveBuffer.getRecvBytes();
+		if (currRecvWnd > 0xFFFFU) {
+			//advertised window is only 16 bit wide
+			return 0xFFFFU;
+		} else {
+			return (UInt16)currRecvWnd;
+		}
+	}
 }
 
-void TCP_Socket::updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum){
-  if(TCP_Segment::SEQ_LT(seqnum, lwseq)){
-    return; // this segment arrived out-of-order
-    //we aleary have a newer window update
-  }
-  if( (seqnum == lwseq) &&
-     TCP_Segment::SEQ_LT(acknum, lwack)) {
-    //this acknowledgment arrived out-of-order
-    //we already have received a more recent acknowledgment
-    return;
-  }
-  //else, we have a send window update:
-  
-  sendWindow = segment->get_window();
-  lwseq = seqnum;
-  lwack = acknum;
+void TCP_Socket::updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum)
+{
+	if (TCP_Segment::SEQ_LT(seqnum, lwseq)) {
+		return; // this segment arrived out-of-order
+		//we aleary have a newer window update
+	}
+	if ((seqnum == lwseq) &&
+			TCP_Segment::SEQ_LT(acknum, lwack)) {
+		//this acknowledgment arrived out-of-order
+		//we already have received a more recent acknowledgment
+		return;
+	}
+	//else, we have a send window update:
+
+	sendWindow = segment->get_window();
+	lwseq = seqnum;
+	lwack = acknum;
 }
 
-void TCP_Socket::clearHistory(){
-  while(TCP_Record* record = history.get()){
-    free(record->getSegment());
-    history.remove(record);
-  }
+void TCP_Socket::clearHistory()
+{
+	while (TCP_Record* record = history.get()) {
+		mempool->free(record->getSendBuffer());
+		history.remove(record);
+	}
 }
 
-void TCP_Socket::updateHistory(bool do_retransmit){
-  //remove TCP segments which are no longer useful from TCP_History
-  //and retransmit timed out segements
-  TCP_Record* record = history.get();
-  while(record != 0){
-    TCP_Segment* segment = record->getSegment();
-    UInt64 timeout = record->getTimeout();
-    if( ((timeout != 0) && (TCP_Segment::SEQ_LT(segment->get_seqnum(), seqnum_unacked))) ||
-        ((timeout == 0) && hasBeenSent(segment)) ){            
-      // 1) Segment is ack'ed (sequence number) OR
-      // 2) Segment has no retransmission timeout and has left the network interface
-      TCP_Record* next = record->getNext();
-      free(segment);
-      history.remove(record);
-      record = next;
-    }
-    else{
-      if( (do_retransmit == true) && record->isTimedOut() ){
-        //a retransmission timeout was reached
-        retransmit(record, segment);
-      }
-      record = record->getNext();
-    }
-  }
+void TCP_Socket::updateHistory(bool do_retransmit)
+{
+	//remove TCP segments which are no longer useful from TCP_History
+	//and retransmit timed out segements
+	Interface* interface = getUsedInterface();
+	if (!interface) {
+		//FATAL something really got wrong here!
+		clearHistory();
+		return;
+	}
+	
+	TCP_Record* record = history.get();
+	while (record != 0) {
+		SendBuffer* buffer = record->getSendBuffer();
+		TCP_Segment* segment = (TCP_Segment*)buffer->memstart_transport;
+		UInt64 timeout = record->getTimeout();
+		if (((timeout != 0) && (TCP_Segment::SEQ_LT(segment->get_seqnum(), seqnum_unacked))) ||
+			((timeout == 0) && interface->hasBeenSent(buffer->getDataStart()))) {
+			// 1) Segment is ack'ed (sequence number) OR
+			// 2) Segment has no retransmission timeout and has left the network interface
+			TCP_Record* next = record->getNext();
+			mempool->free(buffer);
+			history.remove(record);
+			record = next;
+		} else {
+			if ((do_retransmit == true) && record->isTimedOut()) {
+				//a retransmission timeout was reached
+				retransmit(record);
+			}
+			record = record->getNext();
+		}
+	}
 }
 
-void TCP_Socket::handleACK(UInt32 acknum){
-  //this segments contains an acknowledgement number
-  if(TCP_Segment::SEQ_LEQ(acknum, seqnum_unacked)){
-    //acknum should be at least (seqnum_unacked+1)
-    //printf("duplicate ACK arrived\n");
-    return; //duplicate ACK
-  }
-  if(TCP_Segment::SEQ_GT(acknum, seqnum_next)){
-    //acknum must be smaller or equal to seqnum_next
-    //printf("ACK outside window arrived!\n");
-    if(state == SYNRCVD){
-      //TODO: send a reset (packet with RST flag, ACK?)
-    }
-    else{
-      //ACK outside window //TODO
-    }
-    return;
-  }
-  set_seqnum_unacked(acknum); // seqnums < seqnum_unacked are ack'ed now
+void TCP_Socket::retransmit(TCP_Record* record)
+{
+	SendBuffer* buffer = record->getSendBuffer();
+	send(buffer);
+	record->setTimeout(getRTO());
 }
 
-bool TCP_Socket::handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len){
-  bool needToFree = true; //caller must free this segment?
-  if(payload_len > 0){
-    // this segment contains payload data
-    needToFree = (receiveBuffer.insert(segment, seqnum, payload_len) == false);
-    triggerACK();
-  }
-  return needToFree;
+void TCP_Socket::handleACK(UInt32 acknum)
+{
+	//this segments contains an acknowledgement number
+	if (TCP_Segment::SEQ_LEQ(acknum, seqnum_unacked)) {
+		//acknum should be at least (seqnum_unacked+1)
+		//printf("duplicate ACK arrived\n");
+		return; //duplicate ACK
+	}
+	if (TCP_Segment::SEQ_GT(acknum, seqnum_next)) {
+		//acknum must be smaller or equal to seqnum_next
+		//printf("ACK outside window arrived!\n");
+		if (state == SYNRCVD) {
+			//TODO: send a reset (packet with RST flag, ACK?)
+		} else {
+			//ACK outside window //TODO
+		}
+		return;
+	}
+	set_seqnum_unacked(acknum); // seqnums < seqnum_unacked are ack'ed now
 }
 
-bool TCP_Socket::sendACK(UInt32 ackNum){
-  TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
-  if(packet != 0){
-    setupHeader(packet);
-    packet->set_ACK();
-    packet->set_acknum(ackNum);
-    send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
-    history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE, 0); //no timeout, just an ACK
-    return true;
-  }
-  return false;
+bool TCP_Socket::handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len)
+{
+	bool needToFree = true; //caller must free this segment?
+	if (payload_len > 0) {
+		// this segment contains payload data
+		needToFree = (receiveBuffer.insert(segment, seqnum, payload_len) == false);
+		triggerACK();
+	}
+	return needToFree;
 }
 
-bool TCP_Socket::FIN_complete(){
-  //return true if a FIN was received and all data was received completely, too
-  if((FIN_received == true) && (receiveBuffer.getAckNum() == FIN_seqnum)){
-    sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
-    return true;
-  }
-  return false;
+bool TCP_Socket::sendACK(UInt32 ackNum)
+{
+	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
+	SendBuffer* b = requestSendBufferTCP();
+	if (b != 0) {
+// 		TCP_Segment* segment = (TCP_Segment*)b->data;
+		writeHeaderWithAck(b, ackNum);
+		send(b);
+		history.add(b, 0);
+		return true;
+	}
+	return false;
 }
 
-bool TCP_Socket::handleSYN(TCP_Segment* segment){
-  //This function is called only at: ESTABLISHED
-  if(segment->has_SYN()){
-    // 1) ACK of 'three way handshake' got lost! // && segment->has_ACK()){
-    // 2) OR: //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
-    free(segment);
-    sendACK(); // 'retransmit'
-    return true;
-  }
-  return false;
+bool TCP_Socket::FIN_complete()
+{
+	//return true if a FIN was received and all data was received completely, too
+	if ((FIN_received == true) && (receiveBuffer.getAckNum() == FIN_seqnum)) {
+		sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
+		return true;
+	}
+	return false;
 }
 
-bool TCP_Socket::handleSYN_final(TCP_Segment* segment){
-  //call this function if a FIN was received
-  //This function is called at: CLOSEWAIT, LASTACK, CLOSING, TIMEWAIT
-  if(segment->has_SYN()){
-    //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
-    //TODO: "Internetworking with TCP/IP II page 202": answer a SYN with RST and abort()
-    free(segment);
-    sendACK(FIN_seqnum + 1U);
-    return true;
-  }
-  return false;
+bool TCP_Socket::handleSYN(TCP_Segment* segment)
+{
+	//This function is called only at: ESTABLISHED
+	if (segment->has_SYN()) {
+		// 1) ACK of 'three way handshake' got lost! // && segment->has_ACK())
+		// 2) OR: //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
+		freeReceivedSegment(segment);
+		sendACK(); // 'retransmit'
+		return true;
+	}
+	return false;
 }
 
-bool TCP_Socket::handleRST(TCP_Segment* segment){
-  if(segment->has_RST()){
-    /*In all states except SYN-SENT, all reset (RST) segments are validated
-    by checking their SEQ-fields.  A reset is valid if its sequence number
-    is in the window. -> TODO */
-    free(segment);
-    abort(); //abort the connection
-    return true; 
-  }
-  return false;
+bool TCP_Socket::handleSYN_final(TCP_Segment* segment)
+{
+	//call this function if a FIN was received
+	//This function is called at: CLOSEWAIT, LASTACK, CLOSING, TIMEWAIT
+	if (segment->has_SYN()) {
+		//rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
+		//TODO: "Internetworking with TCP/IP II page 202": answer a SYN with RST and abort()
+		freeReceivedSegment(segment);
+		sendACK(FIN_seqnum + 1U);
+		return true;
+	}
+	return false;
 }
 
-void TCP_Socket::processACK() {
-  if(ACK_triggered == true){
-    sendACK();
-  }
+bool TCP_Socket::handleRST(TCP_Segment* segment)
+{
+	if (segment->has_RST()) {
+		/*In all states except SYN-SENT, all reset (RST) segments are validated
+		by checking their SEQ-fields.  A reset is valid if its sequence number
+		is in the window. -> TODO */
+		freeReceivedSegment(segment);
+		abort(); //abort the connection
+		return true;
+	}
+	return false;
 }
 
-void TCP_Socket::setupHeader(TCP_Segment* segment){
-  segment->set_dport(dport);
-  segment->set_sport(sport);
-  segment->set_checksum(0);
-  segment->set_seqnum(seqnum_next);
-  //segment->set_acknum(0); //mostly overridden by caller. A packet without ACK is seldom used
-  segment->set_header_len(TCP_Segment::TCP_MIN_HEADER_SIZE/4);
-  segment->set_flags(0);
-  segment->set_window(getReceiveWindow());
-  segment->set_urgend_ptr(0);
+void TCP_Socket::processACK()
+{
+	if (ACK_triggered == true) {
+		sendACK();
+	}
 }
 
-void TCP_Socket::setupHeader_withACK(TCP_Segment* segment){
-  setupHeader(segment);
-  segment->set_ACK();
-  segment->set_acknum(receiveBuffer.getAckNum());
+void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack)
+{
+	UInt8 headersize = getSpecificTCPHeaderSize();
+	TCP_Segment* segment = (TCP_Segment*)sendbuffer->data;
+	segment->set_dport(dport);
+	segment->set_sport(sport);
+	segment->set_checksum(0);
+	segment->set_seqnum(seqnum_next);
+	segment->set_header_len(headersize/4);
+	segment->set_flags(0);
+	segment->set_window(getReceiveWindow());
+	segment->set_urgend_ptr(0);
+	segment->set_ACK();
+	segment->set_acknum(ack);
+	sendbuffer->writtenToDataPointer(headersize);
 }
 
-void TCP_Socket::setMSS(unsigned max_segment_size) {
-  mss = max_segment_size;
-  
-  if(sizeof(unsigned) == 2){
-    //8 or 16 bit machine
-    UInt32 maxRecvWnd = ((UInt32)maxReceiveWindow_MSS) * max_segment_size;
-    if(maxRecvWnd > 0xFFFFU){
-      //limit to 16 bit (65 KByte)
-      maxReceiveWindow_Bytes = 0xFFFFU;
-    }
-    else{
-      maxReceiveWindow_Bytes = (unsigned) maxRecvWnd;
-    }
-  }
-  else{
-    // 32 or 64 bit machine
-    UInt64 maxRecvWnd = ((UInt64)maxReceiveWindow_MSS) * max_segment_size;
-    if(maxRecvWnd > 0xFFFFFFFFUL){
-      //limit to 32 bit (4 GByte)
-      maxReceiveWindow_Bytes = (unsigned) 0xFFFFFFFFUL;
-    }
-    else{
-      maxReceiveWindow_Bytes = (unsigned) maxRecvWnd;
-    }
-  }
+void TCP_Socket::writeHeader(SendBuffer* sendbuffer)
+{
+	UInt8 headersize = getSpecificTCPHeaderSize();
+	TCP_Segment* segment = (TCP_Segment*)sendbuffer->data;
+	segment->set_dport(dport);
+	segment->set_sport(sport);
+	segment->set_checksum(0);
+	segment->set_seqnum(seqnum_next);
+	segment->set_header_len(headersize/4);
+	segment->set_flags(0);
+	segment->set_window(getReceiveWindow());
+	segment->set_urgend_ptr(0);
+	//("a standard conforming implementation
+	//must set ACK in all packets except for the initial SYN packet")
+	segment->set_acknum(0);
+	sendbuffer->writtenToDataPointer(headersize);
 }
 
-void TCP_Socket::connect(){
-  if(state == CLOSED){
-    gen_initial_seqnum();
-    sendWindow = 0;
-    TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
-    if(packet != 0){
-      setupHeader(packet);
-      packet->set_acknum(0); //clear ACK number ("a standard conforming implementation 
-                             //must set ACK in all packets except for the initial SYN packet")
-      seqnum_next++; // 1 seqnum consumed
-      packet->set_SYN();
-      state = SYNSENT; // next state
-      send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
-      waiting = true;
-      history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE, getRTO());
-    }
-  }
+SendBuffer* TCP_Socket::requestSendBufferTCP_syn(UInt16Opt payloadsize) {
+	return requestSendBufferTCP(payloadsize);
 }
 
-void TCP_Socket::abort(){
-  //printf("Closing connection!\n");
-  state = CLOSED;
-  waiting = receiving = false;
-  FIN_received = false;
-  //TODO: clear receiveBuffer?
-  //TODO: free & reset everything!!
-  clearHistory(); //free all pending packets
+void TCP_Socket::setMSS(unsigned max_segment_size)
+{
+	mss = max_segment_size;
+
+	if (sizeof(unsigned) == 2) {
+		//8 or 16 bit machine
+		UInt32 maxRecvWnd = ((UInt32)maxReceiveWindow_MSS) * max_segment_size;
+		if (maxRecvWnd > 0xFFFFU) {
+			//limit to 16 bit (65 KByte)
+			maxReceiveWindow_Bytes = 0xFFFFU;
+		} else {
+			maxReceiveWindow_Bytes = (unsigned) maxRecvWnd;
+		}
+	} else {
+		// 32 or 64 bit machine
+		UInt64 maxRecvWnd = ((UInt64)maxReceiveWindow_MSS) * max_segment_size;
+		if (maxRecvWnd > 0xFFFFFFFFUL) {
+			//limit to 32 bit (4 GByte)
+			maxReceiveWindow_Bytes = (unsigned) 0xFFFFFFFFUL;
+		} else {
+			maxReceiveWindow_Bytes = (unsigned) maxRecvWnd;
+		}
+	}
 }
 
-void TCP_Socket::close(){
-  if( (state == CLOSEWAIT) || (state == ESTABLISHED) ){
-    //send FIN:
-    TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
-    if(packet != 0){
-      setupHeader_withACK(packet);
-      packet->set_FIN();
-      seqnum_next++; // 1 seqnum consumed (by FIN)
-      send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
-      history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE, getRTO());
-      waiting = true;
-      if(state == CLOSEWAIT){
-        state = LASTACK; //passive close
-      }
-      else{ //if(state == ESTABLISHED)
-        state = FINWAIT1; //active close
-      }
-    }
-  }
-  //else{
-  //  printf("ERROR: close() must be in ESTABLISHED or CLOSEWAIT\n");
-  //}
+bool TCP_Socket::connect()
+{
+	if (!hasValidSrcDestAddresses()) {
+		return false; //no (valid) dst_ipv4_addr set
+	}
+	if (isClosed()) {
+		//only allow connecting in CLOSED state
+		set_sport(TCP_Segment::UNUSED_PORT); //reset source port
+		if (bind()) {
+			if (state == CLOSED) {
+				gen_initial_seqnum();
+				sendWindow = 0;
+				// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
+				SendBuffer* b = requestSendBufferTCP_syn();
+				if (b != 0) {
+					TCP_Segment* segment = (TCP_Segment*)b->data;
+					writeHeader(b);
+					segment->set_SYN();
+					seqnum_next++; // 1 seqnum consumed
+					state = SYNSENT; // next state
+					send(b);
+					waiting = true;
+					history.add(b, getRTO());
+				}
+			}
+			recv_loop();
+			return isEstablished();
+		}
+	}
+	return false;
 }
 
-bool TCP_Socket::block(UInt32 timeout) { return false; }
+void TCP_Socket::abort()
+{
+	//printf("Closing connection!\n");
+	state = CLOSED;
+	waiting = receiving = false;
+	FIN_received = false;
+	// clear receive buffer
+	while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
+		ReceiveBuffer::free(t);
+	}
+	//TODO: free & reset everything!!
+	clearHistory(); //free all pending packets
+}
+
+//full close (no half-close supported)
+bool TCP_Socket::close()
+{
+	if ((state == CLOSEWAIT) || (state == ESTABLISHED)) {
+		//send FIN:
+		// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
+		SendBuffer* b = requestSendBufferTCP();
+		if (b != 0) {
+			TCP_Segment* segment = (TCP_Segment*)b->data;
+			writeHeaderWithAck(b, receiveBuffer.getAckNum());
+			segment->set_FIN();
+			seqnum_next++; // 1 seqnum consumed
+			send(b);
+			waiting = true;
+			history.add(b, getRTO());
+			if (state == CLOSEWAIT) {
+				state = LASTACK; //passive close
+			} else { //if(state == ESTABLISHED)
+				state = FINWAIT1; //active close
+			}
+		}
+	}
+	//else{
+	//  printf("ERROR: close() must be in ESTABLISHED or CLOSEWAIT\n");
+	//}
+	recv_loop();
+	unbind();
+	return isClosed();
+}
+
+bool TCP_Socket::block(UInt32 timeout)
+{
+	return false;
+}
 
 void TCP_Socket::block() {} //wait for incoming packets only
+
+
+void TCP_Socket::processSendData()
+{
+	if (application_buflen == 0)
+		return;
+
+	//there is data to be sent!
+
+	if (sendWindow == 0) { // (!) do NOT use getSendWindow(), because it may be affected by congestion avoidance aspects!
+		//sendWindow is closed. we cannot send any data
+		//probe for 'window update'
+		if (history.getNextTimeout() == 0) {
+			//only probe for zero window if there is no other packet
+			//in history which triggers an timeout event soon
+			// -> send BSD style zero window probe
+			//    (expected sequence number but only one byte of data)
+			sendSegment(1);
+		}
+		return;
+	}
+
+	else {
+		//sendWindow is opened
+		while ((application_buflen > 0) && (getSendWindow() > 0)) {
+			//TODO: propagate sendWindow below?!
+			//we have data be be sent AND receiver can handle new packets
+			if (sendNextSegment() == false) {
+				//stop further sending. an error (e.g. no buffer, silly window, ...) occured!
+				return;
+			}
+		}
+	}
+}
+bool TCP_Socket::sendSegment(UInt16Opt len) {
+	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
+	SendBuffer* b = requestSendBufferTCP(len);
+	if (b != 0) {
+		TCP_Segment* segment = (TCP_Segment*)b->data;
+		writeHeaderWithAck(b, receiveBuffer.getAckNum());
+		
+		b->write(application_buf, len);
+		application_buflen -= len;
+		application_buf = (void*)(((UInt8*)application_buf) + len);
+		
+		//set PUSH flag on last segment
+		if (application_buflen == 0) {
+			segment->set_PSH();
+		}
+		
+		// TCP state update
+		seqnum_next += len;
+		// Because this method can also be used if the send window is closed for a "zero window probe"
+		// the sendWindow variable has to be checked before lowering it.
+		if (sendWindow) 
+			lowerSendWindow(len); //subtract len bytes from sendWindow
+		
+		send(b);
+		history.add(b, getRTO());
+		return true;
+	}
+	return false; //can't get buffer
+}
+
+bool TCP_Socket::sendNextSegment()
+{
+	//calculate length of packet to be send as the following minimum:
+	return sendSegment(min(getSendWindow(), application_buflen, mss));
+}
+void TCP_Socket::set_dport(UInt16 d)
+{
+	dport = d;
+}
+UInt16 TCP_Socket::get_dport()
+{
+	return dport;
+}
+void TCP_Socket::set_sport(UInt16 s)
+{
+	sport = s;
+}
+UInt16 TCP_Socket::get_sport()
+{
+	return sport;
+}
+bool TCP_Socket::listen()
+{
+	if (state == CLOSED) {
+		gen_initial_seqnum();
+		sendWindow = 0;
+		state = LISTEN; // next state
+		waiting = true;
+		return true;
+	}
+	return false;
+}
+void TCP_Socket::gen_initial_seqnum()
+{
+	//RFC 793 (TCP Illustrated Vol.1 page 232)
+	UInt64 usec = Clock::ticks_to_ms(Clock::now()) * 1000UL; // microseconds
+	seqnum_next = usec / 4; // 'increment' every 4 usec ;-)
+	seqnum_unacked = seqnum_next;
+}
+void TCP_Socket::recv_loop()
+{
+	while (waiting_for_input()) {
+		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
+		if (receiveB != 0) {
+			input((TCP_Segment*) receiveB->getData(), receiveB->getSize());
+		} else {
+			input(0, 0);
+		}
+	}
+}
+int TCP_Socket::poll(unsigned int msec)
+{
+	if (isEstablished() || isCloseWait()) {
+		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
+		if (receiveB == 0) {
+			//no gratuitous packets received, yet
+			bool timeout_reached = block((UInt32)msec); //wait for max. msec
+			if (timeout_reached == false) {
+				receiveB = (ReceiveBuffer*)packetbuffer->get(); //check for new packet, since timeout was not reached
+			}
+		}
+		if (receiveB != 0) {
+			do {
+				//process all gratuitous packets that have arrived
+				input((TCP_Segment*) receiveB->getData(), receiveB->getSize());
+				receiveB = (ReceiveBuffer*)packetbuffer->get();
+			} while (receiveB != 0);
+			updateHistory(); //cleanup packets which are not used anymore
+			processACK(); //send ACK if necessary
+		}
+
+		//return amount of received data bytes (payload) while polling
+		//zero out MSB, because return value is an int!
+		const unsigned msb = 1 << ((8 * sizeof(unsigned)) - 1);
+		return (int)(getRecvBytes() & ~msb);
+	}
+	return -1;
+}
+int TCP_Socket::receive(void* buffer, unsigned int buffer_len)
+{
+	if (isEstablished() || isCloseWait()) {
+		//zero out MSB, because return value is an int!
+		const unsigned msb = 1 << ((8 * sizeof(unsigned)) - 1);
+		buffer_len &= ~msb;
+		application_buf = buffer;
+		application_buflen = buffer_len;
+		application_recv_len = 0;
+		receiving = true;
+		waiting = true;
+		recv_loop();
+		unsigned recv_len = get_application_recv_len();
+		if ((recv_len == 0) && isCloseWait()) {
+			return -2;
+		}
+		return (int)recv_len;
+	}
+	return -1;
+}
+bool TCP_Socket::write(const void* data, unsigned int datasize)
+{
+	if (isEstablished() || isCloseWait()) {
+		application_buf = (void*) data;
+		application_buflen = datasize;
+		waiting = true;
+		recv_loop();
+		return (isEstablished() || isCloseWait()); //we are still is a state that allows sending
+	}
+	return false;
+}
+bool TCP_Socket::bind()
+{
+	return Demux::Inst().bind(this);
+}
+void TCP_Socket::unbind()
+{
+	Demux::Inst().unbind(this);
+}
+SendBuffer* TCP_Socket::requestSendBufferTCP(UInt16Opt payloadsize)
+{
+	if (history.isFull()) {
+		updateHistory(false); //update history ... (false := do not trigger any retransmissions)
+		if (history.isFull()) { // ... and try again
+			return 0;
+		}
+	}
+	// Do not use requestSendBuffer(...) here but do it manually so that we can
+	// destinct between a inside-TCP-generated SendBuffer and a user-generated
+	// Sendbuffer.
+	SendBuffer* b = SendBuffer::createSendBuffer(mempool, estimateSendBufferMinSize() + getSpecificTCPHeaderSize() + payloadsize);
+	if (!b) return 0;
+	prepareSendBuffer(b);
+	return b;
+	//return requestSendBuffer(getSpecificTCPHeaderSize()+payloadsize);
+}
+bool TCP_Socket::addToReceiveQueue(TCP_Segment* segment, unsigned int segment_len)
+{
+	// We have to use the ReceiveBuffer wrapper here instead of copying the
+	// segment and putting the new pointer into the packetbuffer because
+	// we need the length.
+	ReceiveBuffer* receiveB = ReceiveBuffer::createReceiveBuffer(mempool, segment, segment_len);
+	if (receiveB != 0) {
+		packetbuffer->put(receiveB);
+		return true;
+	}
+	return false;
+}
+void TCP_Socket::freeReceivedSegment(TCP_Segment* segment)
+{
+	ReceiveBuffer* receiveB = (ReceiveBuffer*)((char*)segment - sizeof(ReceiveBuffer));
+	ReceiveBuffer::free(receiveB);
+}
+
 
 } //namespace ipstack

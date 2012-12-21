@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -21,35 +21,38 @@
 
 using namespace ipstack;
 
-slice class TCP_State_Listen {
-private:
-void listen(TCP_Segment* segment, unsigned len) {
-  if(segment != 0){
-    // new tcp segment received:
-    if(handleRST(segment)){ return; }
-    
-    //only SYN packet have come here.
-    //do not check for SYN flag (once again).
-    receiveBuffer.setFirstSeqNum(segment->get_seqnum() + 1U);
-    
-    free(segment);
-    
-    //send SYN+ACK:
-    TCP_Segment* packet = (TCP_Segment*) alloc(TCP_Segment::TCP_MIN_HEADER_SIZE);
-    if(packet != 0){
-      state = SYNRCVD; //next state only if SYN+ACK can be sent (packet alloc'ed)
-      setupHeader_withACK(packet);
-      seqnum_next++; // 1 seqnum consumed
-      packet->set_SYN();
-      send(packet, TCP_Segment::TCP_MIN_HEADER_SIZE);
-      history.add(packet, TCP_Segment::TCP_MIN_HEADER_SIZE, getRTO());
-    }
-  }
-  else{
-    // there are no more segments in the input buffer
-    block(); //wait for SYN packet
-  }
-}
+slice class TCP_State_Listen
+{
+	private:
+		void listen(TCP_Segment* segment, unsigned len) {
+			if (segment != 0) {
+				// new tcp segment received:
+				if (handleRST(segment)) {
+					return;
+				}
+
+				//only SYN packet have come here.
+				//do not check for SYN flag (once again).
+				receiveBuffer.setFirstSeqNum(segment->get_seqnum() + 1U);
+
+				freeReceivedSegment(segment);
+
+				//send SYN+ACK:
+				SendBuffer* b = requestSendBufferTCP_syn();
+				if (b != 0) {
+					state = SYNRCVD; //next state only if SYN+ACK can be sent (packet alloc'ed)
+					TCP_Segment* segment = (TCP_Segment*)b->data;
+					writeHeaderWithAck(b, receiveBuffer.getAckNum());
+					segment->set_SYN();
+					seqnum_next++; // 1 seqnum consumed
+					send(b);
+					history.add(b, getRTO());
+				}
+			} else {
+				// there are no more segments in the input buffer
+				block(); //wait for SYN packet
+			}
+		}
 
 };
 

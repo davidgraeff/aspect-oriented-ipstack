@@ -23,6 +23,7 @@
 #include "../TCP.h"
 #include "../TCP_Config.h"
 #include "TCP_Record.h"
+#include "ipstack/SendBuffer.h"
 
 namespace ipstack {
 
@@ -35,7 +36,7 @@ class TCP_History{
   public:
   TCP_History() : head(0) {}
   
-  void add(TCP_Segment* segment, unsigned len, UInt32 msec);
+  void add(SendBuffer* b, UInt32 msec);
   
   TCP_Record* get() { return head; }
   bool isEmpty() { return (head == 0); }

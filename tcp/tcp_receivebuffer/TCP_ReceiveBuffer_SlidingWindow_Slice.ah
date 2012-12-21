@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -24,140 +24,134 @@ using namespace ipstack;
 
 
 slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
-  TCP_RecvElement* freelist;
-  TCP_RecvElement* recv_continuous;
-  unsigned recv_bytes;
-  
-  
-  TCP_RecvElement* alloc() {
-    TCP_RecvElement* element = freelist;
-    freelist = element->getNext();
-    return element;
-  }
-  
-  void free(TCP_RecvElement* element){
-    element->setNext(freelist);
-    freelist = element;
-  }
-  
-  void updateContinuous(){
-    //Update the recv_continuous-pointer and recv_bytes count
-    if(recv_continuous == 0){
-      //we have no continuous data received so far
-      if( (head != 0) && (read_firstSeqNum == head->getSeqNum()) ){
-        //head start a continuous data flow
-        recv_continuous = head;
-        recv_bytes = head->getLength();
-      }
-      else{
-        //recv_bytes = 0;
-        return;
-      }
-    }
-    //we have some continuous data received until now
-    TCP_RecvElement* next = recv_continuous->getNext();
-    while( (next != 0) && (recv_continuous->getNextSeqNum() == next->getSeqNum()) ){
-      //next follows directly to recv_continuous (in sequence space)
-      recv_continuous = next;
-      recv_bytes += recv_continuous->getLength();
-      next = recv_continuous->getNext();
-    }
-  }
-  
-  void copyData_SlindingWindow(void* dst, unsigned len){
-    //no len checks here. caller is responsible!
-    read_firstSeqNum += len;
-    recv_bytes -= len;
-    while(len > 0){
-      unsigned current_len = head->getLength();
-      if(current_len <= len){
-        //consume head completely
-        memcpy(dst, head->getData(), current_len);
-        if(head == recv_continuous){
-          //reset recv_continuous pointer if there is no more continuous data received
-          recv_continuous = 0;
-        }
-        TCP_RecvElement* next = head->getNext();
-        socket_free(head->getData()); //free @ TCP_Socket
-        free(head); //free TCP_RecvElement
-        head = next; //advance one TCP_RecvElement
-        if(next == 0){
-          pushFlag = false; // Receive Buffer is empty now
-          return;
-        }
-        else{
-          len -= current_len; //current_len bytes copied
-          dst = (void*) (((UInt8*)dst) + current_len); //increment dst pointer
-        }
-      }
-      else{
-        //consume head only partial
-        memcpy(dst, head->getData(), len);
-        head->increment(len);
-        return; //this must be the last element
-      }
-    }
-  } 
-  
-  //insert returns 'true' if segment has been added successfully
-  //caller must free this packet if it returns 'false'
-  bool insert_SlidingWindow(TCP_Segment* segment, UInt32 seqnum, unsigned len){
-    if(freelist == 0){
-      //printf("Error: ReceiveBuffer is Full :-(\n");
-      //TODO: delete non-contineous?
-      return false;
-    }
-  
-    if(TCP_Segment::SEQ_LT(seqnum, read_firstSeqNum)){
-      //printf("seqnum too small!\n");
-      return false;
-      //we need seqnum >= read_firstSeqNum, since we already read values below
-    }
-    //TODO: compare with max. advertised sequence number!?!
-  
-    //add to list
-    TCP_RecvElement* current = (recv_continuous == 0) ? head : recv_continuous;
-    TCP_RecvElement* prev = 0;
-    while(current != 0){
-      if(TCP_Segment::SEQ_GEQ(seqnum, current->getNextSeqNum())){
-        //insert after current
-        prev = current;
-        current = current->getNext();
-      }
-      else if(TCP_Segment::SEQ_GEQ(seqnum, current->getSeqNum())){
-        //retransmission -> duplicate -> ACK lost?
-        //printf("duplicate arrived ... not adding to receive buffer\n");
-        return false;
-      }
-      else{
-        //insert before current! (after prev)
-        if(current == recv_continuous){
-          //do not insert before recv_continuous
-          //printf("duplicate arrived ... not adding to receive buffer (2)\n");
-          return false;
-        }
-        break;
-      }
-    }
-    TCP_RecvElement* element = alloc();
-    element->setSegment(segment, len, seqnum);
-  
-    if(prev == 0){
-      //insert at front!
-      element->setNext(head);
-      head = element;
-    }
-    else{
-     //insert after prev
-      element->setNext(prev->getNext()); //current?
-      prev->setNext(element);
-    }
-    updateContinuous();
-    //printf("adding data to receive buffer: %u bytes\n", len);
-    if(segment->has_PSH()) { pushFlag = true; }
-    return true;
-  }
-  
+	TCP_RecvElement* freelist;
+	TCP_RecvElement* recv_continuous;
+	unsigned recv_bytes;
+
+
+	TCP_RecvElement* alloc() {
+		TCP_RecvElement* element = freelist;
+		freelist = element->getNext();
+		return element;
+	}
+
+	void free(TCP_RecvElement* element) {
+		element->setNext(freelist);
+		freelist = element;
+	}
+
+	void updateContinuous() {
+		//Update the recv_continuous-pointer and recv_bytes count
+		if (recv_continuous == 0) {
+			//we have no continuous data received so far
+			if ((head != 0) && (read_firstSeqNum == head->getSeqNum())) {
+				//head start a continuous data flow
+				recv_continuous = head;
+				recv_bytes = head->getLength();
+			} else {
+				//recv_bytes = 0;
+				return;
+			}
+		}
+		//we have some continuous data received until now
+		TCP_RecvElement* next = recv_continuous->getNext();
+		while ((next != 0) && (recv_continuous->getNextSeqNum() == next->getSeqNum())) {
+			//next follows directly to recv_continuous (in sequence space)
+			recv_continuous = next;
+			recv_bytes += recv_continuous->getLength();
+			next = recv_continuous->getNext();
+		}
+	}
+
+	void copyData_SlindingWindow(void* dst, unsigned len) {
+		//no len checks here. caller is responsible!
+		read_firstSeqNum += len;
+		recv_bytes -= len;
+		while (len > 0) {
+			unsigned current_len = head->getLength();
+			if (current_len <= len) {
+				//consume head completely
+				memcpy(dst, head->getData(), current_len);
+				if (head == recv_continuous) {
+					//reset recv_continuous pointer if there is no more continuous data received
+					recv_continuous = 0;
+				}
+				TCP_RecvElement* next = head->getNext();
+				socket_free(head->getSegmentPtr()); //free @ TCP_Socket
+				free(head); //free TCP_RecvElement
+				head = next; //advance one TCP_RecvElement
+				if (next == 0) {
+					pushFlag = false; // Receive Buffer is empty now
+					return;
+				} else {
+					len -= current_len; //current_len bytes copied
+					dst = (void*)(((UInt8*)dst) + current_len);  //increment dst pointer
+				}
+			} else {
+				//consume head only partial
+				memcpy(dst, head->getData(), len);
+				head->increment(len);
+				return; //this must be the last element
+			}
+		}
+	}
+
+	//insert returns 'true' if segment has been added successfully
+	//caller must free this packet if it returns 'false'
+	bool insert_SlidingWindow(TCP_Segment* segment, UInt32 seqnum, unsigned len) {
+		if (freelist == 0) {
+			//printf("Error: ReceiveBuffer is Full :-(\n");
+			//TODO: delete non-contineous?
+			return false;
+		}
+
+		if (TCP_Segment::SEQ_LT(seqnum, read_firstSeqNum)) {
+			//printf("seqnum too small!\n");
+			return false;
+			//we need seqnum >= read_firstSeqNum, since we already read values below
+		}
+		//TODO: compare with max. advertised sequence number!?!
+
+		//add to list
+		TCP_RecvElement* current = (recv_continuous == 0) ? head : recv_continuous;
+		TCP_RecvElement* prev = 0;
+		while (current != 0) {
+			if (TCP_Segment::SEQ_GEQ(seqnum, current->getNextSeqNum())) {
+				//insert after current
+				prev = current;
+				current = current->getNext();
+			} else if (TCP_Segment::SEQ_GEQ(seqnum, current->getSeqNum())) {
+				//retransmission -> duplicate -> ACK lost?
+				//printf("duplicate arrived ... not adding to receive buffer\n");
+				return false;
+			} else {
+				//insert before current! (after prev)
+				if (current == recv_continuous) {
+					//do not insert before recv_continuous
+					//printf("duplicate arrived ... not adding to receive buffer (2)\n");
+					return false;
+				}
+				break;
+			}
+		}
+		TCP_RecvElement* element = alloc();
+		element->setSegment(segment, len, seqnum);
+
+		if (prev == 0) {
+			//insert at front!
+			element->setNext(head);
+			head = element;
+		} else {
+			//insert after prev
+			element->setNext(prev->getNext()); //current?
+			prev->setNext(element);
+		}
+		updateContinuous();
+		//printf("adding data to receive buffer: %u bytes\n", len);
+		if (segment->has_PSH()) { pushFlag = true; }
+		return true;
+	}
+
 };
 
 #endif //__TCP_RECEIVE_BUFFER_SLIDING_WINDOW_SLICE__

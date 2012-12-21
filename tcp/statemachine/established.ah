@@ -45,7 +45,7 @@ void established(TCP_Segment* segment, unsigned len) {
     updateSendWindow(segment, seqnum, acknum);
     
     if(needToFree == true){
-      free(segment);
+		freeReceivedSegment(segment);
     }
     
     // **********************************************

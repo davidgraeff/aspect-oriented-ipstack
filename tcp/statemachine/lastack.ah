@@ -33,7 +33,7 @@ void lastack(TCP_Segment* segment, unsigned len) {
       handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
     }
     
-    free(segment);
+    freeReceivedSegment(segment);
   }
   else{
     // there are no more segments in the input buffer

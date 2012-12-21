@@ -20,13 +20,12 @@
 
 namespace ipstack {
 
-void TCP_History::add(TCP_Segment* segment, unsigned len, UInt32 msec){ //msec -> timeout for rexmit
+	void TCP_History::add(SendBuffer* b, UInt32 msec){ //msec -> timeout for rexmit
   //be sure to check isFull _BEFORE_ using this function!
   
   head = &records[0];
   //fill in data
-  head->setSegment(segment);
-  head->setLength(len);
+  head->setSendBuffer(b);
   head->setTimeout(msec);
 }
 

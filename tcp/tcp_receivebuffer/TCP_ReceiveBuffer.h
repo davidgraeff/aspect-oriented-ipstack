@@ -59,7 +59,7 @@ class TCP_ReceiveBuffer{
 
   UInt32 getAckNum();
   
-  void socket_free(void* segment);
+  void socket_free(TCP_Segment* segment);
   
   void copyData(void* dst, unsigned len);
   

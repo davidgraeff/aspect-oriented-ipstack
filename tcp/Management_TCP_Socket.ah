@@ -4,39 +4,31 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2012 David Gräff
 
+#pragma once
 
-#ifndef __TCP_STATE_CLOSED_AH__
-#define __TCP_STATE_CLOSED_AH__
+#include "util/types.h"
+#include "Management_TCP_Socket.h"
 
 using namespace ipstack;
-  
-slice class TCP_State_Closed {
-private:
-  void closed(TCP_Segment* segment, unsigned len) {
-    if(segment != 0){
-      // new tcp segment received:
-      //printf("ERROR: TCP Segment in CLOSED state arrived\n");
-      //printf("-> forgot to 'unbind()' ?\n");
-      freeReceivedSegment(segment);
-    }
-    else{
-      // there are no more segments in the input buffer
-      // nothing to do here
-    }
-    waiting = false; // no more segments to wait for
-  }
 
+/**
+ * Management_TCP_Socket support
+ */
+aspect Management_TCP_Socket_Aspect  {
+	// Initialize this management socket -> we have to do this because the
+	// global constructor of this class is not called
+	advice execution( "void os::init()" ) : after() {
+		new(&(Management_TCP_Socket::instance())) Management_TCP_Socket;
+	}
 };
-
-#endif // __TCP_STATE_CLOSED_AH__

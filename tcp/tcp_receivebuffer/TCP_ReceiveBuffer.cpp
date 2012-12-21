@@ -30,8 +30,8 @@ UInt32 TCP_ReceiveBuffer::getAckNum(){
   }
 }
 
-void TCP_ReceiveBuffer::socket_free(void* segment){
-  socket->free(segment);
+void TCP_ReceiveBuffer::socket_free(TCP_Segment* segment){
+	socket->freeReceivedSegment(segment);
 }
 
 void TCP_ReceiveBuffer::copyData(void* dst, unsigned len){
@@ -41,7 +41,7 @@ void TCP_ReceiveBuffer::copyData(void* dst, unsigned len){
   if(current_len == len){
     //consume head completely
     memcpy(dst, head->getData(), current_len);
-    socket_free(head->getData()); //free @ TCP_Socket
+    socket_free(head->getSegmentPtr()); //free @ TCP_Socket
     head = 0;
     pushFlag = false; // Receive Buffer is empty now
   }

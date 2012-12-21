@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -30,47 +30,44 @@
 using namespace ipstack;
 
 
-aspect TCP_RetransmissionCounter { 
-  
-  // *** Affect class: TCP_Socket
-  //this aspect must be executed after 'SlowStart', in order to count *REAL* retransmitted packets
-  advice execution ("void ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") : 
-         order("%" && !"TCP_RetransmissionCounter", "TCP_RetransmissionCounter");
-  
-  advice execution("void ipstack::TCP_Socket::retransmit(ipstack::TCP_Record*, ipstack::TCP_Segment*)") &&
-         args(record, segment) &&
-         that(socket) :
-         around(TCP_Record* record, TCP_Segment* segment, TCP_Socket& socket) {
+aspect TCP_RetransmissionCounter {
 
-    if(record->retransmission_counter > TCP_MAX_RETRANSMISSIONS) {
-      /* DO NOT call abort() here, because the linked-list 'TCP_History'
-         is under modification and will be corrupted. Wait for 'updateHistory(...)' to complete (see below).
-         Just remember that we want to kill the connection (use state for storage) */
-      socket.state = TCP_Socket::CLOSED;
-    }
-    else {
-      record->retransmission_counter++;
-      tjp->proceed(); // allow retransmit(...)
-    }
-  }
-  
-  advice execution("void ipstack::TCP_Socket::updateHistory(...)") &&
-         that(socket) : after(TCP_Socket& socket) {
-    //check if max. number of retransmissions was exceeded (see above)
-    if(socket.state == TCP_Socket::CLOSED) {
-      socket.abort(); //kill this connection
-    }
-  }
-  
-  
-  // *** Affect class: TCP_Record
-  advice "ipstack::TCP_Record" : slice TCP_Record_RetransmissionCounter_Slice;
-  
-  advice execution("void ipstack::TCP_Record::setSegment(ipstack::TCP_Segment*)") &&
-         that(record) : after(TCP_Record& record) {
-    record.retransmission_counter = 0; //init
-  }
-  
+	// *** Affect class: TCP_Socket
+	//this aspect must be executed after 'SlowStart', in order to count *REAL* retransmitted packets
+	advice execution("void ipstack::TCP_Socket::retransmit(...)") :
+		order("%" && !"TCP_RetransmissionCounter", "TCP_RetransmissionCounter");
+
+	advice execution("void ipstack::TCP_Socket::retransmit(...)") && args(record) && that(socket) :
+		around(TCP_Record* record, TCP_Socket& socket) {
+
+		if (record->retransmission_counter > TCP_MAX_RETRANSMISSIONS) {
+			/* DO NOT call abort() here, because the linked-list 'TCP_History'
+			   is under modification and will be corrupted. Wait for 'updateHistory(...)' to complete (see below).
+			   Just remember that we want to kill the connection (use state for storage) */
+			socket.state = TCP_Socket::CLOSED;
+		} else {
+			record->retransmission_counter++;
+			tjp->proceed(); // allow retransmit(...)
+		}
+	}
+
+	advice execution("void ipstack::TCP_Socket::updateHistory(...)") &&
+	that(socket) : after(TCP_Socket& socket) {
+		//check if max. number of retransmissions was exceeded (see above)
+		if (socket.state == TCP_Socket::CLOSED) {
+			socket.abort(); //kill this connection
+		}
+	}
+
+
+	// *** Affect class: TCP_Record
+advice "ipstack::TCP_Record" : slice TCP_Record_RetransmissionCounter_Slice;
+
+	advice execution("void ipstack::TCP_Record::setSendBuffer(...)") &&
+	that(record) : after(TCP_Record& record) {
+		record.retransmission_counter = 0; //init
+	}
+
 };
 
 #endif //__TCP_RETRANSMISSION_COUNTER_AH__

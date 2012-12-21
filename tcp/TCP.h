@@ -26,7 +26,7 @@ namespace ipstack {
 class TCP_Segment{
   public:
   enum { TCP_MIN_HEADER_SIZE = 20,
-         IPV4_TYPE_TCP = 0x6,
+         IP_TYPE_TCP = 0x6,
          UNUSED_PORT = 0, // http://www.iana.org/assignments/port-numbers
          DEFAULT_MSS = 536 }; //rfc879
          

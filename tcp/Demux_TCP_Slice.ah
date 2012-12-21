@@ -1,0 +1,96 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "TCP_Socket.h"
+
+using namespace ipstack;
+
+slice class Demux_TCP_Slice
+{
+	private:
+		UInt16 tcp_last_default_port;
+		TCP_Socket* tcp_head_socket;
+
+	public:
+		bool bind(TCP_Socket* socket) {
+			UInt16 sport = socket->get_sport();
+			if (sport == TCP_Segment::UNUSED_PORT) {
+				//choose 'random' source port number
+				socket->set_sport(tcp_get_free_port());
+			} else {
+				//verify if connection is not used already
+				TCP_Socket* current = tcp_head_socket;
+				while (current != 0) {
+					if (current->get_sport() == sport) {
+						if (current->get_dport() == socket->get_dport()) {
+							return false;
+						}
+					}
+				}
+				current = current->getNext();
+			}
+
+			//insert at front
+			socket->setNext(tcp_head_socket);
+			tcp_head_socket = socket;
+			return true;
+		}
+
+		void unbind(TCP_Socket* socket) {
+			if (socket == tcp_head_socket) {
+				tcp_head_socket = socket->getNext();
+			} else {
+				TCP_Socket* current = tcp_head_socket;
+				TCP_Socket* next = current->getNext();
+				while (next != 0) {
+					if (next == socket) {
+						current->setNext(next->getNext());
+						return;
+					}
+					current = next;
+					next = current->getNext();
+				}
+			}
+		}
+
+		UInt16 tcp_get_free_port() {
+			//TODO: die TCP Variante unterscheidet sich von dem UDP-Code
+			//Eine Verbindung ist ein 4er Tupel ... sport muss nicht
+			//exklusiv sein!
+			tcp_last_default_port++;
+			if (tcp_last_default_port < 1024U) {
+				tcp_last_default_port = 1024U;
+			}
+			TCP_Socket* current = tcp_head_socket;
+			while (current != 0) {
+				if (current->get_sport() == tcp_last_default_port) {
+					tcp_last_default_port++;
+					if (tcp_last_default_port < 1024U) {
+						tcp_last_default_port = 1024U;
+					}
+					current = tcp_head_socket; //start once again
+				} else {
+					current = current->getNext();
+				}
+			}
+			return tcp_last_default_port;
+		}
+
+};

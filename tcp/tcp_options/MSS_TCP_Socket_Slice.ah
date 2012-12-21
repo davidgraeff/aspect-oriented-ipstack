@@ -4,25 +4,31 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
 
-#ifndef __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
-#define __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
+#pragma once
+#include "util/types.h"
 
-
-slice class MSS_TCP_Socket_Slice {
-  unsigned max_mss;
+slice class MSS_TCP_Socket_Slice{
+public:
+	void recalculate_mss() {
+		// estimateSendBufferMinSize MUST NOT be influenced by the tcp header size aspect in this context
+		const UInt16Opt headersize = estimateSendBufferMinSize();
+		const UInt16Opt memsize = mempool->SIZE_BIG;
+		const UInt16Opt mtusize = getMTU();
+		if (memsize<mtusize)
+			setMSS(memsize-headersize);
+		else
+			setMSS(mtusize-headersize);
+	}
 };
-
-#endif // __TCP_OPTION_MSS_TCP_SOCKET_SLICE__
-

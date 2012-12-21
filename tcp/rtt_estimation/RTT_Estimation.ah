@@ -32,7 +32,7 @@ aspect TCP_RTT_Estimation {
   // *** Affect class: TCP_Socket
   advice "ipstack::TCP_Socket" : slice TCP_RTT_Estimation_Slice;
   
-  advice call("void ipstack::TCP_Socket::send(void*, unsigned)") &&
+  advice call("% ipstack::TCP_Socket::send(...)") &&
          within("bool ipstack::TCP_Socket::sendNextSegment()") &&
          that(socket) :
          before(TCP_Socket& socket) {

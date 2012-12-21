@@ -1,0 +1,66 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../router/Interface.h"
+//#include "TCP_Sendbuffer_Slice.ah"
+#include "TCP_Socket.h"
+#include "TCP.h"
+#include "ipstack/SendBuffer.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+/**
+ * Set TCP as next header protocol in the the IPv4 Header.
+ * We do not need to add a TCP Header here, that is done in the
+ * TCP Socket.
+ * TODO: To use the (SendBuffer, send)-API also for TCP. The tcp
+ * header has to be added, but only if not called within the
+ * TCP_Socket class.
+ */
+aspect Sendbuffer_TCP  {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_TCP");
+
+// 	advice execution("void ipstack::TCP_Socket::writeHeader%(...)") && args(sendbuffer) :
+// 	before(SendBuffer* sendbuffer) {
+// 		sendbuffer->memstart_transport = sendbuffer->data;
+// 	}
+	
+	advice execution("% ipstack::%TCP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+		after(SendBuffer* sendbuffer) {
+		// set ip next header protocol to TCP
+		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
+		sendbuffer->memstart_transport = sendbuffer->data;
+	}
+	
+	// if not within requestSendBufferTCP% than add the tcp header if a connection is established
+// 	advice call("% ipstack::%TCP_Socket::prepareSendBuffer(...)") && args(sendbuffer, size) :
+// 	around(SendBuffer* sendbuffer, UInt16Opt remainingpayloadsize) {
+// 		// remainingpayloadsize: this is payload AND the udp header size as determined in 
+// 		// estimateSendBufferMinSize() before.
+// 		tjp->that()->setupHeader(sendbuffer->data, remainingpayloadsize);
+// 		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
+// 		// set ip next header protocol to UDP
+// 		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
+// 		// there is no remaining size after UDP
+// 		*(tjp->arg<1>()) -= remainingpayloadsize; // 
+// 		
+// 		tjp->proceed();
+// 	}
+};

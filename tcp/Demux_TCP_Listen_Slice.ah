@@ -1,0 +1,60 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "TCP_Socket.h"
+
+using namespace ipstack;
+
+
+slice class Demux_TCP_Listen_Slice {
+  private:
+  TCP_Socket* tcp_head_listen_socket;
+  
+  public:
+  bool listen(TCP_Socket* socket){
+    if(socket->get_sport() == TCP_Segment::UNUSED_PORT){
+      return false; //no lport set. can't listen on port 0
+    }
+    //insert at front
+    socket->setNext(tcp_head_listen_socket);
+    tcp_head_listen_socket = socket;
+    return true;
+  }
+  
+  void deaf(TCP_Socket* socket){
+    if(socket == tcp_head_listen_socket){
+      tcp_head_listen_socket = socket->getNext();
+    }
+    else{
+      TCP_Socket* current = tcp_head_listen_socket;
+      TCP_Socket* next = current->getNext();
+      while(next != 0){
+        if(next == socket){
+          current->setNext(next->getNext());
+          return;
+        }
+        current = next;
+        next = current->getNext();
+      }
+    }
+  }
+    
+};
+
