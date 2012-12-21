@@ -35,18 +35,16 @@ aspect IRQ_Sync{
   
   //Interface::send must be guarded, because the kernel sends arp/icmp packets,
   //and the user sends arbitrary packets, too.
-  advice call("void ipstack::Interface::send(const void*, unsigned)") &&
-         within("ipstack::IPv4_Socket") : around(){
+  advice call("void ipstack::Interface::send(const void*, unsigned)")  : around(){
     os::krn::enterKernel();
     tjp->proceed();
     os::krn::leaveKernel();
   }
   
   //Mempools must be synchronized:
-  pointcut toSync() = "% ipstack::TCP_Socket::alloc(%)" ||
-                      "% ipstack::TCP_Socket::free(%)" ||
-                      "% ipstack::UDP_Socket::alloc(%)" ||
-                      "% ipstack::UDP_Socket::free(%)" || //"% ipstack::IPv4_UDP_Socket::free(%)" MUST NOT be synchronized!
+  pointcut toSync() = "% ipstack::SendBuffer::createSendBuffer(%)" ||
+					  "% ipstack::SendBufferWithInterface::createSendBuffer(%)" ||
+                      "% ipstack::%_Socket::free(%)" ||
                       "% ipstack::%_Socket::%bind()" || //sync linked-list operations
                       "% ipstack::%_Socket::_listen()" || //sync linked-list operations
                       "% ipstack::%_Socket::deaf()";  //sync linked-list operations

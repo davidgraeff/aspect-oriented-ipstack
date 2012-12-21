@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -25,64 +25,38 @@
 
 #include "EventSupport.h"
 #include "EventSupport_Slice.ah"
-#include "../ipv4/IPv4_Socket.h"
+#include "../ReceiveBuffer.h"
 
 using namespace ipstack;
 
 aspect Ipstack_EventSupport {
-  
-  // *** Affect class: IPv4_Socket
-  advice "ipstack::IPv4_Socket" : slice EventSupport_Slice;
+advice "ipstack::%_Socket" :
+	slice EventSupport_Slice;
 
-  advice construction("ipstack::IPv4_Socket") &&
-         that(socket) : before(IPv4_Socket& socket) {
-    AS::GetTaskID(socket.taskid); //init taskid
-    //needs not to be synchronized -> changes no kernel data
-  }
-  
-  advice execution("bool ipstack::IPv4_%_Socket::put(ipstack::IPv4_Packet*, unsigned)") &&
-         that(socket) && result(success) &&
-         within(derived("ipstack::IPv4_Socket")) :
-         after(IPv4_Socket& socket, bool success) {
-    
-    if(success){
-      AS::SetEvent(socket.taskid, IPStackReceiveEvent_);
-    }
-  }
-  
-  advice execution("ipstack::IPv4_Packet* ipstack::IPv4_Socket::receive()") &&
-         that(socket) :
-         around(IPv4_Socket& socket) {
-    
-    void* recv = socket.packetbuffer->get();
-    while(recv == 0){
-      
-      //Because this is an aspect, AS:: calls are not synchronized!
-      //EnterLeave_Weaving_Static.ah uses the call advice,
-      //which doesn't match here :-(
-      //Workaround: call enterKernel() and leaveKernel() explicit!
-      
-      os::krn::enterKernel(); //lock
-      AS::WaitEvent(IPStackReceiveEvent_);
-      AS::ClearEvent(IPStackReceiveEvent_);
-      os::krn::leaveKernel(); //unlock
-      
-      recv = socket.packetbuffer->get();
-    }
-    *tjp->result() = ((IPv4_Packet*) recv);
-  }
-  
-  advice execution("void ipstack::TCP_Socket::block()") : around(){
-      //Because this is an aspect, AS:: calls are not synchronized!
-      //EnterLeave_Weaving_Static.ah uses the call advice,
-      //which doesn't match here :-(
-      //Workaround: call enterKernel() and leaveKernel() explicit!
-      
-      os::krn::enterKernel(); //lock
-      AS::WaitEvent(IPStackReceiveEvent_);
-      AS::ClearEvent(IPStackReceiveEvent_);
-      os::krn::leaveKernel(); //unlock
-  }
+	advice construction("ipstack::%_Socket") : before() {
+		AS::GetTaskID(tjp->that()->taskid); //init taskid
+		//needs not to be synchronized -> changes no kernel data
+	}
+
+	advice execution("bool ipstack::%_Socket::addToReceiveQueue(...)") && result(success) :
+		after(bool success) {
+
+		if (success) {
+			AS::SetEvent(tjp->that()->taskid, IPStackReceiveEvent_);
+		}
+	}
+
+	advice execution("void ipstack::%_Socket::block()") : around() {
+		//Because this is an aspect, AS:: calls are not synchronized!
+		//EnterLeave_Weaving_Static.ah uses the call advice,
+		//which doesn't match here :-(
+		//Workaround: call enterKernel() and leaveKernel() explicit!
+
+		os::krn::enterKernel(); //lock
+		AS::WaitEvent(IPStackReceiveEvent_);
+		AS::ClearEvent(IPStackReceiveEvent_);
+		os::krn::leaveKernel(); //unlock
+	}
 
 };
 
