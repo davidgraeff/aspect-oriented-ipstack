@@ -1,0 +1,86 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "IP_Dualstack_Slice.ah"
+#include "IP_Dualstack_IPVx_Slice.ah"
+#include "../ipv4/IPv4onSockets.h"
+#include "../ipv6/IPv6onSockets.h"
+
+using namespace ipstack;
+
+/**
+ * If both IPv4 and IPv6 are configured, selecting
+ * the sending protocol is a runtime decision.
+ * The current implementation intercepts setting the
+ * destination address for ipv4 and ipv6 and use the ip version where
+ * this is done for the last time.
+ * 
+ * Optimisation hint:
+ * The runtime checks could be eliminated at big parts
+ * if function pointers are used that are one-time set
+ * while changing a destination address.
+ */
+aspect IP_Dualstack_Socket_Delegation {
+	/**
+	 * Every socket gets an m_useipversion variable
+	 * for deciding at runtime which ip version to use, if the
+	 * generic api is used.
+	 */
+	advice "ipstack::IPV%" : slice IP_Dualstack_IPVx_Slice;
+	
+	advice "ipstack::%_Socket" : slice IP_Dualstack_Slice;
+	
+	advice construction("ipstack::%_Socket") : after() {
+		tjp->that()->m_useipversion = 4;
+		tjp->that()->ipv4.m_useipversionPtr = &tjp->that()->m_useipversion;
+		tjp->that()->ipv6.m_useipversionPtr = &tjp->that()->m_useipversion;
+	}
+	
+	/**
+	 * SET IP VERSION WHILE SETTING UP A DESTINATION ADDRESS
+	 */
+	
+	advice execution("% ipstack::IPV4::set_dst_addr(...)") : after() {
+		*(tjp->that()->m_useipversionPtr) = 4;
+	}
+	advice execution("% ipstack::IPV6::set_dst_addr(...)") : after() {
+		*(tjp->that()->m_useipversionPtr) = 6;
+	}
+	
+	/**
+	 * SENDING
+	 */
+	
+	//SendBuffer requestSendBuffer(UInt16 requestedSize, bool freeOnDestruct = true) {}
+	advice execution("% ipstack::%_Socket::getUsedInterface()") : around() {
+		if (tjp->that()->m_useipversion == 4)
+			*tjp->result() = tjp->that()->ipv4.interface;
+		else
+			*tjp->result() = tjp->that()->ipv6.interface;
+	}
+	
+	//bool hasValidSrcDestAddresses() {}
+	advice execution("% ipstack::%_Socket::hasValidSrcDestAddresses()") : around() {
+		if (tjp->that()->m_useipversion == 4)
+			*tjp->result() = tjp->that()->ipv4.hasValidSrcDestAddresses();
+		else
+			*tjp->result() = tjp->that()->ipv6.hasValidSrcDestAddresses();
+	}
+};
+
