@@ -1,0 +1,159 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/router/Interface.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/ipv6/RouteResult.h"
+#include "ipstack/router/Router.h"
+#include "ipstack/SendBuffer.h"
+#include "../IPv6onSockets.h"
+#include "Interface_Multicast_Slice.ah"
+
+// #include "../IPv6.h"
+// #include "util/types.h"
+
+using namespace ipstack;
+
+/**
+ * Allow Multicast addresses to be set as destination address. This is neccessary for some
+ * ICMPv6 traffic. If this aspect is not configured, setting a multicast address as destination will
+ * only work if a static IP Prefix entry with the prefix of the multicast-scope has been added.
+ */
+aspect IPv6_Multicast_aspect {
+advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
+
+	/**
+	 * If the destination address is a multicast address, just pick the first active ipv6 interface
+	 * for sending. In the send advice will will send this packet to all interfaces respectively.
+	 */
+	advice execution("% ipstack::Router::ipv6_find_route(...)") && args(ipv6_dstaddr) && that(router) :
+		around(const ipv6addr& ipv6_dstaddr, Router& router) {
+		//search for local interface. check assigned ip addresses
+		bool isMulticast = (IPV6AddressScope::getIPv6AddressScope(ipv6_dstaddr) == IPV6AddressScope::IPV6_SCOPE_MULTICAST);
+		if (!isMulticast) {
+			tjp->proceed();
+			return;
+		}
+		Interface* interface = router.head_interface;
+		while (interface != 0) {
+			if (interface->isIPv6Up()) {
+				// Pick the first active interface
+				*(tjp->result()) = RouteResult(0,interface);
+				return;
+			}
+			interface = interface->getNext();
+		}
+		*(tjp->result()) = RouteResult(0,0);
+	}
+
+	/**
+	 * Send a multicast packet to all interfaces, not just the first one
+	 */
+	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)") && args(dataToSend, i) :
+		after(SendBuffer* dataToSend, Interface* i) {
+		// only for IPv6
+		if (tjp->that()->m_useipversion != 6) {
+			return;
+		}
+
+		// only for a multicast address
+		IPV6& ipv6 = tjp->that()->ipv6;
+		bool isMulticast = (IPV6AddressScope::getIPv6AddressScope(ipv6.get_dst_addr()) == IPV6AddressScope::IPV6_SCOPE_MULTICAST);
+		if (!isMulticast) {
+			return;
+		}
+
+		Interface* interface = Router::Inst().get_interface(0);
+		while (interface != 0) {
+			if (i != interface && interface->isIPv6Up()) {
+				// Send to this other interface, too.
+				tjp->that()->send(dataToSend, interface);
+			}
+			interface = interface->getNext();
+		}
+	}
+
+	/**
+	 * Receive multicast traffic
+	 */
+	advice execution("bool ipstack::Interface::hasIPv6Address(const ipstack::ipv6addr&)") && args(addr) && that(interface) :
+		around(const ipstack::ipv6addr& addr, Interface& interface) {
+		bool isMulticast = (IPV6AddressScope::getIPv6AddressScope(addr) == IPV6AddressScope::IPV6_SCOPE_MULTICAST);
+		if (!isMulticast) {
+			tjp->proceed();
+			return;
+		}
+		// Check implicit multicast groups (solicitedNode_multicast)
+		*(tjp->result()) = interface.multicast_addr_joined(addr) || interface.is_solicitedNode_multicast_addr(addr);
+	}
+
+	// Join multicast groups before assigning an ip
+	advice execution("void ipstack::Interface::setIPv6Up(bool)") :
+		order("IPv6_Multicast_aspect", "IPv6_add_link_local_address");
+
+	/**
+	 * Join/leave all-nodes and all-routers multicast group on interface up/down
+	 */
+	advice execution("void ipstack::Interface::setIPv6Up(bool)") && args(up) && that(interface) : around(bool up, Interface& interface) {
+		if (up) {
+			interface.join_linkLocal_allRouters_multicastGroup();
+			interface.join_linkLocal_allNodes_multicastGroup();
+		} else {
+			interface.leave_linkLocal_allRouters_multicastGroup();
+			interface.leave_linkLocal_allNodes_multicastGroup();
+		}
+		tjp->proceed();
+	}
+	
+	/**
+	 * The Multicast Listener Discovery Version 2 Protocol have to indicate our interest to routers in receiving
+	 * packets that are related to Neighbor Discovery Protocol responses. Therefore the multicast aspect have to act
+	 * before NDP aspects.
+	 */
+	advice execution("ipstack::AddressEntry* ipstack::Interface::registerIPv6Address(...)") :
+	order("IPv6_Multicast_aspect", "%NDP%");
+	
+	/**
+	 * Join solicitated node multicast group for every unicast address that is assigned to an interface
+	 */
+	advice execution("void ipstack::Interface::registerIPv6Address(...)") && args(entry) && that(interface) : after(AddressEntry* entry, Interface& interface) {
+		if (!entry)
+			return;
+		ipv6addr ip = entry->ipv6;
+		IPV6AddressScope::IPv6_ADDRESS_SCOPE scope = IPV6AddressScope::getIPv6AddressScope(ip);
+		if (scope==IPV6AddressScope::IPV6_SCOPE_GLOBAL_UNICAST || scope==IPV6AddressScope::IPV6_SCOPE_UNIQUE_LOCAL_UNICAST 
+			|| scope==IPV6AddressScope::IPV6_SCOPE_LINKLOCAL) {
+			interface.join_solicitedNode_multicastGroup(ip);
+		}
+	}
+	
+	/**
+	 * Leave solicitated node multicast group for every unicast address that will be removed from an interface
+	 */
+	advice execution("% ipstack::AddressMemory::freeEntry(...)") && args(entry) && that(interface) : before(AddressEntry* entry,Interface& interface) {
+		if (entry->id != AddressEntry::ID)
+			return;
+		ipv6addr ip = entry->ipv6;
+		IPV6AddressScope::IPv6_ADDRESS_SCOPE scope = IPV6AddressScope::getIPv6AddressScope(ip);
+		printf("IPv6_Multicast_aspect::freeEntry\n");
+		if (scope==IPV6AddressScope::IPV6_SCOPE_GLOBAL_UNICAST || scope==IPV6AddressScope::IPV6_SCOPE_UNIQUE_LOCAL_UNICAST) {
+			interface.leave_solicitedNode_multicastGroup(ip);
+		}
+	}
+};
