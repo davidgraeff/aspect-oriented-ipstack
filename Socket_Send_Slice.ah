@@ -93,14 +93,8 @@ public:
 	void prepareSendBuffer(SendBuffer* sendbuffer) {}
 	
 	/**
-	 * Send the data of a SendBuffer that was created with requestSendBuffer().
-	 * 
-	 * Although a SendBuffer stays valid after sending it, you can only use it for sending
-	 * the same packet again. write(...) etc will not work, because the sendbuffer is
-	 * filled and can not be reseted.
-	 * Internal details: The memory block of a sendbuffer is read out by DMA from the
-	 * network device. You cannot change that memory block after calling send() for this reason.
-	 * 
+	 * Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
+	 * invalid after sending it and may be freed by calling socket->free(sendbuffer).
 	 */
 	void send(SendBuffer* dataToSend) {
 		Interface* i = getUsedInterface();
@@ -109,22 +103,29 @@ public:
 	}
 	void send(SendBuffer* dataToSend, Interface* i) {
 		i->send(dataToSend->getDataStart(), dataToSend->getSize());
-		//dataToSend->makeInvalid();
+		dataToSend->makeInvalid();
 	}
 	
 	/**
-	 * Free a Sendbuffer by using this static method. This will block
+	 * Free a Sendbuffer by using this method. This will block
 	 * until the memory block has been transfered if there is still
 	 * a transfer ongoing.
 	 */
 	void free(SendBuffer* b) {
+		// avoid double freeing
+		if (!b->m_mempool) return;
+		// get interface
 		Interface* i = getUsedInterface();
 		if (!i) return;
 		while (!i->hasBeenSent(b->getDataStart())) {}
 		Mempool* mempoolL = b->m_mempool;
+		b->m_mempool = 0; // set to 0 to avoid double free's
 		mempoolL->free((void*)b);
 	}
 	
+	/**
+	 * A convenience method to get the maximum transmission unit for the used interface.
+	 */
 	UInt16Opt getMTU() {
 		Interface* i = getUsedInterface();
 		if (!i) return 0;
@@ -133,12 +134,13 @@ public:
 	
 	/**
 	 * The minium of the remaining MTU and the available memory.
-	 * Use this before creating a UDP SendBuffer for example.
+	 * Use this before creating a UDP SendBuffer where you want a maximum of available space for example.
 	 */
 	UInt16Opt getMaxPayloadLength() {
 		const UInt16Opt headersize = getUsedInterface() ? estimateSendBufferMinSize() : 0;
 		const UInt16Opt memsize = mempool->getMaxFreeBlockSize();
 		const UInt16Opt mtusize = getMTU();
+			
 		if (memsize<mtusize) return memsize-headersize;
 		return mtusize-headersize;
 	}

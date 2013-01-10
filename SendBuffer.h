@@ -49,10 +49,10 @@ class SendBuffer
 		/**
 		 * Put your data here.
 		 * Example:
-		 * SendBuffer buffer = socket.requestSendBuffer(12);
-		 * memcpy(buffer.data, "test", 4);
+		 * SendBuffer* buffer = socket.requestSendBuffer(12);
+		 * memcpy(buffer->data, "test", 4);
 		 * OR
-		 * (int32)buffer.data[0] = 1472984;
+		 * (int32)(buffer->data[0]) = 1472984;
 		 * Do not change the pointer address yourself!
 		 * Always call writtenToDataPointer after writting to this memory location!
 		 */
@@ -71,7 +71,7 @@ class SendBuffer
 		 * of directly write to the data pointer in incremental steps.
 		 */
 		void write(const void* newdata, UInt16Opt length) {
-			if (!data) return;
+			if (!m_memsize) return;
 
 			UInt16Opt availableLength = getRemainingSize();
 			if (availableLength < length)
@@ -82,11 +82,11 @@ class SendBuffer
 		}
 
 		void makeInvalid() {
-			data = 0;
+			m_memsize = 0;
 		}
 
 		bool isValid() {
-			return (data != 0);
+			return (m_memsize != 0);
 		}
 
 		/**
@@ -94,7 +94,7 @@ class SendBuffer
 		 * Cache this value!
 		 * */
 		UInt16Opt getRemainingSize() {
-			if (!this->data) return 0;
+			if (!this->m_memsize) return 0;
 			return m_memsize - ((char*) data - (char*) getDataStart());
 		}
 		UInt16Opt getSize() {
@@ -110,7 +110,7 @@ class SendBuffer
 };
 
 /**
- * Some times it is neccary to carry the interface inline. This is the case for all
+ * Some times it is neccary to carry the interface inline to ask a SendBuffer if it has been send already. This is the case for all
  * management sockets.
  */
 class SendBufferWithInterface
@@ -126,8 +126,13 @@ public:
 		r->interface = interface;
 		return r;
 	}
-	bool isUnused() {
-		return interface->hasBeenSent(sendbuffer.getDataStart());
+	/**
+	  * Return true if the sendbuffer has been send already. This will also return true if the generation of the sendbuffer
+	  * failed (isValid()==false) and the sendbuffer therefore never have been relayed to the network buffer. Therefore do not
+	  * call this method with failed-to-generate sendbuffers!
+	  */
+	bool hasBeenSend() {
+		return !sendbuffer.isValid() && interface->hasBeenSent(sendbuffer.getDataStart());
 	}
 	Interface* interface;
 	SendBuffer sendbuffer;
