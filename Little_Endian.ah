@@ -50,6 +50,7 @@ aspect Little_Endian {
 	"% ipstack::IPv6_Packet::get_%()" ||
 	"% ipstack::IPv6hc_Packet::get_%()" ||
 	"% ipstack::ICMP_Packet::get_%()" ||
+	"% ipstack::ICMPv6_Packet::get_%()" ||
 	"% ipstack::UDP_Packet::get_%()" ||
 	"% ipstack::TCP_Segment::get_%()" ||
 	"% ipstack::Eth_Frame::get_%()" ||
@@ -63,9 +64,10 @@ aspect Little_Endian {
 
 	pointcut Host_to_Network_Short() =
 	"void ipstack::IPv4_Packet::set_%(%)" ||
-	"void ipstack::IPv6_Packet::set_%()" ||
-	"void ipstack::IPv6hc_Packet::set_%()" ||
+	"void ipstack::IPv6_Packet::set_%(%)" ||
+	"void ipstack::IPv6hc_Packet::set_%(%)" ||
 	"void ipstack::ICMP_Packet::set_%(%)" ||
+	"void ipstack::ICMPv6_Packet::set_%(%)" ||
 	"void ipstack::UDP_Packet::set_%(%)" ||
 	"void ipstack::TCP_Segment::set_%(%)" ||
 	"void ipstack::Eth_Frame::set_%(%)" ||
