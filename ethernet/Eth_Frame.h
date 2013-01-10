@@ -62,6 +62,7 @@ class Eth_Frame {
 	  src_hwaddr[3] = src[3];
 	  src_hwaddr[4] = src[4];
 	  src_hwaddr[5] = src[5];
+	  //memcpy(src_hwaddr, (UInt8*)src, 6);
   }
   
   UInt8* get_src_hwaddr() { return src_hwaddr; }

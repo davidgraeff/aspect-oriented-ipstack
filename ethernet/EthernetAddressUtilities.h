@@ -22,69 +22,17 @@
  */
 
 #include "util/types.h"
-#include "Eth_Frame.h"
 
 namespace ipstack {
 
-	UInt8 numberFromAsciiE(char c) {
-		switch (c) {
-			case '0': return 0;
-			case '1': return 1;
-			case '2': return 2;
-			case '3': return 3;
-			case '4': return 4;
-			case '5': return 5;
-			case '6': return 6;
-			case '7': return 7;
-			case '8': return 8;
-			case '9': return 9;
-			case 'a': return 10;
-			case 'A': return 10;
-			case 'b': return 11;
-			case 'B': return 11;
-			case 'c': return 12;
-			case 'C': return 12;
-			case 'd': return 13;
-			case 'D': return 13;
-			case 'e': return 14;
-			case 'E': return 14;
-			case 'f': return 15;
-			case 'F': return 15;
-			default:
-				return 0;
-		};
-	}
-	
+// Return 18 bytes: mac address as string
+void ethernet_addr_tostring(char *dst, UInt8* eth_addr);
 /**
  * Parse a textual ethernet address representation like "20:01:0d:b8:00:00" into the native representation
  * @param addrstr Textual address representation
  * @param ipaddr Resulting native ethernet represenation
- * @return Return true if successful otherwise false. ipaddr is not altered if the parsing was not successful
+ * @return Return true if successful otherwise false.
  */
-bool parse_ethernet_addr(const char *addrstr, UInt8& eth_addr[])
-{
-	UInt8 blockIndex = 0;
-	char* currentCharPtr = (char*)addrstr;
-	while (blockIndex < 6) {
-		UInt8 blockdata[2] = {0};
-		UInt8 position = 0;
-		//printf("block ");
-		while(*currentCharPtr != ':') {
-			//printf ("%c", *currentCharPtr);
-			blockdata[position] = numberFromAsciiE(*currentCharPtr);
-			++currentCharPtr;
-			if (++position > 1)
-				break;
-		}
-		eth_addr[blockIndex] = (blockdata[1]) | (blockdata[0] << 4);
-		if (*currentCharPtr == 0)
-			break;
-		++currentCharPtr;
-		++blockIndex;
-	}
-	if (blockIndex!=6)
-		return 0;
-	return 1;
-}
+bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr);
 
 } //namespace ipstack

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "ipstack/demux/Demux.h"
 #include "DirectResponse_Slice.ah"
 
 using namespace ipstack;
@@ -37,14 +38,14 @@ using namespace ipstack;
  */
 aspect DirectResponse_aspect {
 	advice "ipstack::Demux" : slice DirectResponseSlice;
-	
+
 	// always execute this before parsing upper layers
 	advice execution("void ipstack::Demux::ethernet_demux(...)") : order("DirectResponse_aspect", "%" && !"DirectResponse_aspect");
-	
-  advice execution("void ipstack::Demux::ethernet_demux(...)") &&
+
+	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
 	args(ethernet_frame, framelen, interface) && that(demux) :
 		around(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
-    
+
 		demux.setDirectResponse(false);
 		demux.mDirectResponseInputData = (void*)ethernet_frame;
 		
@@ -52,6 +53,12 @@ aspect DirectResponse_aspect {
 		//printf("DEMUX %u: remote %u %u %u %u %u %u\n",framelen, dest_eth_frame->get_src_hwaddr()[0],dest_eth_frame->get_src_hwaddr()[1],dest_eth_frame->get_src_hwaddr()[2],dest_eth_frame->get_src_hwaddr()[3],dest_eth_frame->get_src_hwaddr()[4],dest_eth_frame->get_src_hwaddr()[5]);
 		
 		tjp->proceed();
-  }
+	}
+
+	// Direct response has to be initalized to off.
+	advice execution( "void os::init()" ) : after() {
+		Demux& demux = Demux::Inst();
+		demux.setDirectResponse(false);
+	}
 };
 

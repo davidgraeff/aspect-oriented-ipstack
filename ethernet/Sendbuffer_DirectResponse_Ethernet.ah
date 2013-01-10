@@ -32,14 +32,13 @@ aspect Sendbuffer_DirectResponse_Ethernet {
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer)  :
 		around(SendBuffer* sendbuffer) {
 
+		Demux& demux = Demux::Inst(); //short name
 		Interface* interface = tjp->that()->getUsedInterface();
-		if (interface->getType() != Interface::ETHERNET) {
+		if (interface->getType() != Interface::ETHERNET || !demux.isDirectResponse()) {
 			tjp->proceed();
 			return;
 		}
 
-
-		Demux& demux = Demux::Inst(); //short name
 		// Get input ethernet frame from "direct response"-stored input data pointer.
 		Eth_Frame* remote_eth_frame = (Eth_Frame*)(demux.directResponseInputDate());
 		// Get destination ethernet frame from sendbuffer.
