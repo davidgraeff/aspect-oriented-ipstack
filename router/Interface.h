@@ -16,6 +16,7 @@
 // Copyright (C) 2011-2012 Christoph Borchert, David Gräff
 
 #pragma once
+#include "util/types.h"
 
 namespace ipstack {
 
@@ -36,7 +37,7 @@ class Interface {
   unsigned char getType() { return 0; }
   const unsigned char* getAddress() { return 0; }
   unsigned getMTU() { return 0; }
-  unsigned getMaxMTU() { return 0; }
+  UInt8 getAddressSize() { return 0; }
   
   bool hasTransmitterHardwareChecksumming() { return false; }
   bool hasReceiverHardwareChecksumming() { return false; }

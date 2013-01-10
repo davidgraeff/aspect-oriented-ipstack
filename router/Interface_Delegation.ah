@@ -44,8 +44,8 @@ aspect Interface_Delegation_Aspect {
     *tjp->result() = static_cast<Derived*>(tjp->that())->getMTU();
   }
   
-  advice execution("unsigned ipstack::Interface::getMaxMTU()") : around() {
-	  *tjp->result() = static_cast<Derived*>(tjp->that())->getMaxMTU();
+  advice execution("% ipstack::Interface::getAddressSize()") : around() {
+	  *tjp->result() = static_cast<Derived*>(tjp->that())->getAddressSize();
   }
   
   advice execution("bool ipstack::Interface::hasTransmitterHardwareChecksumming()") : around() {
