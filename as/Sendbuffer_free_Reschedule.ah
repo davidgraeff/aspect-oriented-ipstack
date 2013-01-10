@@ -1,0 +1,39 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert
+
+#pragma once
+
+#include "as/AS.h"
+#include "os/krn/EnterLeave.h"
+
+aspect Sendbuffer_free_Reschedule {
+
+	advice call(("% ipstack::Interface::hasBeenSent(...)") && within("ipstack::%_Socket::free(...)") || "% ipstack::Interface::ipv6_wait_reschedule(...)") : after() {
+    if(*tjp->result() == false) {
+      // packet not send yet, let other tasks run while waiting ...
+      
+      //Because this is an aspect, AS:: calls are not synchronized!
+      //EnterLeave_Weaving_Static.ah uses the call advice,
+      //which doesn't match here :-(
+      //Workaround: call enterKernel() and leaveKernel() explicit!
+      os::krn::enterKernel(); //lock
+      AS::Schedule();
+      os::krn::leaveKernel(); //unlock
+    }
+  }
+
+};
