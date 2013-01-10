@@ -68,10 +68,6 @@ aspect IPv4_ARP_Send_Receive {
         if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
           //Send ARP-Reply
           ARP_Cache::Inst().ipv4_reply(src_hw_addr, (UInt32*) src_ipv4_addr, interface);
-		  // DG: If a host ask for our mac address, it probably want to send something to us
-		  // so remember its ip.
-		  //Update ARP Cache entries
-		  ARP_Cache::Inst().ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
 		}
         else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
           //Update ARP Cache entries

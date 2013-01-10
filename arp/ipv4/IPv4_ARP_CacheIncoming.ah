@@ -1,0 +1,45 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include <string.h> //for memcpy
+#include "ipstack/router/Interface.h"
+#include "../ARP.h"
+#include "../ARP_Cache.h"
+#include "ipstack/ethernet/Eth_Frame.h"
+
+using namespace ipstack;
+
+/**
+  * We not only reply to an ARP request but also cache the incoming address, because we can assume
+  * that the remote host want to send us further packets.
+  */
+aspect IPv4_ARP_CacheIncoming {
+  
+  // *** Affect class: ARP_Cache
+  advice execution("void ipstack::ARP_Cache::ipv4_reply(%, %, ipstack::Interface*)") &&
+         args(src_hwaddr, src_ipv4_addr, interface) &&
+         that(cache) :
+         after(const UInt8* src_hwaddr, const UInt32* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
+
+ 		  //Update ARP Cache entries
+		  cache.ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
+  }
+  
+};
