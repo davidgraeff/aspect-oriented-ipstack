@@ -1,0 +1,73 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "../ICMPv6.h"
+#include "NDPMessages.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/demux/Demux.h"
+
+aspect NDP_Neighbor_Advertisement {
+	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
+		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+			
+		NDPMessages::NeighborAdvertisementMessage* message = (NDPMessages::NeighborAdvertisementMessage*)icmp_packet;
+		if (message->type == 136 && message->code == 0) {
+			if (payloadlen < sizeof(NDPMessages::NeighborAdvertisementMessage))
+				return; // drop packet
+			payloadlen -= sizeof(NDPMessages::NeighborAdvertisementMessage);
+
+			// get dest mac
+			char dest_ethernet_mac[6];
+			bool foundDestMac = NDPMessages::get_option_linklayer_address(NDPMessages::TargetLinkLayer,
+																		  (char*)message->options, payloadlen, (char*)dest_ethernet_mac);
+
+			// Look in the NDP Cache for an entry
+			NDPCacheEntry* entry = interface->ndpcache_find(message->target_address);
+			if (entry) {
+				entry->isRouter = message->isRouter();
+				// update expire time
+				if (entry->isRouter) {
+					interface->update_NDPCacheEntry_importance(entry, NDPCacheEntry::IMPORTANCE_router);
+				} else {
+					interface->update_NDPCacheEntry_importance(entry, NDPCacheEntry::IMPORTANCE_solicitation_renew);
+				}
+				// update entry
+				if (foundDestMac && (message->isOverride() || entry->state != NDPCacheEntry::NDPCacheEntryState_Reachable)) {
+					memcpy(entry->hw, dest_ethernet_mac, sizeof(entry->hw));
+					entry->state = NDPCacheEntry::NDPCacheEntryState_Reachable;
+				}
+			}
+
+			// Now: Only code that is executed if we actually requested this advertisement
+			if (!message->isResponse())
+				return;
+
+			// If we requested an advertisment we are in the process of duplicate-address-detection.
+			// We do check our interface addresses now and change addresses if necessary
+			NDPMessages::is_duplicate_address(message->target_address, interface);
+		} else {
+			tjp->proceed();
+		}
+	}
+};

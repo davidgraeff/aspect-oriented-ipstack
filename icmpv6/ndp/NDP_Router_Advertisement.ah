@@ -1,0 +1,131 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "../ICMPv6.h"
+#include "NDPMessages.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/demux/Demux.h"
+
+/**
+  * React on router advertisement messages: Add/update all propagated prefixes as ipv6 addresses to the interface on which we received the message.
+  */
+aspect NDP_Router_Advertisement {
+	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
+		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+			
+		NDPMessages::RouterAdvertisementMessage* message = (NDPMessages::RouterAdvertisementMessage*)icmp_packet;
+		if (message->type == 134 && message->code == 0) {
+			if (payloadlen < sizeof(NDPMessages::RouterAdvertisementMessage))
+				return; // drop packet
+			payloadlen -= sizeof(NDPMessages::RouterAdvertisementMessage);
+
+			// get src mac (in the options)
+			char src_ethernet_mac[6];
+			bool foundMac = NDPMessages::get_option_linklayer_address(NDPMessages::SourceLinkLayer,
+			(char*)message->options, payloadlen, (char*)src_ethernet_mac);
+
+			// Try to find the router entry in our ndp cache
+			NDPCacheEntry* entry = interface->ndpcache_find(packet->get_src_ipaddr());
+			if (!entry) {
+				// Not found: Create a new one. Either this is stale (mac is known) or incomplete (mac not known)
+				// In both cases we send out a neighbor solicitation message but if we know the ethernet mac, we will use it
+				entry = interface->addNDPCacheEntry(packet->get_src_ipaddr(), (UInt8*)src_ethernet_mac,
+				foundMac ? NDPCacheEntry::NDPCacheEntryState_Stale : NDPCacheEntry::NDPCacheEntryState_Incomplete);
+			}
+			if (entry) {
+				// HINT: We do not take the Reachable Time and Retrans Timer into account for Neighbor Unreachability Detection.
+				// The ndp cache expire_value field would have be 8 times that big per entry to do it standard compliant.
+				// We assume for an embedded network stack: The topology will not change that often (and: the ndp cache refresh
+				// time is configurable for fast changing topologies)
+				if (foundMac) // Just set the expire_value to a reasonable value (if mac is known)
+					interface->update_NDPCacheEntry_importance(entry, NDPCacheEntry::IMPORTANCE_router);
+
+				// Default router? (message->router_lifetime > 0)
+				// We do not remember this value -> The router has to send another Router_Advertisement
+				// if it want us to stop using it as a default router: Selfish but saves memory.
+				entry->isRouting = (message->router_lifetime != 0);
+				
+				// Ok, now update (and add) all prefixes
+				UInt8 routerPosition = interface->addressmemory.getPosition(entry);
+
+				// First: Flag all entries of this router as ToBeDeleted
+				UInt8 nextEntry = 0;
+				while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+					if (addressentry->routerEntryPosition == routerPosition) {
+// 						printf("NDP_Router_Advertisement flag remove %p\n", addressentry);
+						addressentry->toBeRemoved = 1;
+					}
+				}
+
+				bool router_is_shuting_down = (message->router_lifetime == 0) && (message->reachable_time == 0);
+
+				// Second: Add/Update entries and remove ToBeDeleted flag
+				if (!router_is_shuting_down) {
+					NDPMessages::OptionPrefixInformation* routerprefix = NDPMessages::get_prefix_option((char*)message->options, payloadlen);
+					while (routerprefix) {
+						if (routerprefix->useForStatelessAddressConfiguration()) {
+							// Find ipv6 address with a prefixlen of this interface that equals the new propagated prefix
+							AddressEntry* addressentry = 0;
+							while ((addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry))) {
+								if (addressentry->routerEntryPosition == routerPosition &&
+										compare_ipv6_addr(addressentry->ipv6, routerprefix->prefix, routerprefix->prefix_length)) {
+									break;
+								}
+							}
+
+							if (!addressentry) {
+// 								printf("NDP_Router_Advertisement add prefix %p\n", addressentry);
+								addressentry = interface->makeIPv6AddressByPrefix(routerprefix->prefix, routerprefix->prefix_length,
+											AddressEntry::AddressEntryStateTemporary,
+											routerPosition);
+							}
+							if (addressentry) {
+								addressentry->toBeRemoved = 0;
+								addressentry->hoplimit = message->curHopLimit;
+								addressentry->isOnLink = routerprefix->isOnLink();
+								addressentry->valid_time_minutes = routerprefix->get_valid_lifetime();
+								addressentry->preferred_time_minutes = routerprefix->get_preferred_lifetime();
+							}
+						}
+
+						// next prefix
+						payloadlen -= sizeof(NDPMessages::OptionPrefixInformation);
+						routerprefix = NDPMessages::get_prefix_option((char*)routerprefix, payloadlen);
+					}
+				}
+
+				// Third: Remove all flaged entries
+				nextEntry = 0;
+				while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+					if (addressentry->routerEntryPosition == routerPosition && addressentry->toBeRemoved) {
+						interface->addressmemory.freeEntry(addressentry);
+					}
+				}
+			}
+
+		} else {
+			tjp->proceed();
+		}
+	}
+};
