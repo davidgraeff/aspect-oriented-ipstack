@@ -23,13 +23,6 @@ using namespace ipstack;
 
 
 aspect InternetChecksum_Tx_Offloading_all {
-
-	enum {
-		IP_TYPE_UDP = 17,
-		IP_TYPE_TCP = 0x6,
-		IPV4_TYPE_ICMP = 0x1
-	};
-
 	// *** Affect class 'InternetChecksum'
 	/**
 	 * Do not compute the payload checksum if the hardware is capable of doing this.
@@ -56,13 +49,13 @@ aspect InternetChecksum_Tx_Offloading_all {
 		}
 	}
 
-	// execution-advice ordering: always execute this aspect at last, but before "Sendbuffer_IPv4_Checksum" or "Sendbuffer_ICMPv4_checksum"
+	// execution-advice ordering: always execute this aspect at last, but before "Sendbuffer_%_Checksum" (avoid any software checksumming)
 	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)") :
 		order("%" && !"InternetChecksum_Tx_Offloading_all" && !"Sendbuffer_IPv4_Checksum" && !"Sendbuffer_ICMPv4_checksum",
 			  "InternetChecksum_Tx_Offloading_all",
-			  "Sendbuffer_IPv4_Checksum",
-			  "Sendbuffer_ICMPv4_checksum");
+			  "Sendbuffer_%_Checksum");
 
+	// Hardware checksumming supported for UDP
 	advice execution("void ipstack::%UDP_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)")  &&
 		args(dataToSend, interface):
 		around(SendBuffer* dataToSend, Interface* interface) {
@@ -77,6 +70,7 @@ aspect InternetChecksum_Tx_Offloading_all {
 		tjp->proceed();
 	}
 	
+	// Hardware checksumming supported for TCP
 	advice execution("void ipstack::%TCP_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)")  &&
 		args(dataToSend, interface):
 		around(SendBuffer* dataToSend, Interface* interface) {
@@ -91,7 +85,7 @@ aspect InternetChecksum_Tx_Offloading_all {
 		tjp->proceed();
 	}
 	
-	// Do not do that in hardware: Computation is wrong on my network nic
+	// Hardware checksumming supported for ICMPv4 (not v6)
 	advice execution("void ipstack::ICMPv4_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)")  &&
 		args(dataToSend, interface):
 		around(SendBuffer* dataToSend, Interface* interface) {

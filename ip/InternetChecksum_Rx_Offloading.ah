@@ -26,7 +26,7 @@ aspect InternetChecksum_Rx_Offloading {
 	/**
 	 * Do not compute pseudo header + payload checksum (udp, tcp, icmpv6) if the hardware is capable of doing this.
 	 */
-	advice execution("bool ipstack::InternetChecksum%::valid(%,%,ipstack::Interface*)") : around() {
+	advice execution("bool ipstack::InternetChecksum%::valid(...)") : around() {
 		Interface* interface = *tjp->arg<2>();
 		if (interface->hasReceiverHardwareChecksumming()) {
 			*tjp->result() = true; //checksum has already been checked by hardware
