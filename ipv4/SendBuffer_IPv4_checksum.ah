@@ -4,38 +4,39 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2012 David Gräff
 
+#pragma once
 
-#ifndef __IPV4_AH__
-#define __IPV4_AH__
-
-#include "Router_IPv4_Slice.ah"
-#include "Interface_IPv4_Slice.ah"
-#include "Socket_IPv4_Slice.ah"
+#include "../router/Interface.h"
+#include "ipstack/SendBuffer.h"
+#include "IPv4.h"
+#include "util/types.h"
 
 using namespace ipstack;
 
-
-aspect IPv4 {
-  /* Affect class: Interface */
-  advice "ipstack::Interface" : slice Interface_IPv4_Slice;
-
-  /* Affect class: Router */
-  advice "ipstack::Router" : slice Router_IPv4_Slice;
-  
-  /* Affect class: _Socket */
-  advice "ipstack::%_Socket" : slice Socket_IPv4_Slice;
+/**
+ * Calculates the IPv4 checksum. The around advice will not be executed if tx_offloading by the
+ * InternetChecksum_Tx_Offloading_all aspect is active.
+ */
+aspect Sendbuffer_IPv4_Checksum {
+	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)") && args(sendbuffer, interface) :
+	before(SendBuffer* sendbuffer, Interface* interface) {
+		
+		if (tjp->that()->m_useipversion != 4) {
+			return;
+		}
+		
+		IPv4_Packet* ip = (IPv4_Packet*) sendbuffer->memstart_ip;
+		ip->computeChecksum();
+	}
 };
-
-#endif // __IPV4_AH__
-

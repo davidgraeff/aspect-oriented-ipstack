@@ -73,6 +73,7 @@ class IPv4_Packet{
   }
   
   public:
+	  UInt16 payload_len() { return get_total_len()-get_ihl()*4; } // no get_ to be not influenced by aspects
   UInt16 get_total_len() { return total_len; }
   void set_total_len(UInt16 len) { total_len = len; }
   
@@ -105,6 +106,9 @@ class IPv4_Packet{
   
   UInt8 get_protocol() { return protocol; }
   void set_protocol(UInt8 proto) { protocol = proto; }
+  char* get_nextheaderPointer() {
+	  return (char*)&protocol;
+  }
   
   UInt16 get_hdr_checksum() { return hdr_checksum; }
   void set_hdr_checksum(UInt16 csum) { hdr_checksum = csum; }
@@ -160,10 +164,14 @@ class IPv4_Packet{
     return total_len;
   }
 
-  inline bool validPacketChecksum(){
+  bool validPacketChecksum(void*){
     return (cksum((UInt16*)this, (get_ihl()*2)) == 0);
   }
   
+  inline bool validPacketChecksum(){
+    return (cksum((UInt16*)this, (get_ihl()*2)) == 0);
+  }
+    
   inline void computeChecksum(){
     hdr_checksum = 0;
     hdr_checksum = cksum((UInt16*)this, (get_ihl()*2));

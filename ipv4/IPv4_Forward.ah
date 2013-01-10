@@ -4,15 +4,15 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
 
@@ -30,34 +30,31 @@ using namespace ipstack;
 
 aspect IPv4_Forward {
 
-  /* Affect class: IP_Demux */
-  advice execution("void ipstack::Demux::ipv4_forward(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
-         args(packet, len, interface) && that(demux) :
-         after(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
-    
-    Router& router = Router::Inst(); //short name
-    
-    if(packet->get_ttl() > 0){
-      //only forward packets whose time-to-live (hop count) is not expired
-      
-      //TODO: verfiy the algorithm below! (perhaps optimize it?)
-      Interface* ir = router.ipv4_find_route(packet->get_dst_ipaddr());
-      if(ir == 0) {
-        //destination is NOT on a local link. use gateway
-        //printf("Using default gateway: \n");
-        ir = router.ipv4_find_route(router.ipv4_get_gateway_addr());
-      }
-      //std::cout << "Routing over: " << (const char*) ir->name << std::endl;
-      //printf("Routing over: TODO\n");
-      if( (ir != 0) && (ir != interface) ){
-        //TODO: route this paket -> copy it to userspace routing daemon?
-        //printf("TODO: implement routing of this packet ;-)\n");
-      }
-    }
-  }
-  
-  /* Affect class: XY */
-  
+	/* Affect class: IP_Demux */
+	advice execution("void ipstack::Demux::ipv4_forward(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, len, interface) && that(demux) :
+		after(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
+
+		Router& router = Router::Inst(); //short name
+
+		//TODO: verfiy the algorithm below! (perhaps optimize it?)
+		Interface* ir = router.ipv4_find_route(packet->get_dst_ipaddr());
+		if (ir == 0) {
+			//destination is NOT on a local link. use gateway
+			//printf("Using default gateway: \n");
+			ir = router.ipv4_find_route(router.ipv4_get_gateway_addr());
+		}
+		//std::cout << "Routing over: " << (const char*) ir->name << std::endl;
+		//printf("Routing over: TODO\n");
+		if ((ir != 0) && (ir != interface)) {
+			//TODO: route this paket -> copy it to userspace routing daemon?
+			//printf("TODO: implement routing of this packet ;-)\n");
+		}
+
+	}
+
+	/* Affect class: XY */
+
 };
 
 #endif /*__IPV4_FORWARD_AH__ */

@@ -13,29 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2012 David Gräff
 
+#pragma once
+#include "IPv4onSockets.h"
 
-#ifndef __IPV4_AH__
-#define __IPV4_AH__
-
-#include "Router_IPv4_Slice.ah"
-#include "Interface_IPv4_Slice.ah"
-#include "Socket_IPv4_Slice.ah"
-
-using namespace ipstack;
-
-
-aspect IPv4 {
-  /* Affect class: Interface */
-  advice "ipstack::Interface" : slice Interface_IPv4_Slice;
-
-  /* Affect class: Router */
-  advice "ipstack::Router" : slice Router_IPv4_Slice;
-  
-  /* Affect class: _Socket */
-  advice "ipstack::%_Socket" : slice Socket_IPv4_Slice;
-};
-
-#endif // __IPV4_AH__
-
+namespace ipstack {
+	/**
+	 * Adds IPv4 functionality to a socket.
+	 */
+	slice class Socket_IPv4_Slice {
+	public:
+		/**
+		 * Add a member ipv4 to a socket. ipv4 is able to send and receive ipv4 packets.
+		 * A wrapper api is added by an aspect to use socket.send(..) etc.
+		 * This is neccessary to implement a dual-stack with a common api one one hand
+		 * and a specialised api for the different transport layer methods respectively.
+		 */
+		IPV4 ipv4;
+	}; // slice class
+} //namespace ipstack
