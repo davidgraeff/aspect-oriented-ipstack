@@ -26,7 +26,7 @@ using namespace ipstack;
  * Calculates the icmpv4 checksum. The around advice will not be executed if tx_offloading by the
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
-aspect Sendbuffer_ICMPv4_checksum  {
+aspect Sendbuffer_ICMPv4_Checksum  {
 	advice execution("% ipstack::ICMPv4_Socket::send(...)") && args(sendbuffer, interface) :
 	before(SendBuffer* sendbuffer, Interface* interface) {
 		

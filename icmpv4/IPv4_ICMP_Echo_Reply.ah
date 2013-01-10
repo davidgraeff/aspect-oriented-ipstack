@@ -46,9 +46,7 @@ aspect IPv4_ICMP_Echo_Reply {
 			if (payloadlen > maxlen) {
 				payloadlen = maxlen;
 			}
-						
-			payloadlen -= ICMP_Packet::ICMP_HEADER_SIZE;
-
+			
 			demux.setDirectResponse(true);
 			SendBufferWithInterface* sbi = icmpv4instance.requestSendBufferICMP(interface, payloadlen);
 			//we have an echo request packet for IPv4
@@ -69,5 +67,4 @@ aspect IPv4_ICMP_Echo_Reply {
 			tjp->proceed();
 		}
 	}
-
 };
