@@ -1,0 +1,67 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../../router/Interface.h"
+#include "../IPv6.h"
+#include "../IPv6onSockets.h"
+#include "ipstack/SendBuffer.h"
+#include "IPv6HopByHop.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+/**
+ * Set the IPv6 header extension: HopByHop
+ */
+aspect Sendbuffer_IPv6_HopByHop_extension {
+// 	// Always first add the IPv6 header and after that the Extension headers.
+// 	// All upper layer protocols should be the last ones effecting these funtions.
+	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv6" , "Sendbuffer_IPv6_HopByHop_extension");
+// 
+	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
+		after(unsigned v) {
+		// check ip version
+		if (tjp->that()->m_useipversion == 6) {
+			*tjp->result() = v + IPv6HopByHop::getSize(tjp->that()->ipv6);
+		}
+	}
+
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+		around(SendBuffer* sendbuffer) {
+
+		// check ip version
+		if (tjp->that()->m_useipversion == 6) {
+			IPV6& ipv6 = tjp->that()->ipv6;
+			char* nextHeader = (char*)sendbuffer->data; // the next header field is always the first byte of an IPv6 extension header.
+			UInt16Opt size = IPv6HopByHop::writeExtensionHeader(ipv6, nextHeader);
+// 			printf("Sendbuffer_IPv6_HopByHop_extension content %u\n", size);
+			if (!size) {
+				tjp->proceed();
+				return;
+			}
+			sendbuffer->writtenToDataPointer(size);
+			// set next header of ipv6
+			*(sendbuffer->nextheaderfield_ip) = IPv6HopByHop::IPV6_NEXTHEADER_HOPBYHOP;
+			
+			// change next header pointer to point to the nextheader field of this extension.
+			sendbuffer->nextheaderfield_ip = nextHeader;
+		}
+		tjp->proceed();
+	}
+};

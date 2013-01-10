@@ -1,0 +1,60 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../../IPv6.h"
+#include "../../../demux/Demux.h"
+#include "../../../router/Interface.h"
+#include "hopbyhop_alertMessage_IPv6_Slice.ah"
+
+using namespace ipstack;
+
+/**
+ * Add the possibility to add the alert hop-by-hop option to an IPv6
+ * message. This is necessary for multicast join/leave messages.
+ */
+aspect IPv6_HeaderOption_HopByHop_Alert {
+	/* Affect class: IPV6 */
+advice "ipstack::IPV6" : slice hopbyhop_alertMessage_IPv6_Slice;
+
+	advice execution("unsigned ipstack::IPv6HopByHop::getMinSize(ipstack::IPV6&)") &&
+	args(ipv6) : after(IPV6& ipv6) {
+		if (!ipv6.use_alertoption)
+			return;
+		*(tjp->result()) += 4;
+	}
+
+	advice execution("unsigned ipstack::IPv6HopByHop::writeOptions(ipstack::IPV6&, %)") &&
+	args(ipv6, data) : after(IPV6& ipv6, UInt8* data) {
+		if (!ipv6.use_alertoption)
+			return;
+		
+		data[0] = 5; // option type
+		data[1] = 2; // option length
+		data[2] = 0;
+		data[3] = ipv6.alertoptiontype;
+
+		*(tjp->result()) = 4;
+	}
+	
+	advice execution("void ipstack::IPV6::restoreDefaultSendingConfiguration()") &&
+	that(ipv6) : after(IPV6& ipv6) {
+		ipv6.use_alertoption = false;
+	}
+	
+};
