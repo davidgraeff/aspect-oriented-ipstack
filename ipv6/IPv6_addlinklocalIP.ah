@@ -1,0 +1,59 @@
+// This file is part of CiAO/IPv6-Extension.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IPv6-Extension.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+/// Purpose: After an interface comes up, a link local IP will be added, if not already assigned.
+
+#pragma once
+
+#include "ipstack/router/Interface.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+
+using namespace ipstack;
+
+aspect IPv6_add_link_local_address  {
+	advice execution( "void ipstack::Interface::setIPv6Up(bool)" ) && args(up) && that(interface) : around(bool up, Interface& interface) {
+
+		// only add link local address if the interface gets up
+		if (!up) {
+			tjp->proceed();
+			return;
+		}
+		
+		ipstack::ipv6addr prefix;
+		bool found = interface.getInterfaceIPv6AddressByScope(prefix, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL);
+		// if there is already a link local address assigned -> abort
+		if (found) {
+			tjp->proceed();
+			return;
+		}
+		
+		// make addr a link local address (fe80:/64) see rfc2464 paragraph 5
+		prefix.ipaddrB8[0] = 0xfe;
+		prefix.ipaddrB8[1] = 0x80;
+		prefix.ipaddrB8[2] = 0;
+		prefix.ipaddrB8[3] = 0;
+		prefix.ipaddrB8[4] = 0;
+		prefix.ipaddrB8[5] = 0;
+		prefix.ipaddrB8[6] = 0;
+		prefix.ipaddrB8[7] = 0;
+
+		// add IP address
+		interface.makeIPv6AddressByPrefix(prefix, 64);
+		
+		tjp->proceed();
+	}
+};
