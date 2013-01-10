@@ -29,12 +29,11 @@ using namespace ipstack;
 /**
  * Set TCP as next header protocol in the the IPv4 Header.
  * We do not need to add a TCP Header here, that is done in the
- * TCP Socket.
- * TODO: To use the (SendBuffer, send)-API also for TCP. The tcp
- * header has to be added, but only if not called within the
- * TCP_Socket class.
+ * TCP Socket. The Sendbuffer API is therefore not usable outside
+ * of the TCP Socket class.
  */
 aspect Sendbuffer_TCP  {
+	// First add the IP Header after that execute this TCP aspect
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_TCP");
 
 // 	advice execution("void ipstack::TCP_Socket::writeHeader%(...)") && args(sendbuffer) :
@@ -48,19 +47,4 @@ aspect Sendbuffer_TCP  {
 		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
 		sendbuffer->memstart_transport = sendbuffer->data;
 	}
-	
-	// if not within requestSendBufferTCP% than add the tcp header if a connection is established
-// 	advice call("% ipstack::%TCP_Socket::prepareSendBuffer(...)") && args(sendbuffer, size) :
-// 	around(SendBuffer* sendbuffer, UInt16Opt remainingpayloadsize) {
-// 		// remainingpayloadsize: this is payload AND the udp header size as determined in 
-// 		// estimateSendBufferMinSize() before.
-// 		tjp->that()->setupHeader(sendbuffer->data, remainingpayloadsize);
-// 		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
-// 		// set ip next header protocol to UDP
-// 		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
-// 		// there is no remaining size after UDP
-// 		*(tjp->arg<1>()) -= remainingpayloadsize; // 
-// 		
-// 		tjp->proceed();
-// 	}
 };
