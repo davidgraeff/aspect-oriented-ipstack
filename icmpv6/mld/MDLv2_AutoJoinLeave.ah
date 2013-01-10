@@ -1,0 +1,99 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "../ICMPv6.h"
+#include "../ICMPv6_Socket.h"
+#include "MLDMessages.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/SendBuffer.h"
+#include "util/types.h"
+
+/**
+ * Purpose: Joins and leaves multicast scopes. This is Version 2 of the protocol.
+ * This is only half standard compliant: There is a complex state machine with
+ * timers and resending descripted in the RFC rfc3810 (MLD v2). We only register
+ * to a multicast group once and leave a group if the interface is shutdown or the leave* API is used.
+ 
+ * We respond immediately to a Multicast Query. RFC recommends to wait for a random time if multiple devices
+ * start up at the same time after a power shortage etc.
+ */
+
+aspect MDLv2_Autojoinleave {
+	advice execution("void ipstack::Interface::leave_multicastGroup(const ipstack::ipv6addr&)") && args(multicast_addr) && that(interface) :
+		after(const ipstack::ipv6addr& multicast_addr, Interface& interface) {
+
+		ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
+		IPV6& ipv6 = icmpv6instance.ipv6;
+		ipstack::ipv6addr addr = {{0}};
+		addr.ipaddrB8[0] = 0xff;
+		addr.ipaddrB8[1] = 0x02;
+		addr.ipaddrB8[15] = 0x16;
+		ipv6.addAlertHopByHopOption(IPV6::MLPMessageAlert);
+		ipv6.set_dst_addr(addr, &interface); // all routers multicast address
+		ipv6.setHoplimit(1);
+		// For the src address try to get the link local address
+		if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
+			ipv6.set_src_addr(addr); // link-local
+		else {
+			get_unspecified_ipv6_address(addr);
+			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
+		}
+		SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, MLDMessages::mldv2_listener_report_message_size());
+		if (sbi) {
+			MLDMessages::write_mldv2_listener_report_message((char*)sbi->sendbuffer.data, multicast_addr, MLDMessages::mldv2_CHANGE_TO_INCLUDE_MODE);
+			sbi->sendbuffer.writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
+			icmpv6instance.send(&sbi->sendbuffer);
+		}
+		ipv6.restoreDefaultSendingConfiguration();
+	}
+
+	advice execution("bool ipstack::Interface::join_multicastGroup%(const ipstack::ipv6addr&, bool)") && args(multicast_addr, registerToRouters) && that(interface) :
+		after(const ipstack::ipv6addr& multicast_addr, bool registerToRouters, Interface& interface) {
+			
+			// abort if the multicast address should not be registered to routers or if storing of the address failed (look at the function result)
+			if (!registerToRouters || !*tjp->result())
+				return;
+			
+			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
+			IPV6& ipv6 = icmpv6instance.ipv6;
+			ipstack::ipv6addr addr = {{0}};
+			addr.ipaddrB8[0] = 0xff;
+			addr.ipaddrB8[1] = 0x02;
+			addr.ipaddrB8[15] = 0x16;
+			ipv6.set_dst_addr(addr, &interface); // all routers multicast address
+			ipv6.setHoplimit(1);
+			ipv6.addAlertHopByHopOption(IPV6::MLPMessageAlert);
+			// For the src address try to get the link local address
+			if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
+				ipv6.set_src_addr(addr); // link-local
+			else {
+				get_unspecified_ipv6_address(addr);
+				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
+			}
+			SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, MLDMessages::mldv2_listener_report_message_size());
+			if (sbi) {
+				MLDMessages::write_mldv2_listener_report_message((char*)sbi->sendbuffer.data, multicast_addr, MLDMessages::mldv2_CHANGE_TO_EXCLUDE_MODE);
+				sbi->sendbuffer.writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
+				icmpv6instance.send(&sbi->sendbuffer);
+			}
+			ipv6.restoreDefaultSendingConfiguration();
+	}
+};
