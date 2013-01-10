@@ -1,6 +1,7 @@
 #include "ManagementMemory.h"
 #include "../cfAttribs.h"
 #include "SharedMemory.h"
+#include "stdio.h"
 
 namespace ipstack
 {
@@ -21,14 +22,16 @@ namespace ipstack
 			SendBufferWithInterface* old = (SendBufferWithInterface*)packetbuffer->get();
 			if (!old) {
 				break;
-			}
-			// if the SendBuffer has been send already, free it
-			else if (old->isUnused()) {
+			} else if (old->hasBeenSend()) { // if the SendBuffer has been send already, free it
 				mempool->free((void*)old);
 			} else {
 				// not send, reinsert
 				packetbuffer->put(old);
 			}
 		}
+	}
+	
+	const UInt16Opt ManagementMemory::getSlots() const {
+		return sharedmemory.getSlots();
 	}
 }

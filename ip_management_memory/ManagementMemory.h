@@ -33,6 +33,7 @@ namespace ipstack
  */
 class ManagementMemory
 {
+	friend class Demux; // Make Demux a friend-class to access packetbuffer+mempool
 	public:
 		/**
 		 * Initialise the packetbuffer and mempool pointers to point to the shared memory.
@@ -45,6 +46,11 @@ class ManagementMemory
 		 * has send the data already.
 		 */
 		SendBufferWithInterface* allocSendBufferWithInterface(UInt16Opt size, Interface* interface);
+		
+		/**
+		  * Memory slots
+		  */
+		const UInt16Opt getSlots() const;
 	private:
 		/**
 		 * Check all allocated SendBuffers (listed in "packetbuffer") if the data has been send already.
