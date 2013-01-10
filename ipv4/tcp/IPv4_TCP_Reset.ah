@@ -1,0 +1,68 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert
+
+
+#ifndef __IPV4_TCP_RESET_AH__
+#define __IPV4_TCP_RESET_AH__
+
+#include "../IPv4.h"
+#include "ipstack/tcp/TCP.h"
+#include "ipstack/tcp/Management_TCP_Socket.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
+
+aspect IPv4_TCP_Reset {
+	//only send resets if no connection could be found:
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
+	order("IPv4_TCP_%" && !"IPv4_TCP_Reset", "IPv4_TCP_Reset");
+
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, len, interface) && that(demux) :
+		around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
+
+		if (packet->get_protocol() == TCP_Segment::IP_TYPE_TCP) {
+			TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
+			//do not reply resets with resets
+			if (tcp_segment->has_RST() == false) {
+				//"Active Side Causes Half-Open Connection Discovery"
+				//rfc793 page 35 (Figure 11.)
+				demux.setDirectResponse(true);
+				Management_TCP_Socket &resetsocketinstance = Management_TCP_Socket::instance();
+				resetsocketinstance.ipv4.set_dst_addr(packet->get_src_ipaddr());
+				SendBufferWithInterface* sendbuffer = resetsocketinstance.requestSendBufferTCP(interface);
+				if (!sendbuffer) {
+					demux.error_receiving_queue_full(packet, interface);
+					return;
+				}
+
+				resetsocketinstance.prepareResponse(sendbuffer, tcp_segment,
+													packet->get_total_len() - (packet->get_ihl() + tcp_segment->get_header_len()) * 4);
+
+				resetsocketinstance.send(&(sendbuffer->sendbuffer));
+				
+			}
+		} else {
+			tjp->proceed(); //try another 'ipv4_demux'-aspect
+		}
+	}
+
+};
+
+#endif //__IPV4_TCP_RESET_AH__
+
