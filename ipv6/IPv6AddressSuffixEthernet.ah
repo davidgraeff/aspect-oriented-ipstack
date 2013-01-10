@@ -1,0 +1,55 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+/// Purpose: The lower bytes of an IPv6 address consists normally of the link layer address (ethernet)
+/// This aspect will interfere with addInterfaceIdentifierToIPv6Address and will
+/// set the lower 64 Bytes of the address to the interface ethernet address (48 Bytes).
+/// This aspect is exclusive-or related to the privacy-extension aspect.
+
+#pragma once
+
+#include "IPv6.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
+
+#define SET_BIT(p,n) ((p) |= (1 << (n)))
+#define CLR_BIT(p,n) ((p) &= ~((1) << (n)))
+
+aspect ipstack_ipv6_address_suffix_ethernet  {
+	advice execution( "void ipstack::Interface::addInterfaceIdentifierToIPv6Address(ipstack::ipv6addr&)" ) && args(address) && that(interface)
+	: around(ipv6addr& address, Interface& interface) {
+		
+		// put ethernet address into the IPv6 address. 
+		// rfc2464 defines how to get an 8 byte interface id out of the 6 byte ethernet like this:
+		//  34-56-78-9A-BC-DE --> 36-56-78-_FF_-_FE_-9A-BC-DE
+		
+		// Bytes 8+9+10+13+14+15 are the ethernet address
+		const unsigned char * ethAddr = interface.getAddress();
+		address.ipaddrB8[8] = ethAddr[0]; 
+		address.ipaddrB8[9] = ethAddr[1]; 
+		address.ipaddrB8[10] = ethAddr[2]; 
+		address.ipaddrB8[11] = 0xFF;
+		address.ipaddrB8[12] = 0xFE;
+		address.ipaddrB8[13] = ethAddr[3]; 
+		address.ipaddrB8[14] = ethAddr[4]; 
+		address.ipaddrB8[15] = ethAddr[5]; 
+		
+		CLR_BIT(address.ipaddrB8[8], 0); // group bit = 0
+		SET_BIT(address.ipaddrB8[8], 1); // not globally unique
+	}
+};

@@ -1,0 +1,90 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../../router/Interface.h"
+#include "../../ethernet/Eth_Frame.h"
+#include "ipstack/SendBuffer.h"
+#include "util/types.h"
+#include "../IPv6.h"
+#include "../IPv6onSockets.h"
+
+using namespace ipstack;
+
+/**
+ * Add the ethernet header frame size to the createSendBuffer(size)
+ * and fill in the ethernet header in prepareSendBuffer(...)
+ */
+aspect Sendbuffer_IPv6_Ethernet {
+	// call-advice ordering: always add the ethernet header before the IPv6 header!
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") :
+		order("Sendbuffer_IPv6_Ethernet" , "Sendbuffer_IPv6");
+
+	// add ethernet header to the SendBuffer. This method is only called with a valid
+	// SendBuffer -> no runtime checks.
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") &&
+	args(sendbuffer)  :
+		around(SendBuffer* sendbuffer) {
+
+		// only for IPv6
+		if (tjp->that()->m_useipversion != 6) {
+			tjp->proceed();
+			return;
+		}
+		
+
+		IPV6& ipv6 = tjp->that()->ipv6;
+		Interface* interface = ipv6.interface;
+		if (interface->getType() != Interface::ETHERNET) {
+			tjp->proceed();
+			return;
+		}
+
+		//we have an ethernet device
+		Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->data);
+		ipv6addr nexthopAddr = ipv6.get_nexthop_ipaddr();
+
+		eth_frame->set_type(IPv6_Packet::ETH_TYPE_IPV6);
+		eth_frame->set_src_hwaddr(interface->getAddress());
+		
+// 		char tempbuf[50] = {0};
+// 		ipstack::ipv6_addr_toString(nexthopAddr, tempbuf);
+// 		printf("Sendbuffer_IPv6_Ethernet: destination %s\n", tempbuf);
+/*
+		char tempbuf[50] = {0};
+		ipstack::ipv6_addr_toString(((IPv6_Packet*)sbi->sendbuffer.memstart_ip)->get_src_ipaddr(), tempbuf);
+		printf("addr: src %s\n", tempbuf);*/
+
+		// If this is a multicast ip address, use the broadcast mac
+		if (IPV6AddressScope::getIPv6AddressScope(nexthopAddr) == ipstack::IPV6AddressScope::IPV6_SCOPE_MULTICAST) {
+			//eth_frame->set_dst_hwaddr_broadcast();
+// 			// multicast mac is 33-33-00-00-00-00 filled with the last 4 bytes of the ip address.
+			const UInt8 multicastmac[6] = {0x33, 0x33, nexthopAddr.ipaddrB8[12], nexthopAddr.ipaddrB8[13], nexthopAddr.ipaddrB8[14], nexthopAddr.ipaddrB8[15]};
+			eth_frame->set_dst_hwaddr(multicastmac);
+		} else {
+			// else use an empty mac address and use the ndp cache
+			UInt8 emptymac[6] = {0};
+			eth_frame->set_dst_hwaddr(emptymac);
+		}
+		//dst_hwaddr is set by NDPCache, therefore the ethernet frame start must be known
+		sendbuffer->memstart_ethernet = sendbuffer->data;
+		sendbuffer->writtenToDataPointer(Eth_Frame::ETH_HEADER_SIZE);
+
+		tjp->proceed();
+	}
+};
