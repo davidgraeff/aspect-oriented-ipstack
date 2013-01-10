@@ -1,0 +1,39 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/ipv6/IPv6.h"
+#include "../ipv6/InternetChecksum.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+#include "ICMPv6.h"
+#include "stdio.h"
+
+using namespace ipstack;
+
+/**
+ * This aspect just outputs all ICMPv6 messages on the screen
+ */
+aspect IPv6_ICMP_Receive_Output {
+	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
+		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+		printf("ICMPv6 %u %u\n", icmp_packet->get_type(), icmp_packet->get_code());
+		tjp->proceed(); //try another 'ipv6_demux'-aspect
+	}
+};
