@@ -33,7 +33,7 @@ aspect ARP_Cache_IPv4_Send_Reschedule {
       //EnterLeave_Weaving_Static.ah uses the call advice,
       //which doesn't match here :-(
       //Workaround: call enterKernel() and leaveKernel() explicit!
-	  printf("arp find reschedule\n");
+// 	  printf("arp find reschedule\n");
       os::krn::enterKernel(); //lock
       AS::Schedule();
       os::krn::leaveKernel(); //unlock

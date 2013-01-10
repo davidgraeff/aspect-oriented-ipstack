@@ -33,9 +33,10 @@ aspect IRQ_Sync{
   advice call ("void ipstack::Interface::send(const void*, unsigned)") : 
          order("IRQ_Sync" , "%" && !"IRQ_Sync");
   
-  //Interface::send must be guarded, because the kernel sends arp/icmp packets,
-  //and the user sends arbitrary packets, too.
-  advice call("void ipstack::Interface::send(const void*, unsigned)")  : around(){
+  // Interface::send must be guarded, because the kernel sends arp/icmp packets,
+  // and the user sends arbitrary packets, too. This has to be an execution advice to also
+  // match all send calls in aspects.
+  advice execution("void ipstack::Interface::send(const void*, unsigned)")  : around(){
     os::krn::enterKernel();
     tjp->proceed();
     os::krn::leaveKernel();
@@ -43,7 +44,8 @@ aspect IRQ_Sync{
   
   //Mempools must be synchronized:
   pointcut toSync() = "% ipstack::SendBuffer::createSendBuffer(%)" ||
-					  "% ipstack::SendBufferWithInterface::createSendBuffer(%)" ||
+					  "% ipstack::ManagementMemory::freeAllUnused(%)" ||
+					  "% ipstack::ManagementMemory::allocSendBufferWithInterface(%)" ||
                       "% ipstack::%_Socket::free(%)" ||
                       "% ipstack::%_Socket::%bind()" || //sync linked-list operations
                       "% ipstack::%_Socket::_listen()" || //sync linked-list operations
