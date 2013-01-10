@@ -1,0 +1,137 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "IPv6.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "stdio.h"
+
+using namespace ipstack;
+
+
+slice class Interface_IPv6_Slice {
+private:
+	bool ipv6_up;
+public:
+	/**
+	 * The address memory has to be public. A lot of functionality relies on this.
+	 */
+	AddressMemory addressmemory;
+	
+	/**
+	 * [ASPECT WEAVE IN]
+	 * Generate a full valid IPv6 by providing an IPv6-Prefix (valid in the sense of the RFC, there may be duplicates on-link)
+	 * Input: address prefix
+	 * Output: IP with interface identifier (e.g. ethernet mac) in IP's lower bits as first parameter.
+	 */
+	void addInterfaceIdentifierToIPv6Address(ipstack::ipv6addr& address) {}
+
+	/**
+	 * Return true if an IPv6 address is bound to this interface that machtes the given scope (link-local, global unique, etc).
+	 * The first matched address is returned by the first parameter "addr".
+	 */
+	bool getInterfaceIPv6AddressByScope(ipstack::ipv6addr& addr, ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE scope) {
+		//UInt8 prefixlen = IPV6AddressScope::getIPv6AddressScopePrefixLength(scope);
+		UInt8 nextEntry = 0;
+		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+			if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == scope) {
+				copy_ipv6_addr(entry->ipv6, addr);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Make an IPv6 address out of a prefix and add it to the interface.
+	 * Return true if an IPv6 address could be added to the IP-Addresses of this interface.
+	 * @arg prefix The IPv6 address prefix that should be bound to this interface
+	 * @arg prefixlen If this is an IP derived from
+	 *
+	 * If this entry belongs to a router, set the pointerToRouterEntry to the ndp_cache position.
+	 */
+	AddressEntry* makeIPv6AddressByPrefix(const ipstack::ipv6addr& prefix, UInt8 prefixlen,
+								 UInt8 ipstate = AddressEntry::AddressEntryStateTemporary,
+								 UInt8 routerEntryPosition = AddressMemory::EntryUndefined) {
+		AddressEntry* entry = (AddressEntry*)addressmemory.findEntry<FreeEntryType>();
+		if (!entry)
+			return 0;
+
+		copy_ipv6_addr(prefix, entry->ipv6);
+		addInterfaceIdentifierToIPv6Address(entry->ipv6);
+		entry->prefixlen = prefixlen;
+		entry->stateflag = 0;
+		entry->isOnLink = 1;
+		entry->routerEntryPosition = routerEntryPosition;
+		// "Register" address (send multicast join messages etc)
+		registerIPv6Address(entry);
+		// Set address state (an address state can be temporary, in this case we have to execute a duplicate address detection)
+		setIPv6AddressState(entry, ipstate);
+		return entry;
+	}
+	
+	/**
+	 * Aspect: Multicast
+	 */
+	void registerIPv6Address(AddressEntry* entry) {
+		entry->reserve();
+	}
+
+	/**
+	 * Aspect: If duplicate address detection is configured and the address state is set to AddressEntry::AddressEntryStateTemporary
+	 * do an duplicate address detection.
+	 */
+	void setIPv6AddressState(AddressEntry* entry, UInt8 ipstate) {
+		// If not intercepted make this ip valid
+		entry->state = AddressEntry::AddressEntryStateValid;
+	}
+
+	bool hasIPv6Address(const ipstack::ipv6addr& addr) {
+		UInt8 nextEntry = 0;
+
+// 		char tempbuf[50] = {0};
+// 		ipstack::ipv6_addr_toString(addr, tempbuf);
+// 		printf("hasIPv6Address %s\n", tempbuf);
+
+		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+			if (compare_ipv6_addr(addr, entry->ipv6, entry->prefixlen)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Set the interface up or down. Only an active interface gets a link local address and
+	 * is able to receive or send IPv6 (inkluding ICMPv6, NDP, MLP) packets.
+	 * [ASPECT INFLUENCE BY "IPv6_add_link_local_address"]
+	 */
+	void setIPv6Up(bool up) {
+		if (!up && ipv6_up) { // was online -> take offline
+			// free all assigned addresses
+			addressmemory.freeAll(AddressEntry::ID);
+		}
+		ipv6_up = up;
+	}
+
+	bool isIPv6Up() {
+		return ipv6_up;
+	}
+};
