@@ -1,0 +1,83 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../../router/Interface.h"
+#include "../../ethernet/Eth_Frame.h"
+#include "../../ethernet/EthernetAddressUtilities.h"
+#include "../../router/Router.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipstack/ipv6/AddressMemory.h"
+
+using namespace ipstack;
+
+aspect IPv6_Ethernet_NDPCache_Aspect {
+	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") :
+		order("Sendbuffer_IPv6_Ethernet" , "IPv6_Ethernet_NDPCache_Aspect");
+
+	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") &&
+	args(sendbuffer)  :
+		around(SendBuffer* sendbuffer) {
+
+		// only for IPv6
+		if (tjp->that()->m_useipversion != 6) {
+			tjp->proceed();
+			return;
+		}
+
+		IPV6& ipv6 = tjp->that()->ipv6;
+		Interface* interface = ipv6.interface;
+		if (interface->getType() != Interface::ETHERNET) {
+			tjp->proceed();
+			return;
+		}
+
+		//we have an ethernet device
+		Eth_Frame* eth_frame = (Eth_Frame*) sendbuffer->memstart_ethernet;
+		
+		// check if the mac is already set (only check first byte actually)
+		// This is the case if the IP is a broadcast/multicast IP
+		if (eth_frame->get_dst_hwaddr()[0] != 0) {
+			//printf("IPv6_Ethernet_NDPCache_Aspect already set\n");
+			tjp->proceed();
+			return;
+		}
+
+
+		NDPCacheEntry* entry = interface->ipv6_lookup(ipv6);
+// 		char macstring[19] = {0};
+// 		ethernet_addr_tostring((char*)macstring, (UInt8*)entry->hw);
+// 		printf("IPv6_Ethernet_NDPCache_Aspect: dest mac %s\n", macstring);
+// 			char tempbuf[50] = {0};
+// 			ipv6addr nexthopAddr = ipv6.get_nexthop_ipaddr();
+// 			ipstack::ipv6_addr_toString(nexthopAddr, tempbuf);
+// 			printf("IPv6_Ethernet_NDPCache_Aspect: destination %s\n", tempbuf);
+
+		if (entry == 0) {
+			sendbuffer->makeInvalid();
+			return; //don't send this packet: destination MAC address unknown!
+		}
+
+		eth_frame->set_dst_hwaddr(entry->hw);
+
+		tjp->proceed();
+	}
+
+};
