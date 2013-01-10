@@ -1,0 +1,93 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/udp/UDP.h"
+#include "ipstack/udp/UDP_Socket.h"
+#include "ipstack/udp/Management_UDP_Socket.h"
+#include "ipstack/ipv4/IPv4.h"
+#include "ipstack/ipv4/InternetChecksum.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
+
+
+aspect UDP_IPv4_ECHO_REPLY {
+	// echo service before any real application 
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
+		order("UDP_IPv4_ECHO_REPLY","IPv4_UDP_Receive");
+
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(ipv4_packet, len, interface) && that(demux) :
+	around(IPv4_Packet* ipv4_packet, unsigned len, Interface* interface, Demux& demux) {
+
+		if (ipv4_packet->get_protocol() != UDP_Packet::IP_TYPE_UDP) {
+			tjp->proceed();
+			return;
+		}
+
+		if (len < (unsigned)ipv4_packet->get_ihl() * 4 + UDP_Packet::UDP_HEADER_SIZE) {
+			return; //len too small! Drop packet
+		}
+		
+		// reduce len by ipv4+udp header sizes -> len == payload length
+		len -= ipv4_packet->get_ihl() * 4 + UDP_Packet::UDP_HEADER_SIZE;
+		
+		// extract udp packet and dest port
+		UDP_Packet* udp_packet = (UDP_Packet*) ipv4_packet->get_data();
+		const UInt16 udp_packet_dport = udp_packet->get_dport();
+
+		// UDP Echo Service is on port 7
+		if (7 == udp_packet_dport) {
+			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
+			// the destination interface into account
+			Management_UDP_Socket &udpmanagmentinstance = Management_UDP_Socket::instance();
+			udpmanagmentinstance.ipv4.set_dst_addr(ipv4_packet->get_src_ipaddr());
+			UInt16 maxlen = udpmanagmentinstance.getMaxPayloadLength();
+			if (len > maxlen) {
+				len = maxlen;
+			}
+
+			demux.setDirectResponse(true);
+			SendBufferWithInterface* sbi = udpmanagmentinstance.requestSendBufferUDP(interface, len);
+// 			printf("requested buffer icmp response %p\n", sbi);
+			//we have an echo request packet for IPv4
+			if (sbi) {
+				UDP_Packet* reply_udp = (UDP_Packet*)sbi->sendbuffer.memstart_transport;
+				reply_udp->set_dport(udp_packet->get_sport());
+				reply_udp->set_sport(udp_packet->get_dport());
+				reply_udp->set_length(len+UDP_Packet::UDP_HEADER_SIZE); // incl. UDP_Packet::UDP_HEADER_SIZE!
+				reply_udp->set_checksum(0);
+				sbi->sendbuffer.writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
+				// copy udp payload
+				sbi->sendbuffer.write(udp_packet->get_data(), len);
+
+// 				int offset = (char*)sbi->sendbuffer.memstart_ethernet - (char*)sbi->sendbuffer.getDataStart();
+// 				int ethsize = (char*)sbi->sendbuffer.memstart_ip - (char*)sbi->sendbuffer.memstart_ethernet;
+// 				int ipsize = (char*)sbi->sendbuffer.memstart_transport - (char*)sbi->sendbuffer.memstart_ip;
+// 				int icmpsize = (char*)sbi->sendbuffer.getDataStart() + sbi->sendbuffer.getSize() - (char*)sbi->sendbuffer.memstart_transport;
+// 				printf("udp response %u; offset: %u ethernet: %u ip: %u icmp %u %p\n", sbi->sendbuffer.getSize(), offset, ethsize, ipsize, icmpsize, sbi->sendbuffer.memstart_ethernet);
+
+				udpmanagmentinstance.send(&(sbi->sendbuffer), sbi->interface);
+			}
+		} else {
+			tjp->proceed();
+		}
+	}
+};

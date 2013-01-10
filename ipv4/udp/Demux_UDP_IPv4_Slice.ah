@@ -4,34 +4,29 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
-
-#ifndef __IPV4_UDP_SOCKET__
-#define __IPV4_UDP_SOCKET__
-
+#pragma once
 #include "../IPv4.h"
-#include "../IPv4_Socket.h"
-#include "../../udp/UDP_Socket.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
 
 
-namespace ipstack {
-
-class IPv4_UDP_Socket : public IPv4_Socket, public UDP_Socket {
-  public:
-  IPv4_UDP_Socket();
-  
+slice class Demux_UDP_IPv4_Slice {
+private:
+	/**
+	 * This method should be called if the udp port of the given socket is not assigned on the given
+	 * interface.
+	 */
+	void error_port_not_reachable(IPv4_Packet* ipv4_packet, Interface* interface) {}
 };
-
-} //namespace ipstack
-
-#endif // __IPV4_UDP_SOCKET__ 
