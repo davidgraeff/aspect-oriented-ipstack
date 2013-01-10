@@ -4,39 +4,41 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // CiAO/IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
+//
 // Copyright (C) 2011 Christoph Borchert
 
+#pragma once
 
-#ifndef __IPV4_RECEIVE_ETHERNET_AH__
-#define __IPV4_RECEIVE_ETHERNET_AH__
-
-#include "IPv4.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
-#include "Demux_IPv4_Slice.ah"
+#include "../IPv4.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/ethernet/Eth_Frame.h"
 #include "util/types.h"
 
 using namespace ipstack;
 
 aspect IPv4_Receive_Ethernet {
-  advice execution("void ipstack::Demux::ethernet_demux(...)") &&
-         args(data, len, interface, type) && that(demux) :
-         after(const void* data, unsigned len, Interface* interface, UInt16 type, Demux& demux){
+	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
+	args(ethernet_frame, framelen, interface) && that(demux) :
+		after(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
 
-	if (type != IPv4_Packet::ETH_TYPE_IPV4)
-	  return;
+		Eth_Frame* eth_frame = (Eth_Frame*) ethernet_frame;
 
-	demux.ipv4_demux((IPv4_Packet*) data, len, interface);
-  }
+		if (eth_frame->get_type() != IPv4_Packet::ETH_TYPE_IPV4)
+			return;
+
+		framelen -= Eth_Frame::ETH_HEADER_SIZE;
+
+		IPv4_Packet* packet = (IPv4_Packet*) eth_frame->get_data();
+
+		demux.ipv4_demux(packet, framelen, interface);
+	}
 };
-
-#endif // __IPV4_RECEIVE_ETHERNET_AH__
