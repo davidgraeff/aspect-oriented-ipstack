@@ -1,0 +1,56 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipstack/router/Interface.h"
+#include "Address_prefix_expire_Slice.ah"
+#include "Interface_prefix_expire_Slice.ah"
+
+using namespace ipstack;
+
+/**
+ * Add the ethernet header frame size to the createSendBuffer(size)
+ * and fill in the ethernet header in prepareSendBuffer(...)
+ */
+aspect Address_prefix_expire_aspect {
+	advice "ipstack::AddressEntry" :
+	slice Address_prefix_expire_Slice;
+	advice "ipstack::Interface" :
+	slice Interface_prefix_expire_Slice;
+
+	advice execution("bool ipstack::Router::ipv6_find_route_is_matching(%, ipstack::AddressEntry*)") && args(entry) :
+		around(AddressEntry* entry) {
+		if (!entry->preferred_time_minutes) {
+			*(tjp->result()) = false;
+			return;
+		}
+		tjp->proceed();
+	}
+
+	advice execution("ipstack::AddressEntry* ipstack::Interface::makeIPv6AddressByPrefix(...)") && result(entry) :
+		after(AddressEntry* entry) {
+		if (entry) {
+			entry->valid_time_minutes = AddressEntry::NoTimeExpire;
+			entry->preferred_time_minutes = AddressEntry::NoTimeExpire;
+		}
+	}
+};

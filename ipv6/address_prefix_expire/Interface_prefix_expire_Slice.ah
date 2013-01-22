@@ -1,0 +1,48 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "../AddressMemory.h"
+
+using namespace ipstack;
+
+slice class Interface_prefix_expire_Slice {  
+public:
+	// This may be used by the ndp address unreachable detection
+	// Call this method every IPV6_REFRESH_IN_MINUTES
+	void refreshIPv6Addresses() {
+		UInt8 nextEntry = 0;
+		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+			if (entry->valid_time_minutes==(UInt32)AddressEntry::NoTimeExpire)
+				continue;
+			
+			if (entry->valid_time_minutes <= (UInt32)IPV6_REFRESH_IN_MINUTES) {
+				addressmemory.freeEntry(entry);
+				continue;
+			}
+			
+			entry->valid_time_minutes -= IPV6_REFRESH_IN_MINUTES;
+			if (entry->preferred_time_minutes <= IPV6_REFRESH_IN_MINUTES)
+				entry->preferred_time_minutes = 0;
+			else
+				entry->preferred_time_minutes -= IPV6_REFRESH_IN_MINUTES;
+		}
+	}
+	enum {IPV6_REFRESH_IN_MINUTES = 3};
+};
