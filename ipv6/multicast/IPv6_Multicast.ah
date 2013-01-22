@@ -65,8 +65,8 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 	/**
 	 * Send a multicast packet to all interfaces, not just the first one
 	 */
-	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)") && args(dataToSend, i) :
-		after(SendBuffer* dataToSend, Interface* i) {
+	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) :
+		after(SendBuffer* dataToSend) {
 		// only for IPv6
 		if (tjp->that()->m_useipversion != 6) {
 			return;
@@ -81,9 +81,11 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 
 		Interface* interface = Router::Inst().get_interface(0);
 		while (interface != 0) {
-			if (i != interface && interface->isIPv6Up()) {
-				// Send to this other interface, too.
-				tjp->that()->send(dataToSend, interface);
+			if (interface->isIPv6Up()) {
+				dataToSend->setInterface(interface);
+				dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
+				while (!dataToSend->hasBeenSend()) {}
+				dataToSend->recycle();
 			}
 			interface = interface->getNext();
 		}
@@ -151,7 +153,7 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 			return;
 		ipv6addr ip = entry->ipv6;
 		IPV6AddressScope::IPv6_ADDRESS_SCOPE scope = IPV6AddressScope::getIPv6AddressScope(ip);
-		printf("IPv6_Multicast_aspect::freeEntry\n");
+
 		if (scope==IPV6AddressScope::IPV6_SCOPE_GLOBAL_UNICAST || scope==IPV6AddressScope::IPV6_SCOPE_UNIQUE_LOCAL_UNICAST) {
 			interface.leave_solicitedNode_multicastGroup(ip);
 		}

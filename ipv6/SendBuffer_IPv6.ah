@@ -46,8 +46,8 @@ aspect Sendbuffer_IPv6 {
 // 			printf("Sendbuffer_IPv6 content\n");
 			IPV6& ipv6 = tjp->that()->ipv6;
 			UInt16Opt headersize = ipv6.getSpecificHeaderSize();
-			sendbuffer->memstart_ip = sendbuffer->data;
-			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->data;
+			sendbuffer->memstart_ip = sendbuffer->getDataPointer();
+			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
 			ipv6.setupHeader(ip, sendbuffer->getRemainingSize());
 			sendbuffer->writtenToDataPointer(headersize);
 			// set pointer to next header field

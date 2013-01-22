@@ -33,10 +33,9 @@ class IPV6 {
 public:
 	// cache for fast sending
 	Interface* interface;
-	// this is a copy of the most matching ip of the interface
+	// this is a copy of the most matching assigned ip of the interface
 	// Because ipv6 may assign multiple source ips to an interface this is neccessary.
 	// The best matching source ip will be assigned while setting the destination ip.
-	// This is fully compliant to the specification and important to keep tcp connections on the same source ip.
 	ipv6addr src_ipv6_addr;
 	friend class Router; // allow to call resolveRoute()
 private:
@@ -45,22 +44,25 @@ private:
 	IPV6(const ipstack::IPV6 &) {} // Bug in aspectc++: Segfault if no copy constructur
 
 	/**
-	 * Return the src-ip-prefix entry that belongs to the src-ip that has been determined
-	 * after the destination was known.
-	 * This is important to know for the destination-cache aspect to calculate the next-hop.
+	 * Determine source ip address and interface that fits the destination address set.
+	 *
+	 * @return resolveRoute will return an AddressEntry that contains an IPv6 address that is currently
+	 * assigned to this interface. This IPv6 address fits best to the destination address the
+	 * user has set. For example:
+	 * We have currently assigned two addresses to this interface:
+	 * - fe80::1:2:3:4:5:6
+	 * - 2001::1:2:3:4:5:6
+	 * If we want to send to the destination address fe80::7:8:9:a:b:c resolveRoute will return
+	 * an addressEntry with fe80::1:2:3:4:5:6 because that address fits best to the destination address.
+	 *
+	 * The src address will be set accordingly. If you do not want resolveRoute to be called by set_dst_addr
+	 * you have to set the second parameter "interface".
 	 */
 	AddressEntry* resolveRoute();
 
-	/**
-	 * Assume that all destinations are on-link and just
-	 * return the destination address as next hop. This is influenced
-	 * by the destination cache aspect.
-	 */
-	ipv6addr get_nexthop_ipaddr() ;
-
 	void setupHeader(IPv6_Packet* packet, unsigned datasize) ;
 
-	bool hasValidInterface() ;
+	bool hasValidInterface() const;
 
 	/**
 	 * Return the specific size for a generated header with the currently
@@ -100,10 +102,18 @@ public:
 	 */
 	void set_src_addr(const ipv6addr& src) ;
 
-	// Warning, this is a pointer to the address!
+	// Warning, this is a pointer to the address. Use memcpy
+	// to replicate the address.
 	const ipv6addr& get_dst_addr() const { return dst_ipv6_addr; }
 	const ipv6addr& get_src_addr() const { return src_ipv6_addr; }
+	
+	/**
+	 * Return the destination address as a next hop address in the basic implementation.
+	 * If you enable the destination cache it will return a real on-link destination
+	 * or the unspecified address if no on-link destination can be resolved.
+	 */
+	ipv6addr get_nexthop_ipaddr() ;
 
-	bool hasValidSrcDestAddresses() ;
+	bool hasValidSrcDestAddresses() const;
 }; // end IPV6 class
 } //namespace ipstack

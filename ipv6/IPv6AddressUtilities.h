@@ -24,6 +24,10 @@
 #include "util/types.h"
 #include <string.h>
 
+#define IP_STR_VALUE(arg)      #arg
+#define IP_MAKE_STRING(name) IP_STR_VALUE(name)
+//#define IP_MAKE_STRING(name) #name
+
 namespace ipstack {
 
 // IPv6 address representations
@@ -92,6 +96,8 @@ bool parse_ipv6_addr(const char* addrstr, ipstack::ipv6addr& ipaddr);
 
 /**
  * Parse a native representation into the textual ipv6 address representation like "2001:0db8:0000:08d3:0000:8a2e:0070:7344".
+ * This method also parses strings where leading 0 are ommited like "2001:db8::8d3::8a2e:70:7344". But there always have to
+ * be 8 blocks separated by ":".
  * @param ipaddr Native ipv6 represenation
  * @param addrstr Memory for the textual address representation. 39 characters are generated.
  */

@@ -20,7 +20,6 @@
 
 #include "util/types.h"
 #include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "stdio.h"
 
 namespace ipstack
 {
@@ -101,6 +100,7 @@ class IPv6_Packet
 		ipv6addr get_dst_ipaddr() {
 			return dst_ipaddr;
 		}
+		
 		void set_dst_ipaddr(const ipv6addr& addr) {
 			copy_ipv6_addr(addr, dst_ipaddr);
 		}

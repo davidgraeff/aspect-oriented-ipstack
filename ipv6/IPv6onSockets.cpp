@@ -48,7 +48,7 @@ namespace ipstack {
 		packet->set_dst_ipaddr(get_dst_addr()); // Use the get method
 	}
 
-	bool IPV6::hasValidInterface() { return (interface != 0); }
+	bool IPV6::hasValidInterface() const { return (interface != 0); }
 
 	unsigned int IPV6::getSpecificHeaderSize()
 	{
@@ -78,7 +78,7 @@ namespace ipstack {
 		copy_ipv6_addr(src, src_ipv6_addr);
 	}
 
-	bool IPV6::hasValidSrcDestAddresses()
+	bool IPV6::hasValidSrcDestAddresses() const
 	{
 		return (src_ipv6_addr.ipaddrB8[0] != 0) && (dst_ipv6_addr.ipaddrB8[0] != 0);
 	}

@@ -1,4 +1,6 @@
 #include "IPv6AddressUtilities.h"
+#include "stdio.h"
+
 namespace ipstack {
 namespace IPV6AddressScope {
 UInt8 getIPv6AddressScopePrefixLength(ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE s)
@@ -173,6 +175,7 @@ UInt8 numberFromAscii(char c)
 			return 0;
 	};
 }
+
 UInt8 numberToAscii(UInt8 digit)
 {
 	switch (digit) {
@@ -212,6 +215,7 @@ UInt8 numberToAscii(UInt8 digit)
 			return ' ';
 	};
 }
+
 bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addrprefix, UInt8 prefixlen)
 {
 	for (UInt8 block = 0; block < 16; ++block) {
@@ -239,37 +243,51 @@ bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addrprefix, UInt8 p
 	}
 	return true;
 }
+
 bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addr2)
 {
 	return (memcmp(addr.ipaddrB8, addr2.ipaddrB8, 16) == 0);
 }
+
 bool parse_ipv6_addr(const char* addrstr, ipv6addr& ipaddr)
 {
 	UInt8 blockIndex = 0;
 	char* currentCharPtr = (char*)addrstr;
-	while (blockIndex < 16) {
-		UInt8 blockdata[4] = {0};
-		UInt8 position = 0;
-		//printf("block ");
-		while (*currentCharPtr != ':') {
-			//printf ("%c", *currentCharPtr);
-			blockdata[position] = numberFromAscii(*currentCharPtr);
+	while (blockIndex < 8) { // we have 8 blocks
+		UInt8 blockLength = 0;
+
+		// Determine block length
+		while (*currentCharPtr != ':' && *currentCharPtr != 0) {
+			++blockLength;
 			++currentCharPtr;
-			if (++position > 3)
-				break;
 		}
-		ipaddr.ipaddrB8[blockIndex * 2 + 0] = (blockdata[1]) | (blockdata[0] << 4);
-		ipaddr.ipaddrB8[blockIndex * 2 + 1] = (blockdata[3]) | (blockdata[2] << 4);
+		currentCharPtr -= blockLength; // reset the char pointer
+		
+		// put digits of the block "132f" into 'blockdata'
+		UInt8 blockdata[4] = {0};
+		while (blockLength) {
+			--blockLength;
+			blockdata[blockLength] = numberFromAscii(*currentCharPtr);
+			++currentCharPtr;
+		}
+
+		// from 'blockdata' digits to the ipv6addr. A block of 4 ascii digits is mapped to
+		// 2 ipv6 address bytes.
+		ipaddr.ipaddrB8[blockIndex * 2 + 0] = (blockdata[2]) | (blockdata[3] << 4);
+		ipaddr.ipaddrB8[blockIndex * 2 + 1] = (blockdata[0]) | (blockdata[1] << 4);
+
+		++blockIndex; // valid block: increase block counter
+
 		if (*currentCharPtr == 0)
 			break;
 		++currentCharPtr;
-		//printf(" -> (%u %u) (%u %u)\n", blockIndex*2+1, ipaddr.ipaddrB8[blockIndex*2+1], blockIndex*2+0, ipaddr.ipaddrB8[blockIndex*2+0]);
-		++blockIndex;
 	}
-	if (blockIndex != 16)
+
+	if (blockIndex != 8)
 		return 0;
 	return 1;
 }
+
 void ipv6_addr_toString(const ipv6addr& ipaddr, char* addrstr)
 {
 	// A block consists of 4 digits and a ":". An IPv6 address has 8 blocks.
