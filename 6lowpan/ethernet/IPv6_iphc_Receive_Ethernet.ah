@@ -1,0 +1,49 @@
+// This file is part of CiAO/IPv6-Extension.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IPv6-Extension.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+/*
+ * Purpose: Receive IPv6 IPHC (6LoWPAN IP Header Compression) frames from ethernet
+ */
+
+#include "../IPv6iphc.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/ethernet/Eth_Frame.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+aspect IPv6_IPHC_Receive_Ethernet {
+	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
+	args(ethernet_frame, framelen, interface) && that(demux) :
+		after(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
+
+		Eth_Frame* eth_frame = (Eth_Frame*) ethernet_frame;
+
+		if (eth_frame->get_type() != IPv6hc_Packet::ETH_TYPE_IPV6hc)
+			return;
+
+		framelen -= Eth_Frame::ETH_HEADER_SIZE;
+
+		IPv6_Packet* packet = (IPv6_Packet*) eth_frame->get_data();
+
+		demux.ipv6_demux(packet, framelen, interface);
+	}
+};
+

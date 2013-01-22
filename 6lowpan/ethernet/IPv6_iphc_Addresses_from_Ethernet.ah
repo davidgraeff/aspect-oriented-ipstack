@@ -1,0 +1,82 @@
+// This file is part of CiAO/IPv6-Extension.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IPv6-Extension.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+/*
+ * Purpose: Get mac addresses from ethernet and make ip addresses out of them
+ */
+
+#include "../IPv6iphc.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/ethernet/Eth_Frame.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+aspect IPv6_iphc_Addresses_from_Ethernet {
+	advice execution("void ipstack::IPv6hc_Packet::get_src_ip_from_upper_protocol_addr(%)") &&
+	args(mem) && that(hc) : around(ipv6addr& mem, IPv6hc_Packet& hc) {
+		#define SET_BIT(p,n) ((p) |= (1 << (n)))
+		#define CLR_BIT(p,n) ((p) &= ~((1) << (n)))
+		
+		Eth_Frame* eth_frame = (Eth_Frame*) &hc - Eth_Frame::ETH_HEADER_SIZE;
+		const unsigned char * ethAddr = eth_frame->get_src_hwaddr();
+		// put ethernet address into the IPv6 address. 
+		// rfc2464 defines how to get an 8 byte interface id out of the 6 byte ethernet like this:
+		//  34-56-78-9A-BC-DE --> 36-56-78-_FF_-_FE_-9A-BC-DE
+		
+		// Bytes 8+9+10+13+14+15 are the ethernet address
+		mem.ipaddrB8[8] = ethAddr[0]; 
+		mem.ipaddrB8[9] = ethAddr[1]; 
+		mem.ipaddrB8[10] = ethAddr[2]; 
+		mem.ipaddrB8[11] = 0xFF;
+		mem.ipaddrB8[12] = 0xFE;
+		mem.ipaddrB8[13] = ethAddr[3]; 
+		mem.ipaddrB8[14] = ethAddr[4]; 
+		mem.ipaddrB8[15] = ethAddr[5]; 
+		
+		CLR_BIT(mem.ipaddrB8[8], 0); // group bit = 0
+		SET_BIT(mem.ipaddrB8[8], 1); // not globally unique
+	}
+	
+	advice execution("void ipstack::IPv6hc_Packet::get_dest_ip_from_upper_protocol_addr(%)") &&
+	args(mem) && that(hc) :
+	around(ipv6addr& mem, IPv6hc_Packet& hc) {
+		#define SET_BIT(p,n) ((p) |= (1 << (n)))
+		#define CLR_BIT(p,n) ((p) &= ~((1) << (n)))
+		
+		Eth_Frame* eth_frame = (Eth_Frame*) &hc - Eth_Frame::ETH_HEADER_SIZE;
+		const unsigned char * ethAddr = eth_frame->get_dst_hwaddr();
+		// put ethernet address into the IPv6 address. 
+		// rfc2464 defines how to get an 8 byte interface id out of the 6 byte ethernet like this:
+		//  34-56-78-9A-BC-DE --> 36-56-78-_FF_-_FE_-9A-BC-DE
+		
+		// Bytes 8+9+10+13+14+15 are the ethernet address
+		mem.ipaddrB8[8] = ethAddr[0]; 
+		mem.ipaddrB8[9] = ethAddr[1]; 
+		mem.ipaddrB8[10] = ethAddr[2]; 
+		mem.ipaddrB8[11] = 0xFF;
+		mem.ipaddrB8[12] = 0xFE;
+		mem.ipaddrB8[13] = ethAddr[3]; 
+		mem.ipaddrB8[14] = ethAddr[4]; 
+		mem.ipaddrB8[15] = ethAddr[5]; 
+		
+		CLR_BIT(mem.ipaddrB8[8], 0); // group bit = 0
+		SET_BIT(mem.ipaddrB8[8], 1); // not globally unique
+	}
+};

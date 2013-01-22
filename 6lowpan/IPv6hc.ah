@@ -1,0 +1,109 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+#include "IPv6iphc.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+/**
+ * This aspect is actually a wrapper for all IPv6_Packet methods to
+ * intercept get_ requests and restore the compressed data and to
+ * compress data on set_ methods.
+ * Header compression can therefore not been used together with a default
+ * IPv6 implementation.
+ */
+aspect IPv6hc {
+	advice execution("% ipstack::IPv6::getSpecificHeaderSize(...)") && that(ipv6) :
+		after(IPV6& ipv6) {
+		UInt16 s = *(tjp->result());
+		// Subtract the default ipv6 header size
+		s -= IPv6_Packet::IPV6_HEADER_SIZE_IN_BYTES;
+		// add next header + hop limit bytes + Add Fragment header and iphc header
+		s += IPv6hc_Packet::getWriteHeaderSize() + IPv6hc_Packet::getWriteSrcHeaderSize();
+		// dest size depends on the scope: multicast address?
+		if (IPV6AddressScope::getIPv6AddressScope(ipv6.get_dst_addr()) == IPV6AddressScope::IPV6_SCOPE_MULTICAST)
+			s += IPv6hc_Packet::getWriteMulticastDestHeaderSize();
+		else
+			s += IPv6hc_Packet::getWriteDestHeaderSize();
+		*(tjp->result()) = s;
+	}
+
+	advice execution("% ipstack::IPv6_Packet::setUpHeader(...)") && that(ipheader) : around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		hc->setUpHeader();
+	}
+
+	advice execution("% ipstack::IPv6_Packet::get_payload_len(...)") && that(ipheader) :
+		around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		*(tjp->result()) = hc->get_payload_len();
+	}
+
+	advice execution("% ipstack::IPv6_Packet::set_payload_len(...)") && args(len) && that(ipheader) :
+		around(UInt16 len, IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		hc->set_payload_len(len);
+	}
+
+	advice execution("% ipstack::IPv6_Packet::get_nextheader(...)") && args() && that(ipheader) :
+		around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		*(tjp->result()) = hc->get_nextheader();
+	}
+
+	advice execution("% ipstack::IPv6_Packet::set_nextheader(...)") && args() && that(ipheader) :
+		around(UInt16 len, IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		hc->set_nextheader(len);
+	}
+
+	advice execution("% ipstack::IPv6_Packet::get_src_ipaddr(...)") && args() && that(ipheader) :
+		around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		*(tjp->result()) = hc->get_src_ipaddr();
+	}
+
+	advice execution("% ipstack::IPv6_Packet::set_src_ipaddr(...)") && args(ip) && that(ipheader) :
+		around(const ipv6addr& ip, IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		hc->set_src_ipaddr(ip);
+	}
+
+	advice execution("% ipstack::IPv6_Packet::get_dst_ipaddr(...)") && args() && that(ipheader) :
+		around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		*(tjp->result()) = hc->get_dst_ipaddr();
+	}
+
+	advice execution("% ipstack::IPv6_Packet::set_dst_ipaddr(...)") && args(ip) && that(ipheader) :
+		around(const ipv6addr& ip, IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		hc->set_dst_ipaddr(ip);
+	}
+
+	advice execution("% ipstack::IPv6_Packet::get_payload(...)") && args() && that(ipheader) :
+		around(IPv6_Packet& ipheader) {
+		IPv6hc_Packet* hc = (IPv6hc_Packet*)&ipheader;
+		*(tjp->result()) = hc->get_payload();
+	}
+};
+
