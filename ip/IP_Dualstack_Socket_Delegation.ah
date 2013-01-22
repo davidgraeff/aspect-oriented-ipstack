@@ -19,10 +19,8 @@
 
 #include "IP_Dualstack_Slice.ah"
 #include "IP_Dualstack_IPVx_Slice.ah"
-#include "../ipv4/IPv4onSockets.h"
-#include "../ipv6/IPv6onSockets.h"
-
-using namespace ipstack;
+#include "ipstack/ipv4/IPv4onSockets.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
 
 /**
  * If both IPv4 and IPv6 are configured, selecting
@@ -30,11 +28,6 @@ using namespace ipstack;
  * The current implementation intercepts setting the
  * destination address for ipv4 and ipv6 and use the ip version where
  * this is done for the last time.
- * 
- * Optimisation hint:
- * The runtime checks could be eliminated at big parts
- * if function pointers are used that are one-time set
- * while changing a destination address.
  */
 aspect IP_Dualstack_Socket_Delegation {
 	/**
@@ -46,6 +39,11 @@ aspect IP_Dualstack_Socket_Delegation {
 	
 	advice "ipstack::%_Socket" : slice IP_Dualstack_Slice;
 	
+	/**
+	  * The IPv4 and IPv6 ip-layer classes have to change the to-be-used ip
+	  * version and therefore need a pointer to the m_useipversion variable of
+	  * the socket. 
+	  */
 	advice construction("ipstack::%_Socket") : after() {
 		tjp->that()->m_useipversion = 4;
 		tjp->that()->ipv4.m_useipversionPtr = &tjp->that()->m_useipversion;
@@ -55,7 +53,6 @@ aspect IP_Dualstack_Socket_Delegation {
 	/**
 	 * SET IP VERSION WHILE SETTING UP A DESTINATION ADDRESS
 	 */
-	
 	advice execution("% ipstack::IPV4::set_dst_addr(...)") : after() {
 		*(tjp->that()->m_useipversionPtr) = 4;
 	}
@@ -66,8 +63,6 @@ aspect IP_Dualstack_Socket_Delegation {
 	/**
 	 * SENDING
 	 */
-	
-	//SendBuffer requestSendBuffer(UInt16 requestedSize, bool freeOnDestruct = true) {}
 	advice execution("% ipstack::%_Socket::getUsedInterface()") : around() {
 		if (tjp->that()->m_useipversion == 4)
 			*tjp->result() = tjp->that()->ipv4.interface;
@@ -75,7 +70,6 @@ aspect IP_Dualstack_Socket_Delegation {
 			*tjp->result() = tjp->that()->ipv6.interface;
 	}
 	
-	//bool hasValidSrcDestAddresses() {}
 	advice execution("% ipstack::%_Socket::hasValidSrcDestAddresses()") : around() {
 		if (tjp->that()->m_useipversion == 4)
 			*tjp->result() = tjp->that()->ipv4.hasValidSrcDestAddresses();
