@@ -48,7 +48,7 @@ aspect Sendbuffer_IPv6_HopByHop_extension {
 		// check ip version
 		if (tjp->that()->m_useipversion == 6) {
 			IPV6& ipv6 = tjp->that()->ipv6;
-			char* nextHeader = (char*)sendbuffer->data; // the next header field is always the first byte of an IPv6 extension header.
+			char* nextHeader = (char*)sendbuffer->getDataPointer(); // the next header field is always the first byte of an IPv6 extension header.
 			UInt16Opt size = IPv6HopByHop::writeExtensionHeader(ipv6, nextHeader);
 // 			printf("Sendbuffer_IPv6_HopByHop_extension content %u\n", size);
 			if (!size) {

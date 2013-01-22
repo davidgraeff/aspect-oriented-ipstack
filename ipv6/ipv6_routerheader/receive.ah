@@ -24,20 +24,21 @@
 
 using namespace ipstack;
 
-aspect IPv6_HopByHop_Header_Receive {
+aspect IPv6_RoutingHeader_Receive {
 	advice execution("% ipv6_payload_demux(const Interface*, const IPv6_Packet*, void*&, unsigned&, unsigned char&)") &&
 	args(interface, packet, payload, payload_length, nextHeader) && that(demux) :
 		around(const Interface* interface, const IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader, Demux& demux) {
 
-		*(tjp->result()) = false; // we continue to analyse this packet. This is only an option here.
-		if (nextHeader == 0) {
-			struct hopByHopOption {
+		*(tjp->result()) = false;
+			
+		if (nextHeader == 43) {
+			struct destOption {
 				char type;
 				UInt8 len_in_octets;
 				UInt8 data[];
 			} __attribute__((packed));
-			hopByHopOption* option = (hopByHopOption*)payload;
-
+			destOption* option = (destOption*)payload;
+			
 			unsigned extension_length_in_bytes = option->len_in_octets * 8 + 8;
 			if (!ExtensionHeaderOptions::parseOptions(option->data, extension_length_in_bytes, (Interface*)interface)) {
 				*(tjp->result()) = true; // stop parsing
@@ -46,6 +47,7 @@ aspect IPv6_HopByHop_Header_Receive {
 			payload_length -= extension_length_in_bytes;
 			payload = (char*)payload + extension_length_in_bytes;
 		}
+
 		tjp->proceed();
 	}
 };
