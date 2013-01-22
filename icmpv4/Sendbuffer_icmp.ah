@@ -32,7 +32,7 @@ aspect Sendbuffer_ICMPv4_aspect  {
 		around(SendBuffer* sendbuffer) {
 
 		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
-		sendbuffer->memstart_transport = sendbuffer->data;
+		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
 		*(sendbuffer->nextheaderfield_ip) = ICMP_Packet::IPV4_TYPE_ICMP;
 		tjp->proceed();
 		return;

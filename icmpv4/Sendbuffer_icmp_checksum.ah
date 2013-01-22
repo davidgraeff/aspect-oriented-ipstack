@@ -18,7 +18,9 @@
 #pragma once
 
 #include "util/types.h"
-#include "../router/Interface.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/icmpv4/ICMP.h"
 
 using namespace ipstack;
 
@@ -27,12 +29,14 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_ICMPv4_Checksum  {
-	advice execution("% ipstack::ICMPv4_Socket::send(...)") && args(sendbuffer, interface) :
-	before(SendBuffer* sendbuffer, Interface* interface) {
+	advice execution("% ipstack::ICMPv4_Socket::send(...)") && args(dataToSend) :
+	before(SendBuffer* dataToSend) {
 		
-		ICMP_Packet* icmp = (ICMP_Packet*) sendbuffer->memstart_transport;
-		const UInt16 payloadsize = ((char*)sendbuffer->data - (char*)sendbuffer->memstart_transport);
-		const UInt16 csum = InternetChecksum::computePayloadChecksum((UInt8*)icmp, payloadsize, interface);
-		icmp->set_checksum(csum);
+		ICMP_Packet* icmp = (ICMP_Packet*) dataToSend->memstart_transport;
+		const UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		Interface* interface = dataToSend->getInterface();
+		icmp->set_checksum(0);
+		icmp->set_checksum(icmp->calc_checksum(0, payloadsize, interface));
+
 	}
 };

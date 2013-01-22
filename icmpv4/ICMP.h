@@ -20,7 +20,8 @@
 #define __ICMP__
 
 #include "util/types.h"
-#include "stdio.h"
+#include "ipstack/ip/InternetChecksum.h"
+
 namespace ipstack
 {
 
@@ -69,10 +70,21 @@ class ICMP_Packet
 		void set_checksum(UInt16 csum) {
 			checksum = csum;
 		}
-		void setraw_checksum(UInt16 csum) {
-			checksum = csum;
-		}
+		/**
+		  * Calculate the icmpv4 checksum.
+		  * @param sum The pseudo header sum
+		  * @param payloadlen We use extern information about the size of this packet
+		  * @param The interface on which the packet will be send. Necessary for checksum offloading
+		  */
 
+		UInt16 calc_checksum(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+			csum += InternetChecksum::computePayload((UInt8*)this, payloadlen);
+			return ~InternetChecksum::accumulateCarryBits(csum); // one's complement
+		}
+		bool checksum_valid(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+			return calc_checksum(csum, payloadlen, interface) == 0;
+		}
+	
 		UInt32 get_quench() {
 			return quench;
 		}

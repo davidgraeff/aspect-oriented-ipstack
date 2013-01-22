@@ -33,22 +33,23 @@ aspect IPv4_ICMP_Protocol_Unreachable {
 		
 		ICMPv4_Socket &icmpv4instance = ICMPv4_Socket::instance();
 		icmpv4instance.ipv4.set_dst_addr(packet->get_src_ipaddr());
-		demux.setDirectResponse(true);
+		
 		// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
 		const UInt8 echoErrornousPacketSize = packet->get_ihl() * 4 + 8;
-		SendBufferWithInterface* sbi = icmpv4instance.requestSendBufferICMP(interface, echoErrornousPacketSize + ICMP_Packet::ICMP_HEADER_SIZE);
+		demux.setDirectResponse(true);
+		SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, echoErrornousPacketSize + ICMP_Packet::ICMP_HEADER_SIZE);
 		if (sbi) {
-			ICMP_Packet* icmp_error_reply = (ICMP_Packet*)sbi->sendbuffer.data;
+			ICMP_Packet* icmp_error_reply = (ICMP_Packet*)sbi->getDataPointer();
 			
 			icmp_error_reply->set_type(ICMP_Packet::ICMP_TYPE_DESTINATION_UNREACHABLE);
 			icmp_error_reply->set_code(ICMP_Packet::ICMP_CODE_PROTOCOL_UNREACHABLE);
 			icmp_error_reply->set_quench(0);
 			
-			sbi->sendbuffer.writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
+			sbi->writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
 			// ICMPv4 RFC: Append at least the errornous ipv4 packet + 8 byte payload to the responding icmp packet
-			sbi->sendbuffer.write(packet, echoErrornousPacketSize);
+			sbi->write(packet, echoErrornousPacketSize);
 			
-			icmpv4instance.send(&sbi->sendbuffer);
+			icmpv4instance.send(sbi);
 		}
 	}
 };

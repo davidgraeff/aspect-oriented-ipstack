@@ -28,7 +28,9 @@ using namespace ipstack;
 
 
 aspect IPv4_ICMP_ReceiveOutput {
-
+	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") : 
+	order( "IPv4_ICMP_ReceiveOutput","%" && !"IPv4_ICMP_ReceiveOutput" );
+	
 	// *** Affect class: Demux
 	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
 	args(packet, payloadlen, interface) && that(demux) :

@@ -29,23 +29,15 @@ namespace ipstack
 {
 
 /**
- * Responsible for answering half-open tcp requests. Uses the management memory
+ * Responsible for icmpv4 messages. Uses the management memory
  */
 class ICMPv4_Socket : public ManagementMemory
 {
 	public:
 		ICMPv4_Socket() : ManagementMemory() {}
-// 		void prepareResponse(SendBufferWithInterface* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len) ;
-
-		SendBufferWithInterface* requestSendBufferICMP(Interface* interface, UInt16Opt additional_len) ;
-		static ICMPv4_Socket& instance() {
-			return m_instance;
-		}
-		
+		static ICMPv4_Socket& instance() {return m_instance;}
 		//for placement new: calling the constructor explicitly for global objects
-		void* operator new(__SIZE_TYPE__ size, void* mem) {
-			return mem;
-		}
+		void* operator new(__SIZE_TYPE__ size, void* mem) {return mem;}
 	private:
 		ICMPv4_Socket(const ICMPv4_Socket &) {} // no copies and BUG in aspectc++ (segfault if not defined)
 		static ICMPv4_Socket m_instance;

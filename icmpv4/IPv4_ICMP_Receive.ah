@@ -28,31 +28,31 @@
 using namespace ipstack;
 
 aspect IPv4_ICMP_Receive {
-  // *** Affect class: Demux
-  advice "ipstack::Demux" : slice Demux_IPv4_ICMP_Slice;
-  
-  advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
-         args(packet, len, interface) && that(demux) :
-         around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
+	// *** Affect class: Demux
+	advice "ipstack::Demux" : slice Demux_IPv4_ICMP_Slice;
+	
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+			args(packet, len, interface) && that(demux) :
+			around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux){
 
-    if(packet->get_protocol() == ICMP_Packet::IPV4_TYPE_ICMP){
-      unsigned payloadlen = packet->get_total_len() - packet->get_ihl() * 4; // remove ipv4 header size
-	  
-	  //we have a icmp packet
-	  if(payloadlen < ICMP_Packet::ICMP_HEADER_SIZE){
-        return; //len too small!
-      }
-      
-      //verify icmp checksum
-      if(!InternetChecksum::validPayloadChecksum(packet->get_data(), payloadlen,  interface)) {
-		  //printf("icmp checksum wrong!\n");
-        return;
-      }
-	  
-	  demux.icmpv4_demux(packet, payloadlen, interface);
-      return; //icmpv4 packet dispatched now
-    }
-    tjp->proceed(); //try another 'ipv4_demux'-aspect
-  }
-  
+		if(packet->get_protocol() == ICMP_Packet::IPV4_TYPE_ICMP){
+			unsigned payloadlen = packet->get_total_len() - packet->get_ihl() * 4; // remove ipv4 header size
+			
+			//we have a icmp packet
+			if(payloadlen < ICMP_Packet::ICMP_HEADER_SIZE){
+				return; //len too small!
+			}
+			
+			ICMP_Packet* icmp = (ICMP_Packet*)packet->get_data();
+			
+			//verify icmp checksum
+			if (!icmp->checksum_valid(0, payloadlen, interface)) {
+				return;
+			}
+			
+			demux.icmpv4_demux(packet, payloadlen, interface);
+			return; //icmpv4 packet dispatched now
+		}
+		tjp->proceed(); //try another 'ipv4_demux'-aspect
+	}
 };

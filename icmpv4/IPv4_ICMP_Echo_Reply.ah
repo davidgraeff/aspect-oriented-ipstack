@@ -48,20 +48,19 @@ aspect IPv4_ICMP_Echo_Reply {
 			}
 			
 			demux.setDirectResponse(true);
-			SendBufferWithInterface* sbi = icmpv4instance.requestSendBufferICMP(interface, payloadlen);
+			SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, payloadlen);
 			//we have an echo request packet for IPv4
 			if (sbi) {
-				ICMP_Packet* reply_icmp = (ICMP_Packet*)sbi->sendbuffer.data;
+				ICMP_Packet* reply_icmp = (ICMP_Packet*)sbi->getDataPointer();
 
 				reply_icmp->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY);
 				reply_icmp->set_code(0);
 				reply_icmp->set_quench(icmp_packet->get_quench());
-
-				sbi->sendbuffer.writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
+				sbi->writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
 				// append original payload of the source icmp packet
-				sbi->sendbuffer.write(icmp_packet->get_data(), payloadlen);
+				sbi->write(icmp_packet->get_data(), payloadlen-ICMP_Packet::ICMP_HEADER_SIZE);
 
-				icmpv4instance.send(&(sbi->sendbuffer), sbi->interface);
+				icmpv4instance.send(sbi);
 			}
 		} else {
 			tjp->proceed();
