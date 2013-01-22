@@ -1,0 +1,77 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/router/Interface.h"
+#include "ipstack/ethernet/Eth_Frame.h"
+#include "ipstack/ethernet/EthernetAddressUtilities.h"
+#include "ipstack/router/Router.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipstack/ipv6/AddressMemory.h"
+
+using namespace ipstack;
+
+/**
+  * If the destination mac address of an ethernet packet in a sendbuffer is not set so far
+  * look up the destination mac address by the destination ipv6 address in the ndp cache.
+  * If no cache entry exist, the ndp cache will trigger a lookup in the local network segment.
+  * Implementation limitation: This aspect (ipv6_lookup method actually) will block the current
+  * task until the destination address is known or a timeout occur.
+  */
+aspect IPv6_Ethernet_NDPCache_Blocking_Aspect {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "IPv6_Ethernet_NDPCache_Blocking_Aspect");
+	
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+		around(SendBuffer* sendbuffer) {
+
+		// check ip version
+		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
+			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
+			Interface* interface = sendbuffer->getInterface();
+			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+
+			NDPCacheEntry* entry = interface->ndpcache_find(ip->get_dst_ipaddr());
+			if (entry == 0) {
+				entry = interface->addNDPCacheEntry(ip->get_dst_ipaddr(), 0, NDPCacheEntry::NDPCacheEntryState_Incomplete);
+
+				if (entry) {
+					interface->block_until_neighbor_advertisement(entry);
+					// Check state
+					if (entry->state != NDPCacheEntry::NDPCacheEntryState_Reachable) {
+						interface->addressmemory.freeEntry(entry);
+						entry = interface->ndpcache_findRouter();
+					}
+				} else {
+					// Not enough memory. Try a router instead
+					entry = interface->ndpcache_findRouter();
+				}
+			}
+			if (entry == 0) {
+				sendbuffer->setState(SendBuffer::InvalidState);
+				return; //don't send this packet: destination MAC address unknown!
+			}
+
+			eth_frame->set_dst_hwaddr(entry->hw);
+			// Restore writing state after it has been changed by the IPv6 ethernet aspect
+			sendbuffer->setState(SendBuffer::WritingState);
+		}
+		tjp->proceed();
+	}
+};
