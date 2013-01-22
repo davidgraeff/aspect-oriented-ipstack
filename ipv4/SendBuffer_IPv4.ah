@@ -34,7 +34,6 @@ aspect Sendbuffer_IPv4 {
 		// check ip version
 		if (tjp->that()->m_useipversion == 4) {
 			*tjp->result() = v + tjp->that()->ipv4.getSpecificHeaderSize();
-			//printf("Sendbuffer_IPv4 plus %i size: %i\n", tjp->that()->ipv4.getSpecificHeaderSize(), *tjp->result());
 		}
 	}
 
@@ -47,7 +46,6 @@ aspect Sendbuffer_IPv4 {
 			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->memstart_ip;
 			tjp->that()->ipv4.setupHeader(ip, sendbuffer->getRemainingSize());
 			sendbuffer->writtenToDataPointer(tjp->that()->ipv4.getSpecificHeaderSize());
-			//printf("Sendbuffer_IPv4. Data written %u \n", (char*)sendbuffer->getDataPointer() - (char*)sendbuffer->getDataStart());
 
 			// set pointer to next header field
 			sendbuffer->nextheaderfield_ip = ip->get_nextheaderPointer();

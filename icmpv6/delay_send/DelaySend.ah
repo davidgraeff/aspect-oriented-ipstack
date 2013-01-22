@@ -36,20 +36,21 @@ using namespace ipstack;
 aspect delay_icmpv6_send  {
 
 	// advice ordering: always execute this aspect first
-	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") : 
+	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") : 
 	order( "delay_icmpv6_send%","%" && !"delay_icmpv6_send%" );
 	
 	/**
 	  * We intercept send requests and if mHoldBack is active we just do nothing. The affected sendbuffers will
 	  * be send at the end of the "ipv6_payload_demux"-advice of this aspect.
 	  */
-	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
+	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
 		if (DelaySend::mHoldBack) {
 			dataToSend->setState(SendBuffer::AboutToBeTransmittedState);
 			//printf("-- Delay send\n");
 		}
 		
 		if (DelaySend::mHoldBack) {
+			*tjp->result() = false;
 			return;
 		}
 		tjp->proceed();

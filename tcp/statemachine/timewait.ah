@@ -51,7 +51,7 @@ slice class TCP_State_Timewait
 					//Just waiting for 2*RTO seems to be sufficient.
 					//----
 					// NOTE2: For a "webserver" use-case the timeout is still to high.
-					// Should be configurable maybe? for now: a very short timeout
+					// Should be configurable maybe?
 					
 					abort(); //kill connection
 				}

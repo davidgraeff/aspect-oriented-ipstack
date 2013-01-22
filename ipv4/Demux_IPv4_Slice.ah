@@ -26,18 +26,14 @@ slice class Demux_IPv4_Slice {
 private:
 	void ipv4_demux(IPv4_Packet* packet, unsigned len, Interface* interface){
 		//Aspects to be weaved here!
-		//printf("IPv4 packet arrived\n");
-		
 		// If no protocol handler intercepted this method, call the error handler.
 		error_no_protocol_handler(packet, interface);
 	}
     void ipv4_forward ( IPv4_Packet *packet, unsigned len, Interface *interface ) {
         //Aspects to be weaved here!
-        //printf("IPv4 packet to be forwarded\n");
     }
     bool ipv4_reassemble ( IPv4_Packet* &packet, unsigned &len, Interface *interface, UInt16 fragment_offset ) {
         //Aspects to be weaved here!
-        //printf("IPv4 fragment arrived: offset = %u\n", fragment_offset);
         return false; // Packet not completely reassembled, yet. This is not the last fragment!
     }
     

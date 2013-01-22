@@ -25,7 +25,7 @@ using namespace ipstack;
 * Hardware checksumming supported for TCP
 */
 aspect InternetChecksum_Tx_Offloading_tcp {
-	advice execution("void ipstack::%TCP_Socket::send(ipstack::SendBuffer*)")  &&
+	advice execution("% ipstack::%TCP_Socket::send(ipstack::SendBuffer*)")  &&
 		args(dataToSend):
 		around(SendBuffer* dataToSend) {
 

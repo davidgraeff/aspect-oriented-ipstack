@@ -25,7 +25,7 @@ using namespace ipstack;
 * Hardware checksumming supported for UDP
 */
 aspect InternetChecksum_Tx_Offloading_udp {
-	advice execution("void ipstack::%UDP_Socket::send(ipstack::SendBuffer*)")  &&
+	advice execution("% ipstack::%UDP_Socket::send(ipstack::SendBuffer*)")  &&
 		args(dataToSend):
 		around(SendBuffer* dataToSend) {
 

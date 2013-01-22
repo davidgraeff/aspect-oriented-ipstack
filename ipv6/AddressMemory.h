@@ -105,7 +105,6 @@ class AddressMemory
 		 */
 		template <class resultType, unsigned char type>
 		resultType* findEntry(UInt8* startentry = 0) {
-			//printf("AddressMemory:findEntry %u, %p\n", type, this);
 			for (UInt8 i = startentry ? *startentry : 0; i < ENTRIES; ++i) {
 				
 				if (memory[i * SIZE] == type) {

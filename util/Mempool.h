@@ -41,7 +41,6 @@ class SingleMempool
 		}
 
 		void* alloc() {
-// 			printf("SingleMempool::alloc %u\n", head < freelist);
 			if (head < freelist) {
 				return 0;
 			}
@@ -56,8 +55,6 @@ class SingleMempool
 				return false;
 			}
 			
-// 			printf("SingleMempool::free %p\n", mem);
-
 			//calculate the 'delta' to the next lower BLOCK
 			unsigned rest = ((unsigned)(((char*)mem) - pool)) % BLOCKSIZE;
 

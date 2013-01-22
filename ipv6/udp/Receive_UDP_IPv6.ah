@@ -42,7 +42,7 @@ advice "ipstack::Demux" : slice Demux_UDP_IPv6_Slice;
 			return;
 		}
 
-		//we have a udp packet
+		//we have an udp packet
 		*(tjp->result()) = true;
 			
 		if (payload_length < UDP_Packet::UDP_HEADER_SIZE) {
@@ -54,7 +54,6 @@ advice "ipstack::Demux" : slice Demux_UDP_IPv6_Slice;
 		UInt16 udp_packet_dport = udp_packet->get_dport();
 
 		UDP_Socket* socket = demux.udp_head_socket;
-printf("udp received %u\n", udp_packet_dport);
 		while (socket != 0) {
 			if (socket->get_sport() == udp_packet_dport) {
 				// copy the payload out of the udp socket
@@ -71,7 +70,6 @@ printf("udp received %u\n", udp_packet_dport);
 			}
 			socket = socket->getNext(); //try next socket
 		}
-printf("udp not consumed\n");
 
 		demux.error_port_not_reachable_v6(packet, interface);
 	}

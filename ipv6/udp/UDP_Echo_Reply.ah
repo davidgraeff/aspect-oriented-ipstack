@@ -41,11 +41,9 @@ aspect UDP_IPv6_ECHO_REPLY {
 		}
 
 		if (payload_length < UDP_Packet::UDP_HEADER_SIZE) {
+			*(tjp->result()) = true; // stop parsing ipv6 packet
 			return; //len too small! Drop packet
 		}
-		
-		// udp payload length = payload_length - udp header
-		unsigned len =  payload_length - UDP_Packet::UDP_HEADER_SIZE;
 		
 		// extract udp packet and dest port
 		UDP_Packet* udp_packet = (UDP_Packet*) payload;
@@ -54,6 +52,9 @@ aspect UDP_IPv6_ECHO_REPLY {
 		// UDP Echo Service is on port 7
 		if (7 == udp_packet_dport) {
 			*(tjp->result()) = true; // stop parsing ipv6 packet
+			
+			// udp payload length = payload_length - udp header
+			unsigned len =  payload_length - UDP_Packet::UDP_HEADER_SIZE;
 			
 			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
 			// the destination interface into account

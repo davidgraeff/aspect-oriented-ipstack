@@ -38,8 +38,6 @@ aspect IPv6_TCP_Reset {
 		if (nextHeader == TCP_Segment::IP_TYPE_TCP) {
 			TCP_Segment* tcp_segment = (TCP_Segment*) payload;
 			
-			printf("inside reset\n");
-			
 			//do not reply resets with resets
 			if (tcp_segment->has_RST() == false) {
 				*(tjp->result()) = true; 

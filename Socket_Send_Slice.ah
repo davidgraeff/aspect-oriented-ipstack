@@ -102,12 +102,13 @@ public:
 	 * Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
 	 * invalid after sending it and may be freed by calling socket->free(sendbuffer).
 	 */
-	void send(SendBuffer* dataToSend) {
+	bool send(SendBuffer* dataToSend) {
 		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.
-			return;
+			return false;
 		}
 		dataToSend->setState(SendBuffer::TransmittedState);
 		dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
+		return true;
 	}
 	
 	/**

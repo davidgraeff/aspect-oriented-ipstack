@@ -38,16 +38,16 @@ class UDP_Packet{
 	UInt8 data[];
 	
 	public:
-	UInt16 get_sport() { return sport; }
+	UInt16 get_sport() const { return sport; }
 	void set_sport(UInt16 s) { sport = s; }
 	
-	UInt16 get_dport() { return dport; }
+	UInt16 get_dport() const { return dport; }
 	void set_dport(UInt16 d) { dport = d; }
 	
-	UInt16 get_length() { return length; }
+	UInt16 get_length() const { return length; }
 	void set_length(UInt16 len) { length = len; }
 	
-	UInt16 get_checksum() { return checksum; }
+	UInt16 get_checksum() const { return checksum; }
 	void set_checksum(UInt16 csum) { checksum = csum; }
 	/**
 	  * Calculate the udp checksum.

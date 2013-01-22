@@ -29,7 +29,6 @@ slice class Demux_ARP_Slice {
   private:
   void arp_demux(ARP_Packet* packet, unsigned len, Interface* interface){
     //Aspects to be weaved here!
-    //printf("ARP packet arrived\n");
   }
 };
 

@@ -25,14 +25,14 @@ using namespace ipstack;
 
 aspect delay_icmpv6_send_debug {
 	// advice ordering: always execute this aspect first
-	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") : 
+	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") : 
 	order( "delay_icmpv6_send_debug","delay_icmpv6_send" );
 	
 	/**
 	  * We intercept send requests and if DelaySend::mHoldBack is active we just do nothing. The affected sendbuffers will
 	  * be send at the end of the "ipv6_payload_demux"-advice of this aspect.
 	  */
-	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
+	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
 		if (DelaySend::mHoldBack) {
  			printf("delay_icmpv6_send::avoid %p, interface %p\n", dataToSend, dataToSend->getInterface());
 		}

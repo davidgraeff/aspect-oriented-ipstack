@@ -26,7 +26,7 @@ using namespace ipstack;
 * (commented out: e1000 does not reliably compute the checksum for whatever reason)
 */
 aspect InternetChecksum_Tx_Offloading_icmpv4 {
-// 	advice execution("void ipstack::ICMPv4_Socket::send(ipstack::SendBuffer*)")  &&
+// 	advice execution("% ipstack::ICMPv4_Socket::send(ipstack::SendBuffer*)")  &&
 // 		args(dataToSend):
 // 		around(SendBuffer* dataToSend) {
 // 
