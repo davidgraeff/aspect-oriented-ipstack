@@ -1,5 +1,4 @@
 #include "IPv6AddressUtilities.h"
-#include "stdio.h"
 
 namespace ipstack {
 namespace IPV6AddressScope {

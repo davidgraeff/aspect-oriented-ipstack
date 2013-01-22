@@ -1,7 +1,4 @@
 #include "ICMPv4_Socket.h"
-#include "ICMP.h"
-#include "util/types.h"
-#include "stdio.h"
 
 namespace ipstack
 {

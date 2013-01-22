@@ -20,7 +20,6 @@
 #include "ipstack/ipv6/IPv6AddressUtilities.h"
 #include "util/types.h"
 #include "../cfAttribs.h"
-#include "stdio.h"
 
 #include "ndpcache/NDPCacheEntry.h"
 
@@ -89,7 +88,6 @@ class AddressMemory
 	public:
 		enum { EntryUndefined = 255 };
 		AddressMemory() {
-			printf("AddressMemory::AddressMemory() %p\n", this);
 			// set memory bytes to zero where the id of each entry is located
 			for (UInt8 i = 0; i < ENTRIES; ++i) {
 				memory[i * SIZE] = 0;

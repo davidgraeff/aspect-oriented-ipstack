@@ -19,8 +19,6 @@
 
 #include "as/AS.h"
 #include "os/krn/EnterLeave.h"
-#include "stdio.h"
-
   
 /**
 * Reschedule if ARP or NDP address resolutions are performed. 

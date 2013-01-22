@@ -48,7 +48,6 @@ public:
 	 * The first matched address is returned by the first parameter "addr".
 	 */
 	bool getInterfaceIPv6AddressByScope(ipstack::ipv6addr& addr, ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE scope) {
-		//UInt8 prefixlen = IPV6AddressScope::getIPv6AddressScopePrefixLength(scope);
 		UInt8 nextEntry = 0;
 		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 			if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == scope) {
@@ -105,10 +104,6 @@ public:
 
 	bool hasIPv6Address(const ipstack::ipv6addr& addr) {
 		UInt8 nextEntry = 0;
-
-// 		char tempbuf[50] = {0};
-// 		ipstack::ipv6_addr_toString(addr, tempbuf);
-// 		printf("hasIPv6Address %s\n", tempbuf);
 
 		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 			if (compare_ipv6_addr(addr, entry->ipv6, entry->prefixlen)) {

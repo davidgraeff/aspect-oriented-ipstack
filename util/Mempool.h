@@ -21,7 +21,6 @@
 
 #include "MempoolBase.h"
 #include "../IPStack_Config.h"
-#include "stdio.h"
 
 namespace ipstack
 {

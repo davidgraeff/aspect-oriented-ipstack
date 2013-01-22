@@ -19,7 +19,6 @@
 
 #include "util/types.h"
 #include "SharedMemory.h"
-#include "stdio.h"
 
 using namespace ipstack;
 

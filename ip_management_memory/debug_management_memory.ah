@@ -30,6 +30,10 @@ using namespace ipstack;
   * additional protection to avoid double freeing.
   */
 aspect debug_management_memory {
+	/**
+	  * We have a shadow "array for allocated buffers" here to check
+	  * if the implemented one work as expected
+	  */
 	void* allocatedMemories[SharedMemory::SLOTS];
 
 	advice execution( "% ipstack::SharedMemory::insert(ipstack::SendBuffer*)" ) && args(data) : after(SendBuffer* data) {

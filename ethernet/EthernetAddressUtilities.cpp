@@ -16,7 +16,6 @@
 // Copyright (C) 2012 David Gräff
 
 #include "EthernetAddressUtilities.h"
-#include "stdio.h"
 
 namespace ipstack {
 

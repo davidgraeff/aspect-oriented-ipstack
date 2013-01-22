@@ -15,13 +15,10 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __DEMUX_ETHERNET_SLICE__
-#define __DEMUX_ETHERNET_SLICE__
+#pragma once
 
 #include "../router/Interface.h"
 #include "Eth_Frame.h"
-#include "stdio.h"
 
 using namespace ipstack;
 
@@ -29,8 +26,5 @@ slice class Demux_Ethernet_Slice {
   private:
   void ethernet_demux(const void* ethernet_frame, unsigned framelen, Interface* interface){
     //Aspects to be weaved here!
-    //printf("Ethernet packet arrived\n");
   }
 };
-
-#endif /* __DEMUX_ETHERNET_SLICE__ */

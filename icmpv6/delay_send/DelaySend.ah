@@ -46,7 +46,7 @@ aspect delay_icmpv6_send  {
 	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
 		if (DelaySend::mHoldBack) {
 			dataToSend->setState(SendBuffer::AboutToBeTransmittedState);
-			printf("-- Delay send\n");
+			//printf("-- Delay send\n");
 		}
 		
 		if (DelaySend::mHoldBack) {

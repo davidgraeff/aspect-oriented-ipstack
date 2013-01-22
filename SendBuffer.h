@@ -21,7 +21,6 @@
 #include "router/Interface.h"
 #include <string.h> //for memcpy
 #include "util/types.h"
-#include "stdio.h"
 namespace ipstack
 {
 
