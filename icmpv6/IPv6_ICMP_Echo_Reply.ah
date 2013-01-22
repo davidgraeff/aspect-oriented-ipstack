@@ -50,20 +50,20 @@ aspect IPv6_ICMP_Echo_Reply {
 			if (!payloadlen) return;
 
 			demux.setDirectResponse(true);
-			SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(interface, payloadlen);
+			SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, payloadlen);
 			//we have an echo request packet for IPv6
 			
 			if (sbi) {
-
-				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->sendbuffer.data;
+				sbi->mark("IPv6_ICMP_Echo_Reply");
+				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->getDataPointer();
 
 				reply_icmp->set_type(ICMPv6_Packet::ICMP_TYPE_ECHO_REPLY);
 				reply_icmp->set_code(ICMPv6_Packet::ICMP_CODE_ECHO_REPLY);
-				sbi->sendbuffer.writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE);
+				sbi->writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE);
 				// append original payload of the source icmp packet
-				sbi->sendbuffer.write(icmp_packet->get_data(), payloadlen-ICMPv6_Packet::ICMP_HEADER_SIZE);
+				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv6_Packet::ICMP_HEADER_SIZE);
 
-				icmpv6instance.send(&sbi->sendbuffer);
+				icmpv6instance.send(sbi);
 			}
 		} else {
 			tjp->proceed();

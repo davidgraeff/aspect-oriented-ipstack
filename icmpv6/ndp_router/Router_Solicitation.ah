@@ -19,7 +19,7 @@
 
 #include "util/types.h"
 #include "../ICMPv6.h"
-#include "NDPMessages.h"
+#include "NDPRouterMessages.h"
 #include "../ICMPv6_Socket.h"
 #include "ipstack/ipv6/IPv6.h"
 #include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
@@ -27,6 +27,8 @@
 #include "ipstack/ipv6/IPv6onSockets.h"
 #include "ipstack/router/Interface.h"
 #include "ipstack/demux/Demux.h"
+
+using namespace ipstack;
 
 aspect NDP_Router_Solicitation {
 	// Do a router solicitation after assigning a link local ip (if any is assigned: use unspecified ip otherwise)
@@ -58,56 +60,20 @@ aspect NDP_Router_Solicitation {
 			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 		}
 		// Warning: We support ethernet only at the moment, because we reserving 8 additional bytes (2 bytes reserved) -> 6 bytes remaining for link layer address
-		const UInt8 resSize = sizeof(NDPMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
+		const UInt8 resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
 
-		SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, resSize);
+		demux.setDirectResponse(true);
+		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, resSize);
 		if (sbi) {
-			NDPMessages::RouterSolicitationMessage* msg = (NDPMessages::RouterSolicitationMessage*)sbi->sendbuffer.data;
+			sbi->mark("NDP_Router_Solicitation");
+			NDPRouterMessages::RouterSolicitationMessage* msg = (NDPRouterMessages::RouterSolicitationMessage*)sbi->getDataPointer();
 			msg->type = (133);
 			msg->code = (0);
 			msg->reserved = 0;
 			NDPMessages::write_option_linklayer_address(NDPMessages::SourceLinkLayer,(char*)msg->options, interface.getAddress(), interface.getAddressSize());
-			sbi->sendbuffer.writtenToDataPointer(resSize);
+			sbi->writtenToDataPointer(resSize);
 			
-			icmpv6instance.send(&sbi->sendbuffer,&interface);
+			icmpv6instance.send(sbi);
 		}
-	}
-
-	/**
-	 * We do not allow the default behaviour here. We send a Router Solicitation message if
-	 * a ndp cache entry for a router is going to expire. The Router Advertisement message
-	 * will refresh the ndp cache entry.
-	 */
-	advice execution("% ipstack::Interface::ipv6_router_entry_refresh(...)") && args(entry) && that(interface) :
-		around(NDPCacheEntry* entry, Interface& interface) {
-			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-			IPV6& ipv6 = icmpv6instance.ipv6;
-			ipstack::ipv6addr addr = {{0}};
-			addr.ipaddrB8[0] = 0xff;
-			addr.ipaddrB8[1] = 0x02;
-			addr.ipaddrB8[15] = 0x02;
-			ipv6.set_dst_addr(addr, &interface); // all routers multicast address
-			// For the src address try to get the link local address
-			if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
-				ipv6.set_src_addr(addr); // link-local
-			else {
-				get_unspecified_ipv6_address(addr);
-				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
-			}
-			
-			// Warning: We support ethernet only at the moment, because we reserving 8 additional bytes (2 bytes reserved) -> 6 bytes remaining for link layer address
-			const UInt8 resSize = sizeof(NDPMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
-			
-
-			SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, resSize);
-			if (sbi) {
-				NDPMessages::RouterSolicitationMessage* msg = (NDPMessages::RouterSolicitationMessage*)sbi->sendbuffer.data;
-				msg->type = (133);
-				msg->code = (0);
-				msg->reserved = 0;
-				NDPMessages::write_option_linklayer_address(NDPMessages::SourceLinkLayer,(char*)msg->options, interface.getAddress(), interface.getAddressSize());
-				sbi->sendbuffer.writtenToDataPointer(resSize);
-				icmpv6instance.send(&sbi->sendbuffer);
-			}
 	}
 };

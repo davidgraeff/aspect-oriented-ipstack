@@ -1,0 +1,90 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "../ICMPv6.h"
+#include "ipstack/icmpv6/ndp/NDPNeighborMessages.h"
+#include "../ICMPv6_Socket.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/demux/Demux.h"
+
+aspect NDP_Address_Duplication {
+
+	/**
+	  * Check for a duplicate address. If the interface has assigned a duplicate, we have to change the address
+	  * and redo the procedure. This implementation only changes one byte: If all 255 available addresses are
+	  * duplicates the interface will be unusable. If a device with the same logic and the same start address is within the local network
+	  * both devices will never get a usuable interface.
+	  */
+	static bool is_duplicate_address(const ipstack::ipv6addr& ipv6_dstaddr, Interface* interface) {
+		// duplicate address detection
+		UInt8 nextEntry = 0;
+		while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+			if (/*addressentry->state == AddressEntry::AddressEntryStateTemporary &&*/ // Would be nice, but we have no timer -> all addresses are valid until proofed wrong currently
+				compare_ipv6_addr(ipv6_dstaddr, addressentry->ipv6)) {
+				// Oh no! We have created a duplicate address. "Remove" it from our interface.
+// 				printf("is_duplicate_address true!\n");
+				interface->addressmemory.freeEntry(addressentry);
+			// And add it with a changed byte: Hopefully this will not be a duplicate. We will check that of couse.
+				++addressentry->ipv6.ipaddrB8[15];
+				interface->registerIPv6Address(addressentry);
+				// This will cause a duplicate address detection
+				interface->setIPv6AddressState(addressentry, AddressEntry::AddressEntryStateTemporary);
+				return true;
+				}
+		}
+		return false;
+	}
+	
+	/**
+	 * Address duplicate detection. After assigning an IP to an interface with the temporary state,
+	 * do an address duplicate detection: Send out a Neighbor solicitation message with the unspecified ip (::)
+	 * as src to the soliciated multicast address of our assigned ip. Use the assigned ip as "target_address" 
+	 * parameter in the neighbor_solicitation message. If we get a Neighbor advertisement response, the address is in use already and we have
+	 * to select another ip.
+	 */
+	advice execution("% ipstack::Interface::setIPv6AddressState(...)") && args(entry, ipstate) && that(interface) :
+		before(AddressEntry* entry, UInt8 ipstate, Interface& interface) {
+
+		if (ipstate == AddressEntry::AddressEntryStateTemporary) {
+			ipstack::ipv6addr srcaddr = {{0}};
+			NDPNeighborMessages::send_neighbor_solicitation(srcaddr, entry->ipv6, &interface, true);
+		}
+	}
+	
+	advice execution("void ipstack::Demux::ndp_neighbor_advertisement_demux(ipstack::IPv6_Packet*, ipstack::NDPNeighborMessages::NeighborAdvertisementMessage*, unsigned, ipstack::Interface*)") &&
+	args(packet, message, payloadlen, interface) && that(demux) :
+		around(IPv6_Packet* packet, NDPNeighborMessages::NeighborAdvertisementMessage* message, unsigned payloadlen, Interface* interface, Demux& demux) {
+
+			if (!message->isResponse()) {
+				tjp->proceed();
+				return;
+			}
+
+			// If we requested an advertisment we are in the process of duplicate-address-detection.
+			// We do check our interface addresses now and change addresses if necessary
+			is_duplicate_address(message->target_address, interface);
+
+			tjp->proceed();
+	}
+};

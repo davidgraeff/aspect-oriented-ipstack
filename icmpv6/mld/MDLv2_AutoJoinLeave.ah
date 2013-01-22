@@ -56,11 +56,13 @@ aspect MDLv2_Autojoinleave {
 			get_unspecified_ipv6_address(addr);
 			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 		}
-		SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, MLDMessages::mldv2_listener_report_message_size());
+		Demux::Inst().setDirectResponse(true);
+		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, MLDMessages::mldv2_listener_report_message_size());
 		if (sbi) {
-			MLDMessages::write_mldv2_listener_report_message((char*)sbi->sendbuffer.data, multicast_addr, MLDMessages::mldv2_CHANGE_TO_INCLUDE_MODE);
-			sbi->sendbuffer.writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
-			icmpv6instance.send(&sbi->sendbuffer);
+			sbi->mark("leave_multicastGroup v2");
+			MLDMessages::write_mldv2_listener_report_message((char*)sbi->getDataPointer(), multicast_addr, MLDMessages::mldv2_CHANGE_TO_INCLUDE_MODE);
+			sbi->writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
+			icmpv6instance.send(sbi);
 		}
 		ipv6.restoreDefaultSendingConfiguration();
 	}
@@ -88,11 +90,13 @@ aspect MDLv2_Autojoinleave {
 				get_unspecified_ipv6_address(addr);
 				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 			}
-			SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, MLDMessages::mldv2_listener_report_message_size());
+			Demux::Inst().setDirectResponse(true);
+			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, MLDMessages::mldv2_listener_report_message_size());
 			if (sbi) {
-				MLDMessages::write_mldv2_listener_report_message((char*)sbi->sendbuffer.data, multicast_addr, MLDMessages::mldv2_CHANGE_TO_EXCLUDE_MODE);
-				sbi->sendbuffer.writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
-				icmpv6instance.send(&sbi->sendbuffer);
+				sbi->mark("join_multicastGroup v2");
+				MLDMessages::write_mldv2_listener_report_message((char*)sbi->getDataPointer(), multicast_addr, MLDMessages::mldv2_CHANGE_TO_EXCLUDE_MODE);
+				sbi->writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
+				icmpv6instance.send(sbi);
 			}
 			ipv6.restoreDefaultSendingConfiguration();
 	}

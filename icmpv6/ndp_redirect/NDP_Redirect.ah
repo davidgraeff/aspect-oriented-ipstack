@@ -27,21 +27,32 @@
 #include "ipstack/ipv6/IPv6.h"
 #include "ipstack/ipv6/IPv6onSockets.h"
 #include "../ICMPv6.h"
-#include "NDPMessages.h"
+#include "ipstack/icmpv6/ndp/NDPMessages.h"
 #include "ipstack/router/Interface.h"
 #include "ipstack/demux/Demux.h"
 #include "util/types.h"
 
 aspect NDP_Redirect {
-
+	// Redirect message
+	struct RedirectMessage {
+		UInt8 type; // 3
+		UInt8 code; // 4
+		UInt16 checksum;
+		UInt32 reserved;
+		
+		ipv6addr target_address;
+		ipv6addr destination_address;
+		UInt8 options[];
+	} __attribute__((packed));
+	
 	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
 	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
 		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
-			NDPMessages::RedirectMessage* message = (NDPMessages::RedirectMessage*)icmp_packet;
+			RedirectMessage* message = (RedirectMessage*)icmp_packet;
 		if ((message->type == 137) && (message->code == 0)) {
-			if (payloadlen < sizeof(NDPMessages::RedirectMessage))
+			if (payloadlen < sizeof(RedirectMessage))
 				return; // drop packet
-			payloadlen -= sizeof(NDPMessages::RedirectMessage);
+			payloadlen -= sizeof(RedirectMessage);
 
 			// Check all options of this message
 			char dest_ethernet_mac[6];

@@ -1,0 +1,88 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "DelaySendMethod.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ip_management_memory/SharedMemory.h"
+
+using namespace ipstack;
+
+/**
+ * An incoming icmpv6 packet may trigger the generation of multiple response messages.
+ * For example an incoming "neighbor solicitation message" have to be answered by an
+ * "neighbor advertisement message" and additionally if the remote host is unknown we have
+ * to send a "neighbor solicitation message" on our own. For the case that the network device has
+ * a shared buffer for incoming/outgoing traffic and because we do not copy the incoming
+ * packet to a buffer of our own it is recommend to activate this option to delay sending
+ * packets until the received packet has been processed entirely.
+ */
+aspect delay_icmpv6_send  {
+
+	// advice ordering: always execute this aspect first
+	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") : 
+	order( "delay_icmpv6_send%","%" && !"delay_icmpv6_send%" );
+	
+	/**
+	  * We intercept send requests and if mHoldBack is active we just do nothing. The affected sendbuffers will
+	  * be send at the end of the "ipv6_payload_demux"-advice of this aspect.
+	  */
+	advice execution("void ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
+		if (DelaySend::mHoldBack) {
+			dataToSend->setState(SendBuffer::AboutToBeTransmittedState);
+			printf("-- Delay send\n");
+		}
+		
+		if (DelaySend::mHoldBack) {
+			return;
+		}
+		tjp->proceed();
+	}
+	
+	advice construction("ipstack::SharedMemory") : after() {
+		DelaySend::mHoldBack = 0;
+	}
+	
+	// After output aspect buf before all other aspects
+	advice execution("% ipstack::Demux::icmpv6_demux(...)") : 
+	order( "IPv6_ICMP_Receive_Output", "delay_icmpv6_send%","%" && !"delay_icmpv6_send%" && !"IPv6_ICMP_Receive_Output%" );
+	
+	advice execution("% ipstack::Demux::icmpv6_demux(...)") : around() {
+		++DelaySend::mHoldBack;
+		//printf("------ Delay field ------ %u\n", DelaySend::mHoldBack);
+		
+		tjp->proceed();
+		
+		--DelaySend::mHoldBack;
+		//printf("------ Delay end ------ %u\n", DelaySend::mHoldBack);
+		
+		// We only send out data if holdBack == 0 (reantrance is possible)
+		if (DelaySend::mHoldBack>0)
+			return;
+		
+		/**
+		 * Initiate the sending for all SendBuffer objects that haven't been send so far.
+		 */
+		UInt16Opt index = 0;
+		while (SendBuffer* buffer = (SendBuffer*)sharedmemory.getNext(index)) {
+			DelaySend::sendDelayed(buffer);
+			++index;
+		}
+	}
+};

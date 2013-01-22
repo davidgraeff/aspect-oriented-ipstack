@@ -56,11 +56,13 @@ aspect MDLv1_Autojoinleave {
 			get_unspecified_ipv6_address(addr);
 			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 		}
-		SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, sizeof(MLDMessages::mldv1_listener_done));
+		Demux::Inst().setDirectResponse(true);
+		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, sizeof(MLDMessages::mldv1_listener_done));
 		if (sbi) {
-			MLDMessages::write_mldv1_listener_done((char*)sbi->sendbuffer.data, multicast_addr);
-			sbi->sendbuffer.writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_done));
-			icmpv6instance.send(&sbi->sendbuffer);
+			sbi->mark("leave_multicastGroup v1");
+			MLDMessages::write_mldv1_listener_done((char*)sbi->getDataPointer(), multicast_addr);
+			sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_done));
+			icmpv6instance.send(sbi);
 		}
 		ipv6.restoreDefaultSendingConfiguration();
 	}
@@ -88,11 +90,13 @@ aspect MDLv1_Autojoinleave {
 				get_unspecified_ipv6_address(addr);
 				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 			}
-			SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(&interface, sizeof(MLDMessages::mldv1_listener_report));
+			Demux::Inst().setDirectResponse(true);
+			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, sizeof(MLDMessages::mldv1_listener_report));
 			if (sbi) {
-				MLDMessages::write_mldv1_listener_report((char*)sbi->sendbuffer.data, multicast_addr);
-				sbi->sendbuffer.writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
-				icmpv6instance.send(&sbi->sendbuffer);
+				sbi->mark("join_multicastGroup v1");
+				MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), multicast_addr);
+				sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
+				icmpv6instance.send(sbi);
 			}
 			ipv6.restoreDefaultSendingConfiguration();
 	}

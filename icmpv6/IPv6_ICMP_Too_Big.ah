@@ -1,0 +1,65 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/ipv6/IPv6.h"
+#include "../ipv6/InternetChecksum.h"
+#include "ipstack/demux/Demux.h"
+#include "ipstack/router/Interface.h"
+#include "ICMPv6.h"
+#include "ICMPv6_Socket.h"
+
+using namespace ipstack;
+
+aspect IPv6_ICMP_Too_Big {
+	advice execution("void ipstack::Demux::error_receiving_memory_too_small(ipstack::IPv6_Packet*, ipstack::Interface*)") &&
+	args(packet, interface) && that(demux) :
+	around(IPv6_Packet* packet, Interface* interface, Demux& demux) {
+		
+		// we will respond with a packet-too-big message to allow path mtu detection for other hosts
+		ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
+		icmpv6instance.ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
+		icmpv6instance.ipv6.set_src_addr(packet->get_dst_ipaddr());
+		
+		demux.setDirectResponse(true);
+		SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, ICMPv6_Packet::ICMP_MAX_DATA_SIZE);
+		if (sbi) {
+			sbi->mark("IPv6_ICMP_Too_Big");
+			ICMPv6_Packet* icmp_error_reply = (ICMPv6_Packet*)sbi->getDataPointer();
+			
+			icmp_error_reply->set_type(ICMPv6_Packet::ICMP_TYPE_PACKET_TOO_BIG);
+			icmp_error_reply->set_code(ICMPv6_Packet::ICMP_CODE_PACKET_TOO_BIG);
+			// Byte wise copy of the network mtu (4 byte) to the icmp packet -> to handle different byte orders
+			char* mtu = (char*)icmp_error_reply->get_data(); // mtu is 4 bytes
+			UInt32 interface_mtu = interface->getMTU();
+			// byte order: do it manually
+			mtu[0] = interface_mtu & 0xff;
+			mtu[1] = (interface_mtu>>8) & 0xff;
+			mtu[2] = (interface_mtu>>16) & 0xff;
+			mtu[3] = (interface_mtu>>24) & 0xff;
+			
+			sbi->writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE+4);
+			sbi->write(packet, ICMPv6_Packet::ICMP_MAX_DATA_SIZE-ICMPv6_Packet::ICMP_HEADER_SIZE-4);
+			
+			icmpv6instance.send(sbi);
+		}
+	}
+	
+	// TODO
+	// React on packet to big messages and lower our path-mtu
+};

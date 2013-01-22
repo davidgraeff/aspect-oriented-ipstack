@@ -18,7 +18,11 @@
 #pragma once
 
 #include "util/types.h"
-#include "../router/Interface.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/InternetChecksum.h"
+#include "ipstack/icmpv6/ICMPv6.h"
 
 using namespace ipstack;
 
@@ -27,18 +31,15 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_ICMPv6_Checksum  {
-	advice execution("% ipstack::ICMPv6_Socket::send(...)") && args(sendbuffer, interface) :
-		before(SendBuffer* sendbuffer, Interface* interface) {
+	advice execution("% ipstack::ICMPv6_Socket::send(...)") && args(dataToSend) :
+		before(SendBuffer* dataToSend) {
 
-		IPv6_Packet* packet = (IPv6_Packet*)sendbuffer->memstart_ip;
-		ICMPv6_Packet* icmp = (ICMPv6_Packet*) sendbuffer->memstart_transport;
+		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->memstart_ip;
+		ICMPv6_Packet* icmp = (ICMPv6_Packet*) dataToSend->memstart_transport;
 
+		Interface* interface = dataToSend->getInterface();
+		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
 		icmp->set_checksum(0);
-
-		UInt16 payloadsize = ((char*)sendbuffer->data - (char*)sendbuffer->memstart_transport);
-		UInt16 csum = InternetChecksumV6::compute(packet, payloadsize, interface, ICMPv6_Packet::IPV6_TYPE_ICMP, icmp);
-		icmp->set_checksum(csum);
-
-// 		printf("calculated icmpv6 checksum: %u %u; len %u\n", csum & 0xff, csum >> 8, payloadsize);
+		icmp->set_checksum(icmp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, ICMPv6_Packet::IPV6_TYPE_ICMP), payloadsize, interface));
 	}
 };

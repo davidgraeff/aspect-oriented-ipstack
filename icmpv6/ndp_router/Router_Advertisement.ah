@@ -19,7 +19,7 @@
 
 #include "util/types.h"
 #include "../ICMPv6.h"
-#include "NDPMessages.h"
+#include "NDPRouterMessages.h"
 #include "ipstack/ipv6/IPv6.h"
 #include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
 #include "ipstack/ipv6/AddressMemory.h"
@@ -34,11 +34,11 @@ aspect NDP_Router_Advertisement {
 	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
 		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
 			
-		NDPMessages::RouterAdvertisementMessage* message = (NDPMessages::RouterAdvertisementMessage*)icmp_packet;
+		NDPRouterMessages::RouterAdvertisementMessage* message = (NDPRouterMessages::RouterAdvertisementMessage*)icmp_packet;
 		if (message->type == 134 && message->code == 0) {
-			if (payloadlen < sizeof(NDPMessages::RouterAdvertisementMessage))
+			if (payloadlen < sizeof(NDPRouterMessages::RouterAdvertisementMessage))
 				return; // drop packet
-			payloadlen -= sizeof(NDPMessages::RouterAdvertisementMessage);
+			payloadlen -= sizeof(NDPRouterMessages::RouterAdvertisementMessage);
 
 			// get src mac (in the options)
 			char src_ethernet_mac[6];
@@ -82,7 +82,7 @@ aspect NDP_Router_Advertisement {
 
 				// Second: Add/Update entries and remove ToBeDeleted flag
 				if (!router_is_shuting_down) {
-					NDPMessages::OptionPrefixInformation* routerprefix = NDPMessages::get_prefix_option((char*)message->options, payloadlen);
+					NDPRouterMessages::OptionPrefixInformation* routerprefix = NDPRouterMessages::get_prefix_option((char*)message->options, payloadlen);
 					while (routerprefix) {
 						if (routerprefix->useForStatelessAddressConfiguration()) {
 							// Find ipv6 address with a prefixlen of this interface that equals the new propagated prefix
@@ -110,8 +110,8 @@ aspect NDP_Router_Advertisement {
 						}
 
 						// next prefix
-						payloadlen -= sizeof(NDPMessages::OptionPrefixInformation);
-						routerprefix = NDPMessages::get_prefix_option((char*)routerprefix, payloadlen);
+						payloadlen -= sizeof(NDPRouterMessages::OptionPrefixInformation);
+						routerprefix = NDPRouterMessages::get_prefix_option((char*)routerprefix, payloadlen);
 					}
 				}
 

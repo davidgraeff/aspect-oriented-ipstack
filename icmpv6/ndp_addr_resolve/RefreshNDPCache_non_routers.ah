@@ -1,0 +1,38 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "ipstack/icmpv6/ndp/NDPNeighborMessages.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipstack/router/Interface.h"
+
+aspect NDP_RefreshNDPCache_Entries {
+	/**
+	 * Overwrite behaviour: We send a Neighbor Solicitation message if
+	 * a ndp cache entry for an entry (non router) is going to expire. The Neighbor Advertisement message
+	 * will refresh the ndp cache entry.
+	 */
+	advice execution("% ipstack::Interface::ipv6_nonrouter_entry_refresh(...)") && args(entry) && that(interface) :
+		around(NDPCacheEntry* entry, Interface& interface) {
+		ipstack::ipv6addr srcaddr = {{0}};
+		if (interface.getInterfaceIPv6AddressByScope(srcaddr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
+			NDPNeighborMessages::send_neighbor_solicitation(srcaddr, entry->ipv6, &interface, false);
+	}
+};

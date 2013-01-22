@@ -71,12 +71,14 @@ aspect NDP_MDL_Respond {
 				ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
 				ipv6.set_src_addr(packet->get_dst_ipaddr());
 				ipv6.setHoplimit(1);
+				
 				demux.setDirectResponse(true);
-				SendBufferWithInterface* sbi = icmpv6instance.requestSendBufferICMP(interface, sizeof(MLDMessages::mldv1_listener_report));
+				SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, sizeof(MLDMessages::mldv1_listener_report));
 				if (sbi) {
-					MLDMessages::write_mldv1_listener_report((char*)sbi->sendbuffer.data, query->addr);
-					sbi->sendbuffer.writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
-					icmpv6instance.send(&sbi->sendbuffer);
+					sbi->mark("NDP_MDL_Respond");
+					MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), query->addr);
+					sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
+					icmpv6instance.send(sbi);
 				}
 				ipv6.restoreDefaultSendingConfiguration(); // Reset hop limit etc
 			}

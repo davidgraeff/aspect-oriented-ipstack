@@ -1,0 +1,66 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "util/types.h"
+#include "NDPRouterMessages.h"
+#include "../ICMPv6_Socket.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipstack/router/Interface.h"
+
+aspect NDP_RefreshNDPCache_RouterEntries {
+	/**
+	 * Overwrite behaviour: We send a Router Solicitation message if
+	 * a ndp cache entry for an entry (router) is going to expire. The Router Advertisement message
+	 * will refresh the ndp cache entry.
+	 */
+	advice execution("% ipstack::Interface::ipv6_router_entry_refresh(...)") && args(entry) && that(interface) :
+		around(NDPCacheEntry* entry, Interface& interface) {
+			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
+			IPV6& ipv6 = icmpv6instance.ipv6;
+			ipstack::ipv6addr addr = {{0}};
+			addr.ipaddrB8[0] = 0xff;
+			addr.ipaddrB8[1] = 0x02;
+			addr.ipaddrB8[15] = 0x02;
+			ipv6.set_dst_addr(addr, &interface); // all routers multicast address
+			// For the src address try to get the link local address
+			if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
+				ipv6.set_src_addr(addr); // link-local
+			else {
+				get_unspecified_ipv6_address(addr);
+				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
+			}
+			
+			// Warning: We support ethernet only at the moment, because we reserving 8 additional bytes (2 bytes reserved) -> 6 bytes remaining for link layer address
+			const UInt8 resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
+			
+			demux.setDirectResponse(true);
+			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, resSize);
+			if (sbi) {
+				sbi->mark("NDP_RefreshNDPCache_RouterEntries");
+				NDPRouterMessages::RouterSolicitationMessage* msg = (NDPRouterMessages::RouterSolicitationMessage*)sbi->getDataPointer();
+				msg->type = (133);
+				msg->code = (0);
+				msg->reserved = 0;
+				NDPMessages::write_option_linklayer_address(NDPMessages::SourceLinkLayer,(char*)msg->options, interface.getAddress(), interface.getAddressSize());
+				sbi->writtenToDataPointer(resSize);
+				icmpv6instance.send(sbi);
+			}
+	}
+};

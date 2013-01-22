@@ -17,25 +17,21 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
 #include "ipstack/SendBuffer.h"
-#include "ICMPv6.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/InternetChecksum.h"
-#include "util/types.h"
+namespace ipstack {
 
-using namespace ipstack;
+class DelaySend
+{
+	public:
+		/**
+		* In contrast to all other managment functionality an ICMPv6 incoming packet may generate
+		* multiple output packets. To have a deterministic order of processing we delay all
+		* send() calls until the packet has been processed and send all delayed packets in a burst.
+		* The mHoldBack variable will be set before processing a packet and will be reseted after that.
+		*/
+		static UInt8 mHoldBack;
 
-/**
- * Set the IPv6 next header protocol to ICMPv6
- */
-aspect Sendbuffer_IPCMPv6  {
-	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_IPCMPv6");
-
-	advice execution("% ipstack::ICMPv6_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		after(SendBuffer* sendbuffer) {
-		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
-		*(sendbuffer->nextheaderfield_ip) = ICMPv6_Packet::IPV6_TYPE_ICMP;
-	}
+		static void sendDelayed(SendBuffer* buffer);
 };
+
+}
