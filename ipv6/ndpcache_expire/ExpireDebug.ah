@@ -1,0 +1,53 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2013 David Gräff
+
+#pragma once
+
+#include "ipstack/router/Interface.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "util/types.h"
+
+using namespace ipstack;
+
+aspect expire_debug {
+	// advice ordering: always execute this aspect first
+	advice execution("% ipstack::Interface::ipv6_nonrouter_entry_refresh(...)") : 
+	order( "expire_debug","NDP_RefreshNDPCache_Entries" );
+	
+	advice execution("% ipstack::Interface::ipv6_nonrouter_entry_refresh(...)") && args(entry) && that(interface) :
+		before(NDPCacheEntry* entry, Interface& interface) {
+ 		printf("NDP Cache: Refresh Non-Router Entry %p, interface %p\n", entry, &interface);
+	}
+	
+	advice execution("% ipstack::Interface::ipv6_router_entry_refresh(...)") && args(entry) && that(interface) :
+		before(NDPCacheEntry* entry, Interface& interface) {
+ 		printf("NDP Cache: Refresh Router Entry %p, interface %p\n", entry, &interface);
+	}
+	
+	advice execution("% ipstack::Interface::ipv6_useentry(...)") && args(entry) && that(interface) :
+		before(NDPCacheEntry* entry, Interface& interface) {
+ 		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
+	}
+	
+	advice execution("% ipstack::Interface::releaseOldEntries()") && result(r) && that(interface) :
+		after(Interface& interface) {
+ 		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
+	}
+};
