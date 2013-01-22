@@ -267,24 +267,9 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 
 
 		//contructor:
-		TCP_Socket() :
-			state(CLOSED),
-			receiving(false),
-			receiveBuffer(this),
-			maxReceiveWindow_MSS(1),
-			maxReceiveWindow_Bytes(TCP_Segment::DEFAULT_MSS),
-			mempool(0),
-			packetbuffer(0),
-			FIN_received(false),
-			ACK_triggered(false),
-			dport(TCP_Segment::UNUSED_PORT),
-			sport(TCP_Segment::UNUSED_PORT),
-			mss(TCP_Segment::DEFAULT_MSS),
-			application_buflen(0),
-			waiting(false) {}
-		~TCP_Socket() {
-			unbind();
-		}
+		TCP_Socket();
+		~TCP_Socket();
+		void resetSocketState();
 
 	public:
 		bool bind() ;

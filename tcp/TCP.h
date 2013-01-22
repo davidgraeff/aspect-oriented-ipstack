@@ -20,6 +20,7 @@
 #define __TCP__
 
 #include "util/types.h"
+#include "ipstack/ip/InternetChecksum.h"
 
 namespace ipstack {
 
@@ -86,7 +87,20 @@ class TCP_Segment{
   
   UInt16 get_checksum() { return checksum; }
   void set_checksum(UInt16 c) { checksum = c; }
-  
+	/**
+	  * Calculate the tcp checksum.
+	  * @param sum The pseudo header sum
+	  * @param payloadlen We use extern information about the size of this packet
+	  * @param The interface on which the packet will be send. Necessary for checksum offloading
+	  */
+	UInt16 calc_checksum(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		csum += InternetChecksum::computePayload((UInt8*)this, payloadlen);
+		return ~InternetChecksum::accumulateCarryBits(csum); // one's complement
+	}
+	bool checksum_valid(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		return calc_checksum(csum, payloadlen, interface) == 0;
+	}
+	
   UInt16 get_urgend_ptr() { return urgend_ptr; }
   void set_urgend_ptr(UInt16 up) { urgend_ptr = up; }
   

@@ -40,9 +40,9 @@ class Management_TCP_Socket : public ManagementMemory
 		/**
 		 * Prepare a sendbuffer for answering half-open tcp requests
 		 */
-		void prepareResponse(SendBufferWithInterface* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len) ;
+		void prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len) ;
 
-		SendBufferWithInterface* requestSendBufferTCP(Interface* interface) ;
+		SendBuffer* requestSendBufferTCP(Interface* interface) ;
 		static Management_TCP_Socket& instance() {
 			return m_instance;
 		}

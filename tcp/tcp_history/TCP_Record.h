@@ -20,7 +20,7 @@
 #include "util/types.h"
 #include "../TCP.h"
 #include "ipstack/SendBuffer.h"
-#include "../../Clock.h"
+#include "ipstack/as/Clock.h"
 
 namespace ipstack
 {

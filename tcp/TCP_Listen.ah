@@ -28,9 +28,6 @@ using namespace ipstack;
 aspect TCP_Listen_aspect {
 	// *** Affect class: Demux
 advice "ipstack::Demux" : slice Demux_TCP_Listen_Slice;
-// 	advice execution("% ipstack::TCP_Socket::%(...)") : before() {
-// 		printf("socket %s\n", tjp->signature());
-// 	}
 
 	advice execution("bool ipstack::TCP_Socket::listen()") && that(socket) :
 		around(TCP_Socket& socket) {
@@ -41,7 +38,7 @@ advice "ipstack::Demux" : slice Demux_TCP_Listen_Slice;
 			}
 			tjp->proceed();
 
-			printf("TCP_Socket::listen() wait syn\n");
+// 			printf("TCP_Socket::listen() wait syn 2\n");
 			//Wait for SYN packet
 			while (socket.isListening()) {
 				ReceiveBuffer* receiveB = (ReceiveBuffer*)socket.packetbuffer->get();

@@ -53,11 +53,11 @@ void finwait1(TCP_Segment* segment, unsigned len) {
       //we have received all data so far      
       if(FIN_acked == true){
         // Our FIN got ack'ed --> connection fully terminated now
-        //printf("FIN+ACK arrived: FINWAIT1 --> TIMEWAIT\n");
+//         printf("FIN+ACK arrived: FINWAIT1 --> TIMEWAIT\n");
         state = TIMEWAIT;
       }
       else{
-        //printf("FIN arrived: FINWAIT1 --> CLOSING (simulaneous close)\n");
+//         printf("FIN arrived: FINWAIT1 --> CLOSING (simulaneous close)\n");
         state = CLOSING; //transition: FINWAIT1 --> CLOSING (simulaneous close)
       }
     }

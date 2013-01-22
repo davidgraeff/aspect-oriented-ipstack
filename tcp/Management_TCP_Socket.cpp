@@ -4,9 +4,9 @@ namespace ipstack
 {
 Management_TCP_Socket Management_TCP_Socket::m_instance;
 
-void Management_TCP_Socket::prepareResponse(SendBufferWithInterface* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len)
+void Management_TCP_Socket::prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len)
 {
-	TCP_Segment* segment = (TCP_Segment*)sendbuffer->sendbuffer.data;
+	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(incoming_segment->get_sport());
 	segment->set_sport(incoming_segment->get_dport());
 	segment->set_header_len(TCP_Segment::TCP_MIN_HEADER_SIZE / 4);
@@ -36,19 +36,12 @@ void Management_TCP_Socket::prepareResponse(SendBufferWithInterface* sendbuffer,
 		segment->set_acknum(incoming_segment->get_seqnum() + payload_len);
 	}
 
-	sendbuffer->sendbuffer.writtenToDataPointer(TCP_Segment::TCP_MIN_HEADER_SIZE);
+	sendbuffer->writtenToDataPointer(TCP_Segment::TCP_MIN_HEADER_SIZE);
 }
 
-SendBufferWithInterface* Management_TCP_Socket::requestSendBufferTCP(Interface* interface)
+SendBuffer* Management_TCP_Socket::requestSendBufferTCP(Interface* interface)
 {
-	SendBufferWithInterface* b = allocSendBufferWithInterface(estimateSendBufferMinSize() + TCP_Segment::TCP_MIN_HEADER_SIZE,
-								 interface);
-	if (!b) return 0;
-	prepareSendBuffer(&b->sendbuffer);
-	if (!b->sendbuffer.isValid()) {
-		mempool->free(b);
-		return 0;
-	}
-	return b;
+	return requestSendBuffer(interface, TCP_Segment::TCP_MIN_HEADER_SIZE);
 }
+
 }

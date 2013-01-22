@@ -36,15 +36,10 @@ aspect Sendbuffer_TCP  {
 	// First add the IP Header after that execute this TCP aspect
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_TCP");
 
-// 	advice execution("void ipstack::TCP_Socket::writeHeader%(...)") && args(sendbuffer) :
-// 	before(SendBuffer* sendbuffer) {
-// 		sendbuffer->memstart_transport = sendbuffer->data;
-// 	}
-	
 	advice execution("% ipstack::%TCP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
 		after(SendBuffer* sendbuffer) {
 		// set ip next header protocol to TCP
 		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
-		sendbuffer->memstart_transport = sendbuffer->data;
+		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
 	}
 };

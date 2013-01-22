@@ -41,7 +41,7 @@ slice class TCP_State_Listen
 				SendBuffer* b = requestSendBufferTCP_syn();
 				if (b != 0) {
 					state = SYNRCVD; //next state only if SYN+ACK can be sent (packet alloc'ed)
-					TCP_Segment* segment = (TCP_Segment*)b->data;
+					TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
 					writeHeaderWithAck(b, receiveBuffer.getAckNum());
 					segment->set_SYN();
 					seqnum_next++; // 1 seqnum consumed

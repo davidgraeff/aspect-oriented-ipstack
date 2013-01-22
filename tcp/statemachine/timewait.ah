@@ -25,6 +25,7 @@ slice class TCP_State_Timewait
 {
 	private:
 		void timewait(TCP_Segment* segment, unsigned len) {
+// 			printf("TCP_State_Timewait\n");
 			if (segment != 0) {
 				// new tcp segment received:
 				if (handleRST(segment)) {
@@ -49,6 +50,9 @@ slice class TCP_State_Timewait
 					//waiting 2 min (=2MSL) in userspace is quite a long time ...
 					//Just waiting for 2*RTO seems to be sufficient.
 					//----
+					// NOTE2: For a "webserver" use-case the timeout is still to high.
+					// Should be configurable maybe? for now: a very short timeout
+					
 					abort(); //kill connection
 				}
 				//No support for half-close, because an incoming FIN must be handled

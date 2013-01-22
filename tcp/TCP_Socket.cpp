@@ -20,10 +20,44 @@
 #include "ipstack/demux/Demux.h"
 #include "ipstack/SendBuffer.h"
 #include "ipstack/ReceiveBuffer.h"
-#include "../Clock.h"
+#include "ipstack/as/Clock.h"
 
 namespace ipstack
 {
+
+TCP_Socket() :
+	receiveBuffer(this),
+	mempool(0),
+	packetbuffer(0),
+	dport(TCP_Segment::UNUSED_PORT),
+	sport(TCP_Segment::UNUSED_PORT),
+	{
+		resetSocketState();
+	}
+	
+~TCP_Socket() {
+	unbind();
+}
+
+void TCP_Socket::resetSocketState() {
+	state = CLOSED;
+	receiving = false;
+	maxReceiveWindow_MSS = 1;
+	maxReceiveWindow_Bytes = TCP_Segment::DEFAULT_MSS;
+	FIN_received = false;
+	ACK_triggered = false;
+	mss = TCP_Segment::DEFAULT_MSS;
+	application_buflen = 0;
+	waiting = false;
+	
+	// clear receive buffer
+	while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
+		ReceiveBuffer::free(t);
+	}
+	// Ports are not reseted
+	// 	dport = TCP_Segment::UNUSED_PORT;
+	// 	sport = TCP_Segment::UNUSED_PORT;
+}
 
 void TCP_Socket::input(TCP_Segment* segment, unsigned len)
 {
@@ -122,6 +156,7 @@ void TCP_Socket::updateHistory(bool do_retransmit)
 void TCP_Socket::retransmit(TCP_Record* record)
 {
 	SendBuffer* buffer = record->getSendBuffer();
+	buffer->recycle();
 	send(buffer);
 	record->setTimeout(getRTO());
 }
@@ -163,7 +198,7 @@ bool TCP_Socket::sendACK(UInt32 ackNum)
 	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
 	SendBuffer* b = requestSendBufferTCP();
 	if (b != 0) {
-// 		TCP_Segment* segment = (TCP_Segment*)b->data;
+// 		TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
 		writeHeaderWithAck(b, ackNum);
 		send(b);
 		history.add(b, 0);
@@ -232,7 +267,7 @@ void TCP_Socket::processACK()
 void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack)
 {
 	UInt8 headersize = getSpecificTCPHeaderSize();
-	TCP_Segment* segment = (TCP_Segment*)sendbuffer->data;
+	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(dport);
 	segment->set_sport(sport);
 	segment->set_checksum(0);
@@ -249,7 +284,7 @@ void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack)
 void TCP_Socket::writeHeader(SendBuffer* sendbuffer)
 {
 	UInt8 headersize = getSpecificTCPHeaderSize();
-	TCP_Segment* segment = (TCP_Segment*)sendbuffer->data;
+	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(dport);
 	segment->set_sport(sport);
 	segment->set_checksum(0);
@@ -305,10 +340,10 @@ bool TCP_Socket::connect()
 			if (state == CLOSED) {
 				gen_initial_seqnum();
 				sendWindow = 0;
-				// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
+
 				SendBuffer* b = requestSendBufferTCP_syn();
 				if (b != 0) {
-					TCP_Segment* segment = (TCP_Segment*)b->data;
+					TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
 					writeHeader(b);
 					segment->set_SYN();
 					seqnum_next++; // 1 seqnum consumed
@@ -327,16 +362,8 @@ bool TCP_Socket::connect()
 
 void TCP_Socket::abort()
 {
-	//printf("Closing connection!\n");
-	state = CLOSED;
-	waiting = receiving = false;
-	FIN_received = false;
-	// clear receive buffer
-	while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
-		ReceiveBuffer::free(t);
-	}
-	//TODO: free & reset everything!!
 	clearHistory(); //free all pending packets
+	resetSocketState();
 }
 
 //full close (no half-close supported)
@@ -344,10 +371,9 @@ bool TCP_Socket::close()
 {
 	if ((state == CLOSEWAIT) || (state == ESTABLISHED)) {
 		//send FIN:
-		// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
 		SendBuffer* b = requestSendBufferTCP();
 		if (b != 0) {
-			TCP_Segment* segment = (TCP_Segment*)b->data;
+			TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
 			writeHeaderWithAck(b, receiveBuffer.getAckNum());
 			segment->set_FIN();
 			seqnum_next++; // 1 seqnum consumed
@@ -413,9 +439,9 @@ bool TCP_Socket::sendSegment(UInt16Opt len) {
 	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
 	SendBuffer* b = requestSendBufferTCP(len);
 	if (b != 0) {
-		TCP_Segment* segment = (TCP_Segment*)b->data;
+		TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
 		writeHeaderWithAck(b, receiveBuffer.getAckNum());
-		
+
 		b->write(application_buf, len);
 		application_buflen -= len;
 		application_buf = (void*)(((UInt8*)application_buf) + len);
@@ -564,14 +590,8 @@ SendBuffer* TCP_Socket::requestSendBufferTCP(UInt16Opt payloadsize)
 			return 0;
 		}
 	}
-	// Do not use requestSendBuffer(...) here but do it manually so that we can
-	// destinct between a inside-TCP-generated SendBuffer and a user-generated
-	// Sendbuffer.
-	SendBuffer* b = SendBuffer::createSendBuffer(mempool, estimateSendBufferMinSize() + getSpecificTCPHeaderSize() + payloadsize);
-	if (!b) return 0;
-	prepareSendBuffer(b);
-	return b;
-	//return requestSendBuffer(getSpecificTCPHeaderSize()+payloadsize);
+
+	return requestSendBuffer(getSpecificTCPHeaderSize() + payloadsize);
 }
 bool TCP_Socket::addToReceiveQueue(TCP_Segment* segment, unsigned int segment_len)
 {
