@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "Interface_NDPCache_Slice.ah"
+#include "NDPCache_Interface_Slice.ah"
 using namespace ipstack;
 
 aspect IPv6NDPCache_aspect {
   /* Affect class: Interface */
-  advice "ipstack::Interface" : slice Interface_NDPCache_Slice;
+  advice "ipstack::Interface" : slice NDPCache_Interface_Slice;
 
 };

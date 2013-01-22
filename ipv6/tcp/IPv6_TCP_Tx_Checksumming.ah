@@ -1,0 +1,44 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "../IPv6.h"
+#include "../InternetChecksum.h"
+#include "ipstack/tcp/TCP.h"
+#include "ipstack/SendBuffer.h"
+#include "ipstack/router/Interface.h"
+
+using namespace ipstack;
+
+aspect IPv6_TCP_Tx_Checksumming {
+	advice execution("% ipstack::%TCP_Socket::send(...)") && args(dataToSend) :
+		before(SendBuffer* dataToSend) {
+		if (tjp->that()->m_useipversion != 6) {
+			return;
+		}
+
+		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->memstart_ip;
+		TCP_Segment* tcp = (TCP_Segment*) dataToSend->memstart_transport;
+
+		Interface* interface = dataToSend->getInterface();
+		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		tcp->set_checksum(0);
+		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
+
+	}
+};

@@ -20,10 +20,7 @@
 #include "../cfAttribs.h"
 
 namespace ipstack {
-// Call releaseOldEntries() method of the ndp cache every NDP_CACHE_REFRESH_IN_MINUTES minutes!
-// NDPCACHE_EXPIRE_RATE have to be an even number!
-enum {NDP_CACHE_REFRESH_IN_MINUTES = 3, NDPCACHE_EXPIRE_RATE_PER_MINUTE = 2 * NDP_CACHE_REFRESH_IN_MINUTES,
-	  NDPCACHE_TRESHOLD_REQUIRE_SOLICITATION = NDPCACHE_EXPIRE_RATE_PER_MINUTE * 3,
+enum {
 	  NDPCACHE_WAIT_FOR_RESPONSE = 1000U
 	 };
 }
