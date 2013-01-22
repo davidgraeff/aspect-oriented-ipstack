@@ -23,7 +23,7 @@
  */
 #include <string.h> //for memcpy
 #include "../ReceiveBuffer.h"
-#include "../Clock.h"
+#include "ipstack/as/Clock.h"
 
 using namespace ipstack;
 

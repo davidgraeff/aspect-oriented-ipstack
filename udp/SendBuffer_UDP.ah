@@ -41,14 +41,14 @@ aspect Sendbuffer_UDP  {
 		// remainingpayloadsize: this is payload AND the udp header size as determined in 
 		// estimateSendBufferMinSize() before.
 		
-		sendbuffer->memstart_transport = sendbuffer->data;
+		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
 		// set ip next header protocol to UDP
 		*(sendbuffer->nextheaderfield_ip) = UDP_Packet::IP_TYPE_UDP;
 	}
 	
 	advice execution("% ipstack::UDP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
 		after(SendBuffer* sendbuffer) {
-		tjp->that()->setupHeader((UDP_Packet*)sendbuffer->data, sendbuffer->getRemainingSize());
+		tjp->that()->setupHeader((UDP_Packet*)sendbuffer->getDataPointer(), sendbuffer->getRemainingSize());
 		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
 	}
 };

@@ -20,36 +20,50 @@
 #define __UDP__
 
 #include "util/types.h"
+#include "ipstack/ip/InternetChecksum.h"
 
 namespace ipstack {
 
 class UDP_Packet{
-  public:
-  enum { UDP_HEADER_SIZE = 8,
-         IP_TYPE_UDP = 17, //same for IPv4/IPv6
-         UNUSED_PORT = 0 }; // http://www.iana.org/assignments/port-numbers
+	public:
+	enum { UDP_HEADER_SIZE = 8,
+			IP_TYPE_UDP = 17, //same for IPv4/IPv6
+			UNUSED_PORT = 0 }; // http://www.iana.org/assignments/port-numbers
 
-  private:
-  UInt16 sport;
-  UInt16 dport;
-  UInt16 length;
-  UInt16 checksum;
-  UInt8 data[];
-  
-  public:
-  UInt16 get_sport() { return sport; }
-  void set_sport(UInt16 s) { sport = s; }
-  
-  UInt16 get_dport() { return dport; }
-  void set_dport(UInt16 d) { dport = d; }
-  
-  UInt16 get_length() { return length; }
-  void set_length(UInt16 len) { length = len; }
-  
-  UInt16 get_checksum() { return checksum; }
-  void set_checksum(UInt16 csum) { checksum = csum; }
-  
-  UInt8* get_data() { return data; }
+	private:
+	UInt16 sport;
+	UInt16 dport;
+	UInt16 length;
+	UInt16 checksum;
+	UInt8 data[];
+	
+	public:
+	UInt16 get_sport() { return sport; }
+	void set_sport(UInt16 s) { sport = s; }
+	
+	UInt16 get_dport() { return dport; }
+	void set_dport(UInt16 d) { dport = d; }
+	
+	UInt16 get_length() { return length; }
+	void set_length(UInt16 len) { length = len; }
+	
+	UInt16 get_checksum() { return checksum; }
+	void set_checksum(UInt16 csum) { checksum = csum; }
+	/**
+	  * Calculate the udp checksum.
+	  * @param sum The pseudo header sum
+	  * @param payloadlen We use extern information about the size of this packet
+	  * @param The interface on which the packet will be send. Necessary for checksum offloading
+	  */
+	UInt16 calc_checksum(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		csum += InternetChecksum::computePayload((UInt8*)this, payloadlen);
+		return ~InternetChecksum::accumulateCarryBits(csum); // one's complement
+	}
+	bool checksum_valid(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		return calc_checksum(csum, payloadlen, interface) == 0;
+	}
+			
+	UInt8* get_data() { return data; }
   
 } __attribute__ ((packed));
 

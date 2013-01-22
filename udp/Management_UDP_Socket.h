@@ -37,16 +37,10 @@ class Management_UDP_Socket : public ManagementMemory
 		Management_UDP_Socket() : ManagementMemory() {}
 		~Management_UDP_Socket() {}
 
-		SendBufferWithInterface* requestSendBufferUDP(Interface* interface, unsigned len) ;
-		
-		static Management_UDP_Socket& instance() {
-			return m_instance;
-		}
+		static Management_UDP_Socket& instance() {return m_instance;}
 		
 		//for placement new: calling the constructor explicitly for global objects
-		void* operator new(__SIZE_TYPE__ size, void* mem) {
-			return mem;
-		}
+		void* operator new(__SIZE_TYPE__ size, void* mem) {	return mem;	}
 	private:
 		Management_UDP_Socket(const Management_UDP_Socket &) {} // no copies and BUG in aspectc++ (segfault if not defined)
 		static Management_UDP_Socket m_instance;
