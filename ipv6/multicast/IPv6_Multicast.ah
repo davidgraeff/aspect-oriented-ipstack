@@ -65,8 +65,12 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 	/**
 	 * Send a multicast packet to all interfaces, not just the first one
 	 */
-	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) :
-		after(SendBuffer* dataToSend) {
+	advice execution("% ipstack::%_Socket::send(ipstack::SendBuffer*)") && result(worked) && args(dataToSend) :
+		after(bool worked, SendBuffer* dataToSend) {
+		// only if send worked
+		if (!worked)
+			return;
+		
 		// only for IPv6
 		if (tjp->that()->m_useipversion != 6) {
 			return;
@@ -80,15 +84,24 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 		}
 
 		Interface* interface = Router::Inst().get_interface(0);
+		Interface* alreadySendOnInterface = dataToSend->getInterface();
 		while (interface != 0) {
-			if (interface->isIPv6Up()) {
+			// send on all but the original interface
+			if (interface != alreadySendOnInterface && interface->isIPv6Up()) {
+				// recycle sendbuffer
+				dataToSend->recycle();
+				// set interface pointer for hasBeenSend
 				dataToSend->setInterface(interface);
 				dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
+				// for until packet has been send
 				while (!dataToSend->hasBeenSend()) {}
-				dataToSend->recycle();
+				// set state
+				dataToSend->setState(SendBuffer::TransmittedState);
 			}
 			interface = interface->getNext();
 		}
+		// Restore first interface
+		dataToSend->setInterface(alreadySendOnInterface);
 	}
 
 	/**
