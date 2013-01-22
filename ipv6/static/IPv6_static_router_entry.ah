@@ -1,0 +1,64 @@
+// This file is part of CiAO/IPv6-Extension.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IPv6-Extension.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "../cfAttribs.h"
+#include "ipstack/router/Router.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ipv6/AddressMemory.h"
+#include "ipstack/ethernet/EthernetAddressUtilities.h"
+
+#define ROUTERIP_AS_STRING IP_MAKE_STRING(cfIPSTACK_IFCFG0_IPv6_router_ip)
+#define ROUTERMAC_AS_STRING IP_MAKE_STRING(cfIPSTACK_IFCFG0_IPv6_router_ethernet)
+#ifdef cfIPSTACK_IFCFG0_IPv6_router_in_neigborcache
+  #define ALWAYS_KEEP_STATIC_ROUTER_ENTRY 1
+#else
+  #define ALWAYS_KEEP_STATIC_ROUTER_ENTRY 0
+#endif
+
+using namespace ipstack;
+
+/**
+  * Add a static router ip with ethernet mac address to the ndp address resolution cache.
+  */
+aspect ipstack_ifcfg0_v6_addrouter  {
+	// advice ordering: always execute this aspect before router prefix entry
+	advice execution("void os::init()") : 
+	order( "ipstack_ifcfg0_v6_forcerouter", "ipstack_ifcfg0_v6_addrouter" );
+	
+	advice execution( "void os::init()" ) : after() {
+		Interface* interface = Router::Inst().get_interface(0);
+		if(interface) {
+			ipstack::ipv6addr addr;
+			if (!parse_ipv6_addr(ROUTERIP_AS_STRING, addr)) {
+				return;
+			}
+			UInt8 hwaddr[6];
+			if (!parse_ethernet_addr(ROUTERMAC_AS_STRING, hwaddr)) {
+				return;
+			}
+
+			// Add an entry to the ndp cache with IPv6 address, ethernet address, entry status.
+			NDPCacheEntry* entry = interface->addNDPCacheEntry(addr, hwaddr, NDPCacheEntry::NDPCacheEntryState_Reachable);
+			if (ALWAYS_KEEP_STATIC_ROUTER_ENTRY) {
+				if (entry) interface->update_NDPCacheEntry_importance(entry, NDPCacheEntry::IMPORTANCE_always_keep);
+			}
+		}
+	}
+};
+
