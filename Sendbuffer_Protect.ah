@@ -209,7 +209,6 @@ aspect sendbuffer_protect {
 		
 		lastbuffer = 0;
 		
-		dataToSend->printAdditionalInfo();
 		tjp->proceed();
 		
 		if (dataToSend->getStateWithoutOptions()!=SendBuffer::TransmittedState) {

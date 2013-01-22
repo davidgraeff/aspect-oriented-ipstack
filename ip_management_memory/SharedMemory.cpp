@@ -1,6 +1,5 @@
 #include "SharedMemory.h"
 #include "../cfAttribs.h"
-#include "stdio.h"
 
 namespace ipstack
 {

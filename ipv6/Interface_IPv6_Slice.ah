@@ -21,7 +21,6 @@
 #include "IPv6.h"
 #include "ipstack/ipv6/IPv6AddressUtilities.h"
 #include "ipstack/ipv6/AddressMemory.h"
-#include "stdio.h"
 
 using namespace ipstack;
 

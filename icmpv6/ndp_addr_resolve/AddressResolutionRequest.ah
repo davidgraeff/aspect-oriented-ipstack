@@ -43,8 +43,6 @@ aspect AddressResolutionRequest {
 		if (!entry || entry->state == NDPCacheEntry::NDPCacheEntryState_Reachable)
 			return;
 		
-		printf("AddressResolutionRequest by addNDPCacheEntry \n");
-		
 		ipstack::ipv6addr ipv6_srcaddr = {{0}};
 		if (interface.getInterfaceIPv6AddressByScope(ipv6_srcaddr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL)) {
 

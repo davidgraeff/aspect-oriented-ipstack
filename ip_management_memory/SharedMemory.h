@@ -23,7 +23,6 @@
 #include "ipstack/SendBuffer.h"
 #include <string.h>
 #include "util/types.h"
-#include "stdio.h"
 namespace ipstack
 {
 class SendBuffer;

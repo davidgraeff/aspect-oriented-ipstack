@@ -17,7 +17,6 @@
 
 #pragma once
 #include "IPv4_Singlestack_Slice.ah"
-#include "stdio.h"
 
 using namespace ipstack;
 

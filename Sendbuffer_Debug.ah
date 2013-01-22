@@ -87,7 +87,16 @@ aspect sendbuffer_debug {
 	}
 	
 	advice call("% ipstack::Interface::send(...)") && within("% ipstack::%_Socket::send(...)") : before() {
-		printf("SendBuffer: send low level %p!\n", *tjp->arg<0>());
+		// compute address of the senbuffer that is around the raw data
+		SendBuffer* buffer = (SendBuffer*) (((char*)*tjp->arg<0>()) - sizeof(SendBuffer));
+		// if it is a sendbuffer and the computation above is correct, we can read out the interface
+		// and can compare it to the current one
+		if (buffer->getInterface() == tjp->target()) {
+			printf("SendBuffer: Send %p!\n", buffer);
+			buffer->printAdditionalInfo();
+		} else { // maybe the data isn't from a sendbuffer. print out a more general message
+			printf("Send low level %p, %p, I: %p==%p!\n", *tjp->arg<0>(), buffer, tjp->target(), buffer->getInterface());
+		}
 	}
 	
 	advice execution("% ipstack::SendBuffer::mark(const char*)") && args(str) && that(sendbuffer) : after(const char* str, SendBuffer& sendbuffer) {

@@ -18,7 +18,8 @@
 #pragma once
 /**
  * Purspose: You should never call hasBeendSend before actually transmit this
- * sendbuffer to the network device.
+ * sendbuffer to the network device. This slice introduces a hasBeenTransmitted
+ * variable and belongs to the sendbuffer protection aspect.
  */
 
 using namespace ipstack;
@@ -27,5 +28,9 @@ slice class SendBuffer_Protect_Slice {
 
 public:
 	bool hasBeenTransmitted;
+	/**
+	  * Stub: Print additional information about this sendbuffer.
+	  * May be influenced by analysing aspects.
+	  */
 	void printAdditionalInfo() {}
 };
