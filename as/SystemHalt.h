@@ -13,24 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
 
-#include "as/AS.h"
-#include "os/krn/EnterLeave.h"
+namespace ipstack {
 
-aspect Sendbuffer_free_Reschedule {
-
+class System {
+public:
 	/**
-	  * We have to wait for a SendBuffer to be transmitted before we can free it. While we are in the loop,
-	  * polling the network device and querying if the buffer has been send, we reschedule.
+	  * Should by provided by the operating system! This implementation
+	  * is x86/x64 only.
 	  */
-	advice call("% ipstack::Interface::hasBeenSent(...)") && within("% ipstack::%_Socket::free(...)") : after() {
-		if(*tjp->result() == false) {
-			os::krn::enterKernel(); //lock
-			AS::Schedule();
-			os::krn::leaveKernel(); //unlock
-		}
-	}
+  static inline void haltsystem() { asm volatile("cli\nhlt"); }
 };
+
+}

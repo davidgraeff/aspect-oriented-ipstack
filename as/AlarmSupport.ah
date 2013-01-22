@@ -40,12 +40,7 @@ aspect Ipstack_AlarmSupport {
          around(UInt32 timeout, TCP_Socket& socket) {
 
     if(timeout != 0){
-      //printf("set timeout in %u msec\n", timeout);
-      
-      //Because this is an aspect, AS:: calls are not synchronized!
-      //EnterLeave_Weaving_Static.ah uses the call advice,
-      //which doesn't match here :-(
-      //Workaround: call enterKernel() and leaveKernel() explicit!
+//       printf("set timeout in %u msec\n", timeout);
       
       os::krn::enterKernel(); //lock
       AS::SetRelAlarm(socket.alarm, timeout, 0);

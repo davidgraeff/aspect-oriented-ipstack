@@ -30,7 +30,7 @@ aspect IRQ_Sync{
   }
   
   //advice ordering: execute IRQ_Sync at first!
-  advice call ("void ipstack::Interface::send(const void*, unsigned)") : 
+  advice execution ("void ipstack::Interface::send(const void*, unsigned)") : 
          order("IRQ_Sync" , "%" && !"IRQ_Sync");
   
   // Interface::send must be guarded, because the kernel sends arp/icmp packets,
@@ -43,9 +43,9 @@ aspect IRQ_Sync{
   }
   
   //Mempools must be synchronized:
-  pointcut toSync() = "% ipstack::SendBuffer::createSendBuffer(%)" ||
-					  "% ipstack::ManagementMemory::freeAllUnused(%)" ||
-					  "% ipstack::ManagementMemory::allocSendBufferWithInterface(%)" ||
+  pointcut toSync() = "% ipstack::%_Socket::requestSendBuffer(...)" ||
+					  "% ipstack::SharedMemory::%(%)" ||
+					  "% ipstack::DemuxLinkedList::%(%)" ||
                       "% ipstack::%_Socket::free(%)" ||
                       "% ipstack::%_Socket::%bind()" || //sync linked-list operations
                       "% ipstack::%_Socket::_listen()" || //sync linked-list operations

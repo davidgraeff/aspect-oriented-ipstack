@@ -19,18 +19,36 @@
 
 #include "as/AS.h"
 #include "os/krn/EnterLeave.h"
+#include "SystemHalt.h"
+#include "stdio.h"
 
-aspect Sendbuffer_free_Reschedule {
+using namespace ipstack;
 
-	/**
-	  * We have to wait for a SendBuffer to be transmitted before we can free it. While we are in the loop,
-	  * polling the network device and querying if the buffer has been send, we reschedule.
-	  */
-	advice call("% ipstack::Interface::hasBeenSent(...)") && within("% ipstack::%_Socket::free(...)") : after() {
-		if(*tjp->result() == false) {
-			os::krn::enterKernel(); //lock
-			AS::Schedule();
-			os::krn::leaveKernel(); //unlock
-		}
+/**
+  * Halt system if a reschedule is requested within the ipstack while we are in the process of receiving a packet.
+  * (This should not happen actually)
+  */
+aspect ProtectRescheduleReceiving {
+	bool receiving;
+	
+	advice execution( "void os::init()" ) : after() {
+		receiving = false;
+	}
+	
+	advice execution("% ipstack::Demux::demux(...)") : before() {
+		receiving = true;
+		printf("Reschedule protect: receiving!\n");
+	}
+	
+	advice construction("ipstack::Demux") : after() {
+		receiving = false;
+		printf("Reschedule protect: on!\n");
+	}
+
+	advice execution("% AS::Schedule()") : before() {
+		if (!receiving)
+			return;
+		printf("Fatal: A reschedule is requested while receiving!\n");
+		System::haltsystem();
 	}
 };
