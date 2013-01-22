@@ -16,13 +16,20 @@
 // Copyright (C) 2012 David Gräff
 #pragma once
 #include "util/types.h"
+#include <string.h>
 #include "stdio.h"
 
-using namespace ipstack;
-
-aspect ipstack_debug_aspect {
-	advice execution("% ipstack::Demux::%demux%(...)") : before() {
-		printf("Demux: %s\n", tjp->signature());
+/**
+  * Print a message for all entered demux methods.
+  */
+aspect ipstack_debug_incoming_aspect {
+	advice execution("% ipstack::%::%_demux%(...)") : around() {
+		char sig[200] = {0};
+		strcpy(sig, tjp->signature());
+		char* d = strchr(sig, '(');
+		if (d)
+			*d = 0;
+		printf( "Demux: %s\n", sig );
+		tjp->proceed();
 	}
-
 };
