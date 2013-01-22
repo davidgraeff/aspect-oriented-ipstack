@@ -37,7 +37,7 @@ public:
 		}
 		return csum;
 	}
-	static UInt32 computePayload(UInt8* payloaddata, UInt16 payloadlen, Interface* interface) {
+	static UInt32 computePayload(UInt8* payloaddata, UInt16 payloadlen) {
 		//Software Checksumming
 		UInt32 csum = 0;
 
@@ -56,15 +56,9 @@ public:
 		return csum;
 	}
 
-
-	static UInt16 computePayloadChecksum(UInt8* payloaddata, UInt16 payloadlen, Interface* interface) {
-		UInt32 csum = computePayload(payloaddata, payloadlen, interface);
+	static UInt16 computePayloadChecksum(UInt8* payloaddata, UInt16 payloadlen) {
+		UInt32 csum = computePayload(payloaddata, payloadlen);
 		return (~accumulateCarryBits(csum)); // one's complement
-	}
-	
-	static bool validPayloadChecksum(UInt8* payloaddata, UInt16 payloadlen, Interface* interface) {
-		UInt32 csum = computePayload(payloaddata, payloadlen, interface);
-		return ((UInt16)~accumulateCarryBits(csum) == 0);
 	}
 };
 
