@@ -47,8 +47,8 @@ public:
 	 * Socket s;
 	 * SendBuffer* b = s.requestSendBuffer(size);
 	 * if (!b) ABORT();
-	 * memcpy(b->data, "test", 4); OR (UInt32)*b->data = 47248459;
-	 * b->writtenToDataPointer(UInt16 length)
+	 * memcpy(b->getDataPointer(), "test", 4); OR ((UInt32*)b->getDataPointer()) = 47248459;
+	 * b->writtenToDataPointer(4)
 	 * s.send(b);
 	 * 
 	 * or use the write(const char* data, UInt16 length) method.
@@ -64,12 +64,19 @@ public:
 	 * 
 	 */
 	SendBuffer* requestSendBuffer(UInt16Opt requestSize) {
-		SendBuffer* b = SendBuffer::createSendBuffer(mempool, estimateSendBufferMinSize()+requestSize);
+		return requestSendBuffer(getUsedInterface(), requestSize);
+	}
+	SendBuffer* requestSendBuffer(Interface* interface, UInt16Opt requestSize)
+	{
+		SendBuffer* b = SendBuffer::createInstance(mempool, estimateSendBufferMinSize() + requestSize, interface);
 		if (!b) return 0;
 		prepareSendBuffer(b);
+		if (b->getState()!=SendBuffer::WritingState) {
+			return 0;
+		}
 		return b;
 	}
-	
+
 	Interface* getUsedInterface() {
 		return 0;
 	}
@@ -97,13 +104,11 @@ public:
 	 * invalid after sending it and may be freed by calling socket->free(sendbuffer).
 	 */
 	void send(SendBuffer* dataToSend) {
-		Interface* i = getUsedInterface();
-		if (!i) return;
-		send(dataToSend, i);
-	}
-	void send(SendBuffer* dataToSend, Interface* i) {
-		i->send(dataToSend->getDataStart(), dataToSend->getSize());
-		dataToSend->makeInvalid();
+		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.
+			return;
+		}
+		dataToSend->setState(SendBuffer::TransmittedState);
+		dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
 	}
 	
 	/**
@@ -112,15 +117,8 @@ public:
 	 * a transfer ongoing.
 	 */
 	void free(SendBuffer* b) {
-		// avoid double freeing
-		if (!b->m_mempool) return;
-		// get interface
-		Interface* i = getUsedInterface();
-		if (!i) return;
-		while (!i->hasBeenSent(b->getDataStart())) {}
-		Mempool* mempoolL = b->m_mempool;
-		b->m_mempool = 0; // set to 0 to avoid double free's
-		mempoolL->free((void*)b);
+		while (!b->hasBeenSend()) {}
+		mempool->free((void*)b);
 	}
 	
 	/**
