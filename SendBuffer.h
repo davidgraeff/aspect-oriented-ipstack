@@ -60,7 +60,7 @@ class SendBuffer
 			data = getDataStart();
 		}
 		inline void* getDataStart() {
-			return this + sizeof(SendBuffer);
+			return ((char*)this) + sizeof(SendBuffer);
 		}
 		
 		/**
