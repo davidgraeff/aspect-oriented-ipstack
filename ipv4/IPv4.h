@@ -189,6 +189,13 @@ class IPv4_Packet{
     return addr;
   }
   
+  static void convert_ipv4_addr(UInt32 ip, UInt8& a, UInt8& b, UInt8& c, UInt8& d) {
+	  a = ((UInt8)(ip      )) & 0xFF;
+	  b = ((UInt8)(ip >>  8)) & 0xFF;
+	  c = ((UInt8)(ip >> 16)) & 0xFF;
+	  d = ((UInt8)(ip >> 24)) & 0xFF;
+  }
+  
 } __attribute__ ((packed)); //__attribute__ ((aligned(1), packed));
 
 } //namespace ipstack

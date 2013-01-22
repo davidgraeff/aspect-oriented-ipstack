@@ -20,39 +20,30 @@
 #define __INTERNET_CHECKSUM__
 
 #include "IPv4.h"
-#include "../router/Interface.h"
-#include "../ip/InternetChecksum.h"
 #include "util/types.h"
 
 namespace ipstack {
 
 class InternetChecksumV4 {
-  public:
-  static UInt32 computePseudoHeader(IPv4_Packet* packet, UInt16 len){
-    UInt32 csum = len; //length of (udp, tcp) frame
-  
-    csum += packet->get_protocol(); // protocol
-  
-    UInt32 src = packet->get_src_ipaddr();
-	csum += InternetChecksum::byteswap16(src); // source address (1)
-    csum += InternetChecksum::byteswap16(src>>16); // source address (2)
+	public:
+	static inline UInt16 byteswap16(UInt16 val) {
+		return ((val & 0xFF) << 8) | ((val & 0xFF00) >> 8);
+	}
+	static UInt32 computePseudoHeader(IPv4_Packet* packet, UInt16 payloadlen, UInt8 upper_layer_nextheader){
+		UInt32 csum = payloadlen; //length of (udp, tcp) frame
+	
+		csum += upper_layer_nextheader; // protocol
+	
+		UInt32 src = packet->get_src_ipaddr();
+		csum += byteswap16(src); // source address (1)
+		csum += byteswap16(src>>16); // source address (2)
 
-    UInt32 dst = packet->get_dst_ipaddr();
-	csum += InternetChecksum::byteswap16(dst); // destination address (1)
-    csum += InternetChecksum::byteswap16(dst>>16); // destination address (2)
-  
-    return csum;
-  }
-
-  static UInt16 compute(IPv4_Packet* packet, UInt16 payloadlen, Interface* interface) {
-	  UInt32 csum = computePseudoHeader(packet, payloadlen);
-	  csum += InternetChecksum::computePayload(packet->get_data(), payloadlen, interface);
-	  return InternetChecksum::invert(InternetChecksum::accumulateCarryBits(csum), interface); // one's complement
-  }
-  
-  static bool valid(IPv4_Packet* packet, UInt16 payloadlen, Interface* interface) {
-	  return (compute(packet, payloadlen, interface) == 0);
-  }
+		UInt32 dst = packet->get_dst_ipaddr();
+		csum += byteswap16(dst); // destination address (1)
+		csum += byteswap16(dst>>16); // destination address (2)
+	
+		return csum;
+	}
 };
 
 } //namespace ipstack

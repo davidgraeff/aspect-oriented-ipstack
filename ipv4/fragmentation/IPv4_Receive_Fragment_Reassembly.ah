@@ -23,7 +23,7 @@
 #include "../demux/Demux.h"
 #include "../router/Interface.h"
 
-#include "../Clock.h"
+#include "ipstack/as/Clock.h"
 
 #include <string.h> //for memcpy and memset
 

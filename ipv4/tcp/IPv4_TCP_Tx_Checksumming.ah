@@ -25,17 +25,18 @@
 using namespace ipstack;
 
 aspect IPv4_TCP_Tx_Checksumming {
-	advice execution("% ipstack::%TCP_Socket::send(...)") && args(sendbuffer, interface) :
-	before(SendBuffer* sendbuffer, Interface* interface) {
+	advice execution("% ipstack::%TCP_Socket::send(...)") && args(dataToSend) :
+	before(SendBuffer* dataToSend) {
 		if (tjp->that()->m_useipversion != 4) {
 			return;
 		}
 		
-		IPv4_Packet* packet = (IPv4_Packet*)sendbuffer->memstart_ip;
-		TCP_Segment* tcp = (TCP_Segment*) sendbuffer->memstart_transport;
+		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->memstart_ip;
+		TCP_Segment* tcp = (TCP_Segment*) dataToSend->memstart_transport;
 		
-		UInt16 payloadsize = ((char*)sendbuffer->data - (char*)sendbuffer->memstart_transport);
-		UInt16 csum = InternetChecksumV4::compute(packet, payloadsize, interface);
-		tcp->set_checksum(csum); // store checksum in TCP checksum field
+		Interface* interface = dataToSend->getInterface();
+		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		tcp->set_checksum(0);
+		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV4::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
 	}
 };

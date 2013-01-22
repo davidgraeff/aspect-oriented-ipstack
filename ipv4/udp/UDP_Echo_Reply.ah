@@ -65,26 +65,26 @@ aspect UDP_IPv4_ECHO_REPLY {
 			}
 
 			demux.setDirectResponse(true);
-			SendBufferWithInterface* sbi = udpmanagmentinstance.requestSendBufferUDP(interface, len);
+			SendBuffer* sbi = udpmanagmentinstance.requestSendBuffer(interface, len+UDP_Packet::UDP_HEADER_SIZE);
 // 			printf("requested buffer icmp response %p\n", sbi);
 			//we have an echo request packet for IPv4
 			if (sbi) {
-				UDP_Packet* reply_udp = (UDP_Packet*)sbi->sendbuffer.memstart_transport;
+				UDP_Packet* reply_udp = (UDP_Packet*)sbi->memstart_transport;
 				reply_udp->set_dport(udp_packet->get_sport());
 				reply_udp->set_sport(udp_packet->get_dport());
 				reply_udp->set_length(len+UDP_Packet::UDP_HEADER_SIZE); // incl. UDP_Packet::UDP_HEADER_SIZE!
 				reply_udp->set_checksum(0);
-				sbi->sendbuffer.writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
+				sbi->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
 				// copy udp payload
-				sbi->sendbuffer.write(udp_packet->get_data(), len);
+				sbi->write(udp_packet->get_data(), len);
 
-// 				int offset = (char*)sbi->sendbuffer.memstart_ethernet - (char*)sbi->sendbuffer.getDataStart();
-// 				int ethsize = (char*)sbi->sendbuffer.memstart_ip - (char*)sbi->sendbuffer.memstart_ethernet;
-// 				int ipsize = (char*)sbi->sendbuffer.memstart_transport - (char*)sbi->sendbuffer.memstart_ip;
-// 				int icmpsize = (char*)sbi->sendbuffer.getDataStart() + sbi->sendbuffer.getSize() - (char*)sbi->sendbuffer.memstart_transport;
-// 				printf("udp response %u; offset: %u ethernet: %u ip: %u icmp %u %p\n", sbi->sendbuffer.getSize(), offset, ethsize, ipsize, icmpsize, sbi->sendbuffer.memstart_ethernet);
+// 				int offset = (char*)sbi->memstart_ethernet - (char*)sbi->getDataStart();
+// 				int ethsize = (char*)sbi->memstart_ip - (char*)sbi->memstart_ethernet;
+// 				int ipsize = (char*)sbi->memstart_transport - (char*)sbi->memstart_ip;
+// 				int icmpsize = (char*)sbi->getDataStart() + sbi->getSize() - (char*)sbi->memstart_transport;
+// 				printf("udp response %u; offset: %u ethernet: %u ip: %u icmp %u %p\n", sbi->getSize(), offset, ethsize, ipsize, icmpsize, sbi->memstart_ethernet);
 
-				udpmanagmentinstance.send(&(sbi->sendbuffer), sbi->interface);
+				udpmanagmentinstance.send(sbi);
 			}
 		} else {
 			tjp->proceed();

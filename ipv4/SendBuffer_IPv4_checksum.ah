@@ -29,14 +29,14 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_IPv4_Checksum {
-	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*,ipstack::Interface*)") && args(sendbuffer, interface) :
-	before(SendBuffer* sendbuffer, Interface* interface) {
+	advice execution("void ipstack::%_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) :
+	before(SendBuffer* dataToSend) {
 		
 		if (tjp->that()->m_useipversion != 4) {
 			return;
 		}
 		
-		IPv4_Packet* ip = (IPv4_Packet*) sendbuffer->memstart_ip;
+		IPv4_Packet* ip = (IPv4_Packet*) dataToSend->memstart_ip;
 		ip->computeChecksum();
 	}
 };

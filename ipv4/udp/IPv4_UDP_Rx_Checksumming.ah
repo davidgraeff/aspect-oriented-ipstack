@@ -42,12 +42,12 @@ aspect IPv4_UDP_Rx_Checksumming {
 		
 		len -= packet->get_ihl() * 4; // Length including UDP_HEADER_SIZE
 
-		UDP_Packet* udp_packet = (UDP_Packet*) packet->get_data();
+		UDP_Packet* udp = (UDP_Packet*) packet->get_data();
 
-		if (udp_packet->get_checksum() != 0) {
+		if (udp->get_checksum() != 0) {
 			//this packet is protected by an internet checksum
-			if (InternetChecksumV4::valid(packet, len, interface) == false) {
-				printf("checksum wrong; packet len %u\n", len);
+			if (!udp->checksum_valid(InternetChecksumV4::computePseudoHeader(packet, len, UDP_Packet::IP_TYPE_UDP), len, interface)) {
+//  				printf("checksum udp wrong; packet len %u\n", len);
 				// checksum wrong: drop entire packet
 				return;
 			}

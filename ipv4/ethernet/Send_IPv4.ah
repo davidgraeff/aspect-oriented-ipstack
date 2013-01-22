@@ -26,7 +26,6 @@
 
 using namespace ipstack;
 
-
 /**
  * Add the ethernet header frame size to the createSendBuffer(size)
  * and fill in the ethernet header in prepareSendBuffer(...)
@@ -53,16 +52,22 @@ aspect Sendbuffer_IPv4_Ethernet {
 		}
 
 		//we have an ethernet device
-		Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->data);
-
+		Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->getDataPointer());
+		sendbuffer->memstart_ethernet = eth_frame;
+		sendbuffer->writtenToDataPointer(Eth_Frame::ETH_HEADER_SIZE);
+		
+		UInt32 ip = tjp->that()->ipv4.get_nexthop_ipaddr();
+		
 		eth_frame->set_type(IPv4_Packet::ETH_TYPE_IPV4);
 		eth_frame->set_src_hwaddr(interface->getAddress());
-		// If this is a broadcast ip address (255.255.255.255), use the broadcast mac
-		UInt32 ip =  tjp->that()->ipv4.get_dst_addr();
+		
 		UInt8 leftpart = (UInt8)(ip>>24);
+		
+		// If this is a broadcast ip address (255.255.255.255), use the broadcast mac
 		if (ip == (UInt32) - 1) { // Broadcast address -1==255.255.255.255==all bits 1
 			eth_frame->set_dst_hwaddr_broadcast();
 		}
+		
 		// If this is a multicast ip address (224.0.0.0-239.255.255.255), use the multicast mac
 		else if ( leftpart >=224 && leftpart<=239) {
 			// that is 01-00-5e-00-00-00 filled with the last 23 Bits of the ip address.
@@ -70,17 +75,9 @@ aspect Sendbuffer_IPv4_Ethernet {
 			UInt8 emptymac[6] = {0x01, 0x00, 0x5e, leftpart,((UInt8) (ip>>16)),((UInt8) ip)};
 			eth_frame->set_dst_hwaddr(emptymac);
 		} else {
-			// else use an empty mac address and use the arp cache
-			const UInt8 emptymac[6] = {0};
-			eth_frame->set_dst_hwaddr(emptymac);
+			sendbuffer->setState(SendBuffer::WritingState | SendBuffer::ResolveLinkLayerStateOption);
 		}
-		sendbuffer->memstart_ethernet = eth_frame;
-		//dst_hwaddr is set by ARP, therefore the ethernet frame start must be known
-		sendbuffer->writtenToDataPointer(Eth_Frame::ETH_HEADER_SIZE);
-		//printf("Sendbuffer_IPv4_Ethernet: Data written %u \n", (char*)sendbuffer->data - (char*)sendbuffer->getDataStart());
-
+		
 		tjp->proceed();
 	}
-
-
 };

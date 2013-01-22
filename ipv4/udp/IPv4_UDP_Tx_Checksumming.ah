@@ -26,17 +26,19 @@
 using namespace ipstack;
 
 aspect IPv4_UDP_Tx_Checksumming {
-	advice execution("% ipstack::%UDP_Socket::send(...)") && args(sendbuffer, interface) :
-		before(SendBuffer* sendbuffer, Interface* interface) {
+	advice execution("% ipstack::%UDP_Socket::send(...)") && args(dataToSend) :
+		before(SendBuffer* dataToSend) {
 
 		if (tjp->that()->m_useipversion != 4) {
 			return;
 		}
-		IPv4_Packet* packet = (IPv4_Packet*)sendbuffer->memstart_ip;
-		UDP_Packet* udp = (UDP_Packet*) sendbuffer->memstart_transport;
+		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->memstart_ip;
+		UDP_Packet* udp = (UDP_Packet*) dataToSend->memstart_transport;
 
-		UInt16 csum = InternetChecksumV4::compute(packet, udp->get_length(), interface);
-		udp->set_checksum(csum); // store checksum in UDP checksum field
+		Interface* interface = dataToSend->getInterface();
+		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		udp->set_checksum(0);
+		udp->set_checksum(udp->calc_checksum(InternetChecksumV4::computePseudoHeader(packet, payloadsize, UDP_Packet::IP_TYPE_UDP), payloadsize, interface));
 
 	}
 

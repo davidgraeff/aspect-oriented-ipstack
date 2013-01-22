@@ -54,12 +54,13 @@ aspect IPv4_TCP_Receive {
 		// preprocessing length: subtract the ipv4 header size
 		len -= packet->get_ihl() * 4;
 
+		TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
+		
 		//verify tcp checksum
-		if (InternetChecksumV4::valid(packet,len,interface) == false) {
+		if (!tcp_segment->checksum_valid(InternetChecksumV4::computePseudoHeader(packet, len, TCP_Segment::IP_TYPE_TCP), len, interface)) {
 			return; //wrong! Drop packet
 		}
 
-		TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
 		TCP_Socket* socket = demux.tcp_head_socket;
 		
 		const UInt16 dport = tcp_segment->get_dport();

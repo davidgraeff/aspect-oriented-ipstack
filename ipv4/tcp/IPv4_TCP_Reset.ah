@@ -42,10 +42,11 @@ aspect IPv4_TCP_Reset {
 			if (tcp_segment->has_RST() == false) {
 				//"Active Side Causes Half-Open Connection Discovery"
 				//rfc793 page 35 (Figure 11.)
-				demux.setDirectResponse(true);
+				
 				Management_TCP_Socket &resetsocketinstance = Management_TCP_Socket::instance();
 				resetsocketinstance.ipv4.set_dst_addr(packet->get_src_ipaddr());
-				SendBufferWithInterface* sendbuffer = resetsocketinstance.requestSendBufferTCP(interface);
+				demux.setDirectResponse(true);
+				SendBuffer* sendbuffer = resetsocketinstance.requestSendBufferTCP(interface);
 				if (!sendbuffer) {
 					demux.error_receiving_queue_full(packet, interface);
 					return;
@@ -54,7 +55,7 @@ aspect IPv4_TCP_Reset {
 				resetsocketinstance.prepareResponse(sendbuffer, tcp_segment,
 													packet->get_total_len() - (packet->get_ihl() + tcp_segment->get_header_len()) * 4);
 
-				resetsocketinstance.send(&(sendbuffer->sendbuffer));
+				resetsocketinstance.send(sendbuffer);
 				
 			}
 		} else {

@@ -55,6 +55,7 @@ aspect IPv4_TCP_Listen {
 						} else if (!socket->addToReceiveQueue(tcp_segment, len)) {
 							demux.error_receiving_memory_too_small(packet, interface);
 						} else {
+// 							printf("IPv4_TCP_Listen LISTEN->Connected %p\n", socket);
 							demux.deaf(socket); //remove socket's 'listening' state
 							//add remote ipv4 addr
 							socket->ipv4.set_dst_addr(packet->get_src_ipaddr());

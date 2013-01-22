@@ -44,7 +44,7 @@ namespace ipstack {
 		
 		void setupHeader(IPv4_Packet* packet, unsigned datasize);
 		
-		bool hasValidInterface() ;
+		bool hasValidInterface() const;
 		
 		/**
 		 * Return the specific size for a generated header with the currently
@@ -61,10 +61,12 @@ namespace ipstack {
 		void set_dst_addr(UInt32 dst);
 		void set_dst_addr(UInt8 a, UInt8 b, UInt8 c, UInt8 d);
 		
-		UInt32 get_dst_addr() ;
+		UInt32 get_dst_addr() const;
 		
-		UInt32 get_src_addr() ;
+		UInt32 get_src_addr() const;
 		
-		bool hasValidSrcDestAddresses() ;
+		UInt32 get_nexthop_ipaddr();
+		
+		bool hasValidSrcDestAddresses() const;
 	}; // end IPV4 class
 } //namespace ipstack
