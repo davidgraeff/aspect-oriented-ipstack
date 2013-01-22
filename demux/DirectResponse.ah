@@ -1,0 +1,47 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipstack/demux/Demux.h"
+#include "DirectResponse_Slice.ah"
+
+using namespace ipstack;
+
+/**
+ * Purpose:
+ * Instead of copying the input data to a socket buffer and process it there in the user context, a direct response
+ * with the remote addresses given in the input data is executed. This procedure saves cpu cycles for not copying,
+ * saves memory on the embedded system and shortens the latency.
+ * It should only be used by ICMP or other management tasks which are not directly related to application tasks, because
+ * no reschedule is allowed while generating the response.
+ * Used by:
+ * - All ICMP functionality that respond directly to a packet, - TCP_Reset
+ * Internal:
+ * Store a pointer to the beginning of an input stream (network layer data should be located there)
+ * and a boolean "directResponse". Fills in the link layer address of the source as destination address,
+ * before ARP/NDP do a lookup.
+ */
+aspect DirectResponse_aspect {
+	advice "ipstack::Demux" : slice DirectResponseSlice;
+
+	advice execution("% ipstack::%_Socket::requestSendBuffer(%)") : after() {
+		// deactivate direct response
+		Demux::Inst().setDirectResponse(false);
+	}
+};
+

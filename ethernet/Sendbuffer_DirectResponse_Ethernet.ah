@@ -26,27 +26,31 @@ using namespace ipstack;
 
 aspect Sendbuffer_DirectResponse_Ethernet {
 	// Before ARP or NDP
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : 
-		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_DirectResponse_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_Aspect");
+	advice execution("% ipstack::%_Socket::ethernet_by_ipv%_address(...)") : 
+		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_DirectResponse_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_%_Aspect");
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer)  :
-		around(SendBuffer* sendbuffer) {
-
+	advice execution("% ipstack::%_Socket::ethernet_by_ipv%_address(...)") : around() {
 		Demux& demux = Demux::Inst(); //short name
-		Interface* interface = tjp->that()->getUsedInterface();
-		if (interface->getType() != Interface::ETHERNET || !demux.isDirectResponse()) {
+
+		// Proceed if direct response is off or if this is not a reponse to a packet
+		if (!demux.isDirectResponse() || !demux.mDirectResponseInputData) {
 			tjp->proceed();
 			return;
 		}
 
+		// we have an ethernet destination address: return true
+		*tjp->result() = true;
+
+		// Get destination ethernet frame from sendbuffer.
+		Eth_Frame* dest_eth_frame = *tjp->arg<1>();
+
 		// Get input ethernet frame from "direct response"-stored input data pointer.
 		Eth_Frame* remote_eth_frame = (Eth_Frame*)(demux.directResponseInputDate());
-		// Get destination ethernet frame from sendbuffer.
-		Eth_Frame* dest_eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+		demux.mDirectResponseInputData = 0; // clear input pointer
+		
 		// Set destination addr := remote src addr
 		dest_eth_frame->set_dst_hwaddr(remote_eth_frame->get_src_hwaddr());
 
 		//printf("ethernet direct response: remote %u %u %u %u %u %u\n",dest_eth_frame->get_dst_hwaddr()[0],dest_eth_frame->get_dst_hwaddr()[1],dest_eth_frame->get_dst_hwaddr()[2],dest_eth_frame->get_dst_hwaddr()[3],dest_eth_frame->get_dst_hwaddr()[4],dest_eth_frame->get_dst_hwaddr()[5]);
-		tjp->proceed();
 	}
 };

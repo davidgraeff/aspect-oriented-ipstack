@@ -16,9 +16,14 @@
 // Copyright (C) 2012 David Gräff
 
 #include "EthernetAddressUtilities.h"
+#include "stdio.h"
 
 namespace ipstack {
 
+	bool is_eth_addr_set(UInt8* eth_addr) {
+		return (eth_addr[3] || eth_addr[4] || eth_addr[5]);
+	}
+	
 	UInt8 numberFromAsciiE(char c) {
 		switch (c) {
 			case '0': return 0;
@@ -89,25 +94,25 @@ namespace ipstack {
 }
 
 // Return 18 bytes: mac address as string
-void ethernet_addr_tostring(char *dst, UInt8* eth_addr)
+void ethernet_addr_tostring(UInt8* eth_addr, char *addrstr)
 {
-	*dst = numberToAsciiE(((*eth_addr) & 0x0f)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f); ++dst;
-	*dst = ':'; ++dst;
-	*dst = numberToAsciiE(*(++eth_addr)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f); ++dst;
-	*dst = ':'; ++dst;
-	*dst = numberToAsciiE(*(++eth_addr)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f); ++dst;
-	*dst = ':'; ++dst;
-	*dst = numberToAsciiE(*(++eth_addr)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f); ++dst;
-	*dst = ':'; ++dst;
-	*dst = numberToAsciiE(*(++eth_addr)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f); ++dst;
-	*dst = ':'; ++dst;
-	*dst = numberToAsciiE(*(++eth_addr)>>4); ++dst;
-	*dst = numberToAsciiE((*eth_addr) & 0x0f);
+	*addrstr = numberToAsciiE(((*eth_addr) & 0x0f)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
+	*addrstr = ':'; ++addrstr;
+	*addrstr = numberToAsciiE(*(++eth_addr)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
+	*addrstr = ':'; ++addrstr;
+	*addrstr = numberToAsciiE(*(++eth_addr)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
+	*addrstr = ':'; ++addrstr;
+	*addrstr = numberToAsciiE(*(++eth_addr)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
+	*addrstr = ':'; ++addrstr;
+	*addrstr = numberToAsciiE(*(++eth_addr)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
+	*addrstr = ':'; ++addrstr;
+	*addrstr = numberToAsciiE(*(++eth_addr)>>4); ++addrstr;
+	*addrstr = numberToAsciiE((*eth_addr) & 0x0f);
 }
 
 /**
@@ -123,20 +128,23 @@ bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr)
 	while (blockIndex < 6) {
 		UInt8 blockdata[2] = {0};
 		UInt8 position = 0;
-		//printf("block ");
+// 		printf("ebl ");
 		while(*currentCharPtr != ':') {
-			//printf ("%c", *currentCharPtr);
+// 			printf ("%c", *currentCharPtr);
 			blockdata[position] = numberFromAsciiE(*currentCharPtr);
 			++currentCharPtr;
 			if (++position > 1)
 				break;
 		}
 		eth_addr[blockIndex] = (blockdata[1]) | (blockdata[0] << 4);
+		
+		++blockIndex; // valid block: increase block counter
+
 		if (*currentCharPtr == 0)
 			break;
 		++currentCharPtr;
-		++blockIndex;
 	}
+
 	if (blockIndex!=6)
 		return 0;
 	return 1;

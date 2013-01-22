@@ -25,8 +25,12 @@
 
 namespace ipstack {
 
-// Return 18 bytes: mac address as string
-void ethernet_addr_tostring(char *dst, UInt8* eth_addr);
+/**
+ * Parse a native representation into the textual mac address representation like "20:b8:00:d3:00:2e".
+ * @param eth_addr Native mac represenation
+ * @param addrstr Memory for the textual address representation. 18 characters are generated.
+ */
+void ethernet_addr_tostring(UInt8* eth_addr, char *addrstr);
 /**
  * Parse a textual ethernet address representation like "20:01:0d:b8:00:00" into the native representation
  * @param addrstr Textual address representation
@@ -35,4 +39,12 @@ void ethernet_addr_tostring(char *dst, UInt8* eth_addr);
  */
 bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr);
 
+/**
+  * Return true if a valid mac addr is set. The first three bytes are
+  * valid if they are listed in http://standards.ieee.org/develop/regauth/oui/oui.txt.
+  * For simplification we do not test the first three bytes (even 00-00-00 is assigned and therefore valid).
+  * The second three bytes of the mac address are usually nic identifier of the network card and
+  * should be != 0. This method test the second three bytes.
+  */
+bool is_eth_addr_set(UInt8* eth_addr);
 } //namespace ipstack
