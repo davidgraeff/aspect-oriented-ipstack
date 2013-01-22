@@ -26,7 +26,7 @@
 #include "stdio.h"
 namespace ipstack
 {
-
+class SendBuffer;
 //static template metaprogram assertions
 
 //check if the buffer count is not 0
@@ -45,38 +45,62 @@ class SharedMemory_Size_Assertion_40{ public: typedef void CONFIGURATION_ERROR_F
 template<unsigned BUFFER_SIZE>class SharedMemory_Size_Assertion_40<BUFFER_SIZE, false>{};
 
 class SharedMemory {
-  public:
-  
-  //create the type for the following mempool instantiation
-  typedef ipstack::MempoolAPI<cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG, cfIPSTACK_MANAGEMENT_COUNT_BIG, cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL, cfIPSTACK_MANAGEMENT_COUNT_SMALL, ipstack::MEMORY_GENERIC>::Type SharedMemory_Mempool;
- 
-  //static assertion: check whether at least 2 buffers (a big and small one) are available for this TCP Socket. If not, throw a compile-time error.
-  typedef SharedMemory_Count_Assertion<SharedMemory_Mempool::COUNT_BIG>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 big_buf_cnt_assert;
-  typedef SharedMemory_Count_Assertion<SharedMemory_Mempool::COUNT_SMALL>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 small_buf_cnt_assert;
-  
-  //static assertion: check whether the size of each buffer is at least 40(44) bytes (IP header + TCP header (+ TCP MSS Option))
-  typedef SharedMemory_Size_Assertion_44<SharedMemory_Mempool::SIZE_BIG>::CONFIGURATION_ERROR_FOR_TCP__Size_of_big_buffer_must_be_at_least_44_bytes big_buf_size_assert;
-  typedef SharedMemory_Size_Assertion_40<SharedMemory_Mempool::SIZE_SMALL>::CONFIGURATION_ERROR_FOR_TCP__Size_of_small_buffer_must_be_at_least_40_bytes small_buf_size_assert;
+	public:
+	
+	//create the type for the following mempool instantiation
+	typedef ipstack::MempoolAPI<cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG, cfIPSTACK_MANAGEMENT_COUNT_BIG, cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL, cfIPSTACK_MANAGEMENT_COUNT_SMALL, ipstack::MEMORY_GENERIC>::Type SharedMemory_Mempool;
+	
+	//static assertion: check whether at least 2 buffers (a big and small one) are available for this TCP Socket. If not, throw a compile-time error.
+	typedef SharedMemory_Count_Assertion<SharedMemory_Mempool::COUNT_BIG>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 big_buf_cnt_assert;
+	typedef SharedMemory_Count_Assertion<SharedMemory_Mempool::COUNT_SMALL>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 small_buf_cnt_assert;
+	
+	//static assertion: check whether the size of each buffer is at least 40(44) bytes (IP header + TCP header (+ TCP MSS Option))
+	typedef SharedMemory_Size_Assertion_44<SharedMemory_Mempool::SIZE_BIG>::CONFIGURATION_ERROR_FOR_TCP__Size_of_big_buffer_must_be_at_least_44_bytes big_buf_size_assert;
+	typedef SharedMemory_Size_Assertion_40<SharedMemory_Mempool::SIZE_SMALL>::CONFIGURATION_ERROR_FOR_TCP__Size_of_small_buffer_must_be_at_least_40_bytes small_buf_size_assert;
 
-  //the mempool attribute
-  SharedMemory_Mempool mempool;
-  
-  //size of ringbuffer: tCOUNT_1+tCOUNT_2 (if generic api is enabled, else PACKET_LIMIT)
-   ipstack::PacketbufferAPI<cfIPSTACK_MANAGEMENT_COUNT_BIG+cfIPSTACK_MANAGEMENT_COUNT_SMALL, ipstack::MEMORY_GENERIC>::Type buf;
+	// the mempool attribute. Because mempool provide no functionality to iterate it, we have to 
+	// keep pointers to the allocated objects
+	SharedMemory_Mempool mempool;
+	
+	/**
+		* Return amount of memory blocks available.
+		*/
+	enum {SLOTS = cfIPSTACK_MANAGEMENT_COUNT_BIG + cfIPSTACK_MANAGEMENT_COUNT_SMALL};
 
-   /**
-    * Return amount of memory blocks available. This is usefull for iterating over all memory blocks
-	*/
-   const UInt16Opt getSlots() const { return cfIPSTACK_MANAGEMENT_COUNT_BIG + cfIPSTACK_MANAGEMENT_COUNT_SMALL; }
-   
-  SharedMemory(){}
+	SendBuffer* allocatedMemories[SLOTS];
+	/**
+	  * Insert a SendBuffer pointer into the management list
+	  */
+	bool insert(SendBuffer* data);
+	/**
+	  * Remove a SendBuffer pointer from the management list identified by the list number.
+	  */
+	bool remove(UInt16Opt index);
+	/**
+	  * Use this to iterate over all used list entries. "index" will be modified
+	  * to point to the next found list number where the returned Sendbuffer has been
+	  * found. Return 0 if no valid entry could be found. The search start with the given
+	  * index.
+	  */
+	SendBuffer* getNext(UInt16Opt& index) const;
+	/**
+	  * Check for all allocated SendBuffers if the data has been send already.
+	  * If this is the case, free the memory block / Sendbuffer.
+	  * This method is called internally by every call to @allocSendBuffer.
+	  */
+	void freeAllUnused();
 
-  //for placement new: calling the constructor explicitly for global objects
-  void* operator new(__SIZE_TYPE__ size, void* mem) {
-    return mem;
-  }
+	SharedMemory();
+
+	//for placement new: calling the constructor explicitly for global objects
+	void* operator new(__SIZE_TYPE__ size, void* mem) {
+		return mem;
+	}
 };
 
+/**
+  * SharedMemory is actually a singleton. Use this "sharedmemory" variable.
+  */
 extern SharedMemory sharedmemory;
 
 } //namespace ipstack

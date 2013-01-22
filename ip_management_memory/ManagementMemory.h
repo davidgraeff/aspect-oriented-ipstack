@@ -17,50 +17,25 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
-#include "../util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
-#include "ipstack/SendBuffer.h"
 #include <string.h>
 #include "util/types.h"
-#include "stdio.h"
+#include "ipstack/util/Mempool.h"
 namespace ipstack
 {
 
 /**
  * Inherit this to use the management memory. It is important to call the constructor of this super class.
- * All functionality that inherit this management memory class share the same memory blocks and ringbuffer
+ * All functionality that inherit this management memory class share the same memory block.
  */
 class ManagementMemory
 {
-	friend class Demux; // Make Demux a friend-class to access packetbuffer+mempool
 	public:
 		/**
-		 * Initialise the packetbuffer and mempool pointers to point to the shared memory.
+		 * Initialise the mempool pointer to point to the shared memory.
 		 * You really want to call this super class constructor in your class!
 		 */
 		ManagementMemory();
-		/**
-		 * Construct a SendBuffer (if memory is available) and also remember the destination interface.
-		 * This allows us to free unused SendBuffers. A SendBuffer is unused if the linked Interface
-		 * has send the data already.
-		 */
-		SendBufferWithInterface* allocSendBufferWithInterface(UInt16Opt size, Interface* interface);
-		
-		/**
-		  * Memory slots
-		  */
-		const UInt16Opt getSlots() const;
-	private:
-		/**
-		 * Check all allocated SendBuffers (listed in "packetbuffer") if the data has been send already.
-		 * If this is the case, free the memory block / Sendbuffer.
-		 * This method is called internally by every call to @allocSendBufferWithInterface.
-		 */
-		void freeAllUnused();
-
 	protected:
-		Packetbuffer* packetbuffer;
 		Mempool* mempool;
 };
 

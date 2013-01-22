@@ -19,6 +19,7 @@
 
 #include "util/types.h"
 #include "SharedMemory.h"
+#include "stdio.h"
 
 using namespace ipstack;
 
@@ -29,5 +30,32 @@ aspect SharedMemoryAspect  {
 	advice execution( "void os::init()" ) : after() {
 		// Call constructor of global shared memory
 		new(&sharedmemory) SharedMemory;
+	}
+	
+	/**
+	  * If the creation of a sendbuffer has been successfull, add it to the
+	  * list of allocated management buffers. We have to keep track of all
+	  * sendbuffers because next time we try to allocate one, we will go
+	  * through the list and free those that have been send so far.
+	  */
+	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : before() {
+		ipstack::Mempool* m = *tjp->arg<0>();
+		// Only do something within management sockets
+		if (m != &(sharedmemory.mempool))
+			return;
+		sharedmemory.freeAllUnused();
+	}
+	
+	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+		ipstack::Mempool* m = *tjp->arg<0>();
+		// Only do something within management sockets
+		if (m != &(sharedmemory.mempool))
+			return;
+
+		SendBuffer* buffer = *tjp->result();
+		
+		if (buffer) {
+			sharedmemory.insert(buffer);
+		}
 	}
 };
