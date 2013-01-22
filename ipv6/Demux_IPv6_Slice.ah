@@ -27,17 +27,20 @@ private:
     void ipv6_demux ( IPv6_Packet* packet, unsigned len, Interface* interface ) {
         // Go through all linked next headers
         unsigned remainingLength = packet->get_payload_len();
+		unsigned remainingLengthFailSafe = remainingLength;
 		void* payload = (void*)packet->get_payload();
         unsigned char nextHeader = packet->get_nextheader();
 		
-        while ( remainingLength ) {
-			if (ipv6_payload_demux ( interface, packet, payload, remainingLength, nextHeader )) {
+		while ( !ipv6_payload_demux ( interface, packet, payload, remainingLength, nextHeader ) ) {
+			if (!remainingLength) // all bytes consumed: return
 				return;
+			// With every iteration the remainingLength should shrink: if not -> no aspect registered
+			if (remainingLength==remainingLengthFailSafe) {
+				error_no_protocol_handler_v6(packet, interface);
+				break;
 			}
+			remainingLengthFailSafe = remainingLength;
         }
-
-		printf("Demux_IPv6_Slice not handled\n");
-        error_no_protocol_handler_v6(packet, interface);
     }
 
     /**
@@ -47,18 +50,7 @@ private:
      * eight bytes)
      */
     bool ipv6_payload_demux ( Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader ) {
-        // If no aspect intercepted this method so far, the payload propably is a
-        // IPv6 header that is not recogniced. Aspects that intercept this and consume
-        // all remaining bytes should use an around advice and return true.
-        const unsigned header_extension_length_in_bytes = (( UInt8*)payload)[1]*8 + 8;
-		if ( !payload_length || header_extension_length_in_bytes > payload_length )
-            return true;
-
-		nextHeader = (( unsigned char* ) payload)[0];
-        // change payload pointer and reduce length
-		payload_length -= header_extension_length_in_bytes;
-		payload = (( char* )payload) + header_extension_length_in_bytes;
-		return false;
+		return (nextHeader==59); // 59: no next protocol
     }
     
     /**
