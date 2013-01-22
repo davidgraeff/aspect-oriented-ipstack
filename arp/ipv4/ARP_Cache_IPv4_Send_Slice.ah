@@ -26,7 +26,7 @@
 #include "ipstack/ethernet/Eth_Frame.h"
 #include "Eth_ARP_IPv4_Packet.h"
 
-#include "../../Clock.h"
+#include "ipstack/as/Clock.h"
 
 using namespace ipstack;
 

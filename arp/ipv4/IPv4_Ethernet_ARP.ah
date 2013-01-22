@@ -17,61 +17,37 @@
 
 #pragma once
 
-#include "../../router/Interface.h"
-#include "../ARP_Cache.h"
-#include "../../ethernet/Eth_Frame.h"
-#include "../../router/Router.h"
+#include "ipstack/router/Interface.h"
+#include "ipstack/arp/ARP_Cache.h"
+#include "ipstack/ethernet/Eth_Frame.h"
+#include "ipstack/ethernet/EthernetAddressUtilities.h"
+#include "ipstack/router/Router.h"
 #include "ipstack/SendBuffer.h"
 
 using namespace ipstack;
 
 aspect IPv4_Socket_Ethernet_ARP_Aspect {
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv4_Ethernet" , "Sendbuffer_DirectResponse_Ethernet", "IPv4_Socket_Ethernet_ARP_Aspect");
-		
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer)  :
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "IPv4_Socket_Ethernet_ARP_Aspect");
+	
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
 		around(SendBuffer* sendbuffer) {
 
-		// only for IPv4
-		if (tjp->that()->m_useipversion != 4) {
-			tjp->proceed();
-			return;
+		// check ip version
+		if (tjp->that()->m_useipversion == 4 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
+			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->memstart_ip;
+			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+			Interface* interface = sendbuffer->getInterface();
+
+			const UInt8* dst_hw_addr = ARP_Cache::Inst().ipv4_lookup(ip->get_dst_ipaddr(), interface);
+			if (dst_hw_addr == 0) {
+				sendbuffer->setState(SendBuffer::InvalidState);
+				return; //don't send this packet: destination MAC address unknown!
+			}
+
+			eth_frame->set_dst_hwaddr(dst_hw_addr);
+			// Restore writing state after it has been changed by the IPv6 ethernet aspect
+			sendbuffer->setState(SendBuffer::WritingState);
 		}
-
-		Interface* interface = tjp->that()->getUsedInterface();
-		if (interface->getType() != Interface::ETHERNET) {
-			tjp->proceed();
-			return;
-		}
-
-		//we have an ethernet device
-		Eth_Frame* eth_frame = (Eth_Frame*) sendbuffer->memstart_ethernet;
-		
-
-		// check if the mac is already set
-		if (eth_frame->get_dst_hwaddr()[0] != 0) {
-			tjp->proceed();
-			return;
-		}
-		
-		UInt32 lookup_ipv4_addr;
-		if (tjp->that()->ipv4.using_gateway == false) {
-			lookup_ipv4_addr = tjp->that()->ipv4.get_dst_addr(); //local
-		} else {
-			lookup_ipv4_addr = Router::Inst().ipv4_get_gateway_addr(); //gateway
-		}
-		
-		ARP_Cache& cache = ARP_Cache::Inst(); //short name
-
-		const UInt8* dst_hw_addr = cache.ipv4_lookup(lookup_ipv4_addr, interface);
-		if (dst_hw_addr == 0) {
-			sendbuffer->makeInvalid();
-			return; //don't send this packet: destination MAC address unknown!
-		}
-
-		eth_frame->set_dst_hwaddr(dst_hw_addr);
-
 		tjp->proceed();
-		return;
 	}
-
 };
