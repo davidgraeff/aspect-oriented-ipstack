@@ -17,8 +17,10 @@
 
 #pragma once
 
+#include "ICMP.h"
 #include "util/types.h"
 #include "../router/Interface.h"
+#include "../SendBuffer.h"
 
 using namespace ipstack;
 

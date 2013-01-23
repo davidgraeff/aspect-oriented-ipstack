@@ -17,59 +17,9 @@
 
 #pragma once
 
-#include "util/Mempool.h"
-
 using namespace ipstack;
 
 slice class SendBuffer_DebugInfo_Slice {
-
-private:
-	void addDigitsForGetDestIPstring(char* buffer, UInt8 d) {
-		buffer[0] = d / 100 + '0';
-		if (buffer[0]=='0') buffer[0] = ' ';
-		d = d % 100;
-		buffer[1] = d / 10 + '0';
-		if (buffer[1]=='0') buffer[1] = ' ';
-		d = d % 10;
-		buffer[2] = d + '0';
-	}
-	
-	void getDestIPstring(char* tempbuf) {
-		IPv6_Packet* packet = (IPv6_Packet*)this->memstart_ip;
-		if (packet->get_version() == 6) {
-			ipstack::ipv6_addr_toString(packet->get_dst_ipaddr(), tempbuf);
-		} else {
-			UInt8 a,b,c,d;
-			IPv4_Packet* packet = (IPv4_Packet*)this->memstart_ip;
-			IPv4_Packet::convert_ipv4_addr(packet->get_dst_ipaddr(), a, b, c, d);
-			addDigitsForGetDestIPstring(&(tempbuf[0]), a);
-			tempbuf[3] = '.';
-			addDigitsForGetDestIPstring(&(tempbuf[4]), b);
-			tempbuf[7] = '.';
-			addDigitsForGetDestIPstring(&(tempbuf[8]), c);
-			tempbuf[11] = '.';
-			addDigitsForGetDestIPstring(&(tempbuf[12]), d);
-		}
-	}
 public:
-	void printAdditionalInfo() {
-		// find in messages array
-		char* message = 0;
-		for (int i=0;i<SharedMemory::SLOTS;++i) {
-			if (messages[i].ptr == this) {
-				message = messages[i].msg;
-				break;
-			}
-		}
-		if (message) {
-			printf("   Buffer: %p, Msg: %s\n", this, message);
-		}
-		char tempbuf[50] = {0};
-		getDestIPstring(tempbuf);
-		printf("   Destination: %s\n", tempbuf);
-	
-		UInt8* lastByte = (UInt8*)(getDataStart()) + getSize();
-		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (UInt8*)memstart_ip-(UInt8*)memstart_ethernet,
-				(UInt8*)memstart_transport-(UInt8*)memstart_ip, lastByte-(UInt8*)memstart_transport);
-	}
+	void printAdditionalInfo() {}
 };

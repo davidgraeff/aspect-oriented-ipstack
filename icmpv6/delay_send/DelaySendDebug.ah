@@ -44,7 +44,7 @@ aspect delay_icmpv6_send_debug {
 	order( "delay_icmpv6_send_debug","delay_icmpv6_send" );
 	
 	advice execution("% ipstack::DelaySend::sendDelayed(ipstack::SendBuffer*)") && args(buffer) : before(SendBuffer* buffer) {
-		if (buffer->isValid()) {
+		if (buffer->getState()==SendBuffer::AboutToBeTransmittedState) {
 			printf("delay_icmpv6_send: send %p...\n", buffer);
 		} else {
 			printf("delay_icmpv6_send: already send %p\n", buffer);

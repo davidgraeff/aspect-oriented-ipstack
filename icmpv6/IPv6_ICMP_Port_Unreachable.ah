@@ -19,6 +19,7 @@
 
 #include "ipstack/demux/Demux.h"
 #include "ipstack/router/Interface.h"
+#include "ipstack/ipv6/IPv6.h"
 #include "ICMPv6.h"
 #include "ICMPv6_Socket.h"
 

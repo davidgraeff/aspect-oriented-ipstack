@@ -17,10 +17,108 @@
 
 #pragma once
 #include "util/types.h"
+#include "ipstack/ipv6/IPv6.h"
+#include "ipstack/ipv4/IPv4.h"
+#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipstack/ip_management_memory/SharedMemory.h"
 #include "ipstack/Sendbuffer_DebugInfo_Slice.ah"
 using namespace ipstack;
+#define MARK_MSG_LEN 100
 
+/**
+ * If SendBuffer DebugInfo is active, an implementation
+ * for sendbuffer->mark("some debug message") will be added. The debug and
+ * protect aspects of SendBuffer will use that message as additional output.
+ */
 aspect sendbuffer_debuginfo {
 	/* Affect class: SendBuffer */
 	advice "ipstack::SendBuffer" : slice SendBuffer_DebugInfo_Slice;
+	
+	struct mark_msg_struct {
+		SendBuffer* ptr;
+		char msg[MARK_MSG_LEN];
+	};
+
+	mark_msg_struct messages[SharedMemory::SLOTS];
+	unsigned nextMsg;
+	
+	void addDigitsForGetDestIPstring(char* buffer, UInt8 d) {
+		buffer[0] = d / 100 + '0';
+		if (buffer[0]=='0') buffer[0] = ' ';
+		d = d % 100;
+		buffer[1] = d / 10 + '0';
+		if (buffer[1]=='0') buffer[1] = ' ';
+		d = d % 10;
+		buffer[2] = d + '0';
+	}
+	
+	void getDestIPstring(SendBuffer& sendbuffer, char* tempbuf) {
+		IPv6_Packet* packet = (IPv6_Packet*)sendbuffer.memstart_ip;
+		if (packet->get_version() == 6) {
+			ipstack::ipv6_addr_toString(packet->get_dst_ipaddr(), tempbuf);
+		} else {
+			UInt8 a,b,c,d;
+			IPv4_Packet* packet = (IPv4_Packet*)sendbuffer.memstart_ip;
+			IPv4_Packet::convert_ipv4_addr(packet->get_dst_ipaddr(), a, b, c, d);
+			addDigitsForGetDestIPstring(&(tempbuf[0]), a);
+			tempbuf[3] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[4]), b);
+			tempbuf[7] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[8]), c);
+			tempbuf[11] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[12]), d);
+		}
+	}
+
+	advice execution( "% ipstack::SendBuffer::printAdditionalInfo()" ) && that(sendbuffer) : around(SendBuffer& sendbuffer) {
+		// find in messages array
+		char* message = 0;
+		for (int i=0;i<SharedMemory::SLOTS;++i) {
+			if (messages[i].ptr == &sendbuffer) {
+				message = messages[i].msg;
+				break;
+			}
+		}
+		if (message) {
+			printf("   Buffer: %p, Msg: %s\n", &sendbuffer, message);
+		}
+		char tempbuf[50] = {0};
+		getDestIPstring(sendbuffer, tempbuf);
+		printf("   Destination: %s\n", tempbuf);
+	
+		UInt8* lastByte = (UInt8*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
+		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (UInt8*)sendbuffer.memstart_ip-(UInt8*)sendbuffer.memstart_ethernet,
+				(UInt8*)sendbuffer.memstart_transport-(UInt8*)sendbuffer.memstart_ip, lastByte-(UInt8*)sendbuffer.memstart_transport);
+	}
+	
+	advice execution( "void os::init()" ) : after() {
+		nextMsg = 0;
+	}
+
+	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+		SendBuffer* b = *tjp->result();
+		if (b != 0) {
+			// clear messages with same SendBuffer pointer.
+			for (int i=0;i<SharedMemory::SLOTS;++i) {
+				if (messages[i].ptr == b)
+					messages[i].ptr = 0;
+			}
+			// add somewhere in the messages array
+			++nextMsg; if (nextMsg>=SharedMemory::SLOTS) nextMsg = 0;
+			memset( &(messages[nextMsg]), 0, sizeof(mark_msg_struct) );
+			messages[nextMsg].ptr = b;
+		}
+	}
+
+	advice execution("% ipstack::SendBuffer::mark(const char*)") && args(str) && that(sendbuffer) : after(const char* str, SendBuffer& sendbuffer) {
+		unsigned len = strlen(str);
+		len = ((len > MARK_MSG_LEN-1) ? MARK_MSG_LEN-1 : len);
+		
+		for (int i=0;i<SharedMemory::SLOTS;++i) {
+			if (messages[i].ptr == &sendbuffer) {
+				strncpy(&(messages[i].msg[0]), str, len);
+				break;
+			}
+		}
+	}
 };

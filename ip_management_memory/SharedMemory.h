@@ -20,7 +20,7 @@
 #include "../cfAttribs.h"
 #include "../util/Mempool.h"
 #include "ipstack/util/Ringbuffer.h"
-#include "ipstack/SendBuffer.h"
+
 #include <string.h>
 #include "util/types.h"
 namespace ipstack

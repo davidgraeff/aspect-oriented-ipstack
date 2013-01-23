@@ -1,4 +1,5 @@
 #include "SharedMemory.h"
+#include "ipstack/SendBuffer.h"
 #include "../cfAttribs.h"
 
 namespace ipstack
