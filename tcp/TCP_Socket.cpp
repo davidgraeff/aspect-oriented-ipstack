@@ -25,17 +25,17 @@
 namespace ipstack
 {
 
-TCP_Socket() :
+TCP_Socket::TCP_Socket() :
 	receiveBuffer(this),
 	mempool(0),
 	packetbuffer(0),
 	dport(TCP_Segment::UNUSED_PORT),
-	sport(TCP_Segment::UNUSED_PORT),
+	sport(TCP_Segment::UNUSED_PORT)
 	{
 		resetSocketState();
 	}
 	
-~TCP_Socket() {
+TCP_Socket::~TCP_Socket() {
 	unbind();
 }
 

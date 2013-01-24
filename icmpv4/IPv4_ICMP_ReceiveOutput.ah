@@ -23,6 +23,7 @@
 #include "../router/Interface.h"
 #include "ICMP.h"
 #include "ICMPv4_Socket.h"
+#include "stdio.h"
 
 using namespace ipstack;
 
