@@ -23,5 +23,5 @@ using namespace ipstack;
 
 aspect IPv6_Ethernet_NDPCache {
 	/* Affect class: NDPCacheEntry: Add ethernet as link layer address to the ndpcache entry */
-	advice "ipstack::NDPCacheEntry" : slice NDPCacheEntry_Expire_Slice;
+	advice "ipstack::NDPCacheEntry" : slice NDPCacheEntry_Ethernet_Slice;
 };

@@ -62,7 +62,7 @@ aspect NDP_Router_Solicitation {
 		// Warning: We support ethernet only at the moment, because we reserving 8 additional bytes (2 bytes reserved) -> 6 bytes remaining for link layer address
 		const UInt8 resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
 
-		demux.setDirectResponse(true);
+		Demux::Inst().setDirectResponse(true);
 		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, resSize);
 		if (sbi) {
 			sbi->mark("NDP_Router_Solicitation");

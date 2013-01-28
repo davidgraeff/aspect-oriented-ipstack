@@ -28,9 +28,4 @@ slice class SendBuffer_Protect_Slice {
 
 public:
 	bool hasBeenTransmitted;
-	/**
-	  * Stub: Print additional information about this sendbuffer.
-	  * May be influenced by analysing aspects.
-	  */
-	void printAdditionalInfo() {}
 };

@@ -29,6 +29,7 @@
 #include "../ICMPv6.h"
 #include "ipstack/icmpv6/ndp/NDPMessages.h"
 #include "ipstack/router/Interface.h"
+#include "ipstack/router/Router.h"
 #include "ipstack/demux/Demux.h"
 #include "util/types.h"
 

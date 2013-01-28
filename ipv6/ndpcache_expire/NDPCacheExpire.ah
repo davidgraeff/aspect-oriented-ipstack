@@ -20,6 +20,7 @@
 #include "ipstack/router/Interface.h"
 #include "Interface_Expire_Slice.ah"
 #include "NDPCacheEntry_Expire_Slice.ah"
+#include "NDPCacheExpireConfig.h"
 using namespace ipstack;
 
 aspect IPv6NDPCacheExpire_aspect {

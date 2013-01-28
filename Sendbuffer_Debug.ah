@@ -25,7 +25,7 @@
 #include "ipstack/ipv4/IPv4.h"
 #include "ipstack/ipv6/IPv6AddressUtilities.h"
 #include "ipstack/ip_management_memory/SharedMemory.h"
-
+#include "ipstack/Sendbuffer_DebugInfo_Slice.ah"
 #define MARK_MSG_LEN 100
 using namespace ipstack;
 
@@ -34,7 +34,7 @@ aspect sendbuffer_debug {
 		SendBuffer* ptr;
 		char msg[MARK_MSG_LEN];
 	};
-	
+
 	mark_msg_struct messages[SharedMemory::SLOTS];
 	unsigned nextMsg;
 	
@@ -58,33 +58,6 @@ aspect sendbuffer_debug {
 		}
 	}
 
-	void addDigits(char* buffer, UInt8 d) {
-		buffer[0] = d / 100 + '0';
-		if (buffer[0]=='0') buffer[0] = ' ';
-		d = d % 100;
-		buffer[1] = d / 10 + '0';
-		if (buffer[1]=='0') buffer[1] = ' ';
-		d = d % 10;
-		buffer[2] = d + '0';
-	}
-	
-	void addIP(char* tempbuf, SendBuffer* dataToSend) {
-		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->memstart_ip;
-		if (packet->get_version() == 6) {
-			ipstack::ipv6_addr_toString(packet->get_dst_ipaddr(), tempbuf);
-		} else {
-			UInt8 a,b,c,d;
-			IPv4_Packet* packet = (IPv4_Packet*)dataToSend->memstart_ip;
-			IPv4_Packet::convert_ipv4_addr(packet->get_dst_ipaddr(), a, b, c, d);
-			addDigits(&(tempbuf[0]), a);
-			tempbuf[3] = '.';
-			addDigits(&(tempbuf[4]), b);
-			tempbuf[7] = '.';
-			addDigits(&(tempbuf[8]), c);
-			tempbuf[11] = '.';
-			addDigits(&(tempbuf[12]), d);
-		}
-	}
 	
 	advice call("% ipstack::Interface::send(...)") && within("% ipstack::%_Socket::send(...)") : before() {
 		// compute address of the senbuffer that is around the raw data
@@ -109,27 +82,5 @@ aspect sendbuffer_debug {
 				break;
 			}
 		}
-	}
-	
-	advice execution("% ipstack::SendBuffer::printAdditionalInfo()") && that(sendbuffer) : after(SendBuffer& sendbuffer) {
-		// find in messages array
-		char* message = 0;
-		for (int i=0;i<SharedMemory::SLOTS;++i) {
-			if (messages[i].ptr == &sendbuffer) {
-				message = messages[i].msg;
-				break;
-			}
-		}
-		if (message) {
-			printf("   Buffer: %p, Msg: %s\n", &sendbuffer, message);
-		}
-		char tempbuf[50] = {0};
-		addIP(tempbuf, &sendbuffer);
-		printf("   Destination: %s\n", tempbuf);
-	
-		UInt8* lastByte = (UInt8*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
-		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (UInt8*)sendbuffer.memstart_ip-(UInt8*)sendbuffer.memstart_ethernet,
-				(UInt8*)sendbuffer.memstart_transport-(UInt8*)sendbuffer.memstart_ip, lastByte-(UInt8*)sendbuffer.memstart_transport);
-
 	}
 };

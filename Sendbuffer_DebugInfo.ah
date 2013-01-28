@@ -13,20 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2012-2013 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
-
 #include "util/types.h"
-
+#include "ipstack/Sendbuffer_DebugInfo_Slice.ah"
 using namespace ipstack;
 
-/**
-  * Add another member variable to the NDPCacheEntry struct.
-  */
-slice class NDPCacheEntry_Ethernet_Slice
-{
-	public:
-	enum  {LINK_LAYER_ADDRESS_SIZE = 6}; // for a 6 byte link layer address
-	UInt8 hw[LINK_LAYER_ADDRESS_SIZE];
+aspect sendbuffer_debuginfo {
+	/* Affect class: SendBuffer */
+	advice "ipstack::SendBuffer" : slice SendBuffer_DebugInfo_Slice;
 };
