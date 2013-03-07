@@ -27,27 +27,27 @@ namespace ipstack {
 class ReceiveBufferUDPIPv4 : public ReceiveBuffer {
 public:
 	struct RemoteInfo {
-		UInt8 id;
-		UInt16 remoteport;
 		UInt32 ipv4;
+		UInt16 remoteport;
+		UInt8 id;
 	};
 	/**
 	 * Create a receive buffer and return it.
 	 * Changes the ReceiveBuffer list-head pointer if neccessary.
 	 */
 	static ReceiveBufferUDPIPv4* createReceiveBufferUDPIPv4(Mempool* mempool, void*  payload, UInt16 payloadsize, UInt16 remoteport, UInt32 ipv4) {
-		ReceiveBufferUDPIPv4* r = (ReceiveBufferUDPIPv4*)ReceiveBuffer::createReceiveBuffer(mempool, payload, payloadsize + sizeof(RemoteInfo));
+		UInt8 padding = (4 - ((payloadsize + sizeof(RemoteInfo)) % 4)) % 4;
+		ReceiveBufferUDPIPv4* r = (ReceiveBufferUDPIPv4*)ReceiveBuffer::createReceiveBuffer(mempool, payload, payloadsize + sizeof(RemoteInfo) + padding);
 		if (!r)
 			return 0;
 		
 		r->m_receivedSize = payloadsize;
 		char* d = r->m_dataStart;
-		d+= payloadsize;
+		d += payloadsize + padding;
 		RemoteInfo* remoteinfo = (RemoteInfo*)d;
 		remoteinfo->id = '4';
 		remoteinfo->remoteport = remoteport;
 		remoteinfo->ipv4 = ipv4;
-		
 		return r;
 	}
 	
@@ -58,8 +58,9 @@ public:
 	}
 	
 	RemoteInfo* getRemoteInfo() {
+		UInt8 padding = (4 - ((m_receivedSize + sizeof(RemoteInfo)) % 4)) % 4;
 		char* d = m_dataStart;
-		d+= m_receivedSize;
+		d += m_receivedSize + padding;
 		return (RemoteInfo*)d;
 	}
 };

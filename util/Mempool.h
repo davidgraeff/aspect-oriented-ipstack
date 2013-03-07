@@ -44,7 +44,7 @@ class SingleMempool
 			if (head < freelist) {
 				return 0;
 			}
-			return *head--;
+			return *(head--);
 		}
 
 		/**

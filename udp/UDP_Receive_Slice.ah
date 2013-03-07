@@ -47,7 +47,7 @@ public:
 	 * 
 	 * ReceiveBuffer* b = socket->receive();
 	 * prinft(b->getData());
-	 * b->free();
+	 * ReceiveBuffer::free(b);
 	 */
 	ReceiveBuffer* receive(){
 		return (ReceiveBuffer*)m_receivequeue->get();

@@ -30,7 +30,7 @@ using namespace ipstack;
  */
 aspect Sendbuffer_UDP  {
 	advice execution("% ipstack::%UDP_Socket::estimateSendBufferMinSize()") && result(v) :
-		after(UInt16 v) {
+		after(unsigned v) {
 			*tjp->result() = v + UDP_Packet::UDP_HEADER_SIZE;
 	}
 
@@ -41,13 +41,13 @@ aspect Sendbuffer_UDP  {
 		// remainingpayloadsize: this is payload AND the udp header size as determined in 
 		// estimateSendBufferMinSize() before.
 		
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
 		// set ip next header protocol to UDP
 		*(sendbuffer->nextheaderfield_ip) = UDP_Packet::IP_TYPE_UDP;
 	}
 	
 	advice execution("% ipstack::UDP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
 		after(SendBuffer* sendbuffer) {
+		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
 		tjp->that()->setupHeader((UDP_Packet*)sendbuffer->getDataPointer(), sendbuffer->getRemainingSize());
 		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
 	}
