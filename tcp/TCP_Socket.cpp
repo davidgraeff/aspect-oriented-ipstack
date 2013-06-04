@@ -49,11 +49,7 @@ void TCP_Socket::resetSocketState() {
 	mss = TCP_Segment::DEFAULT_MSS;
 	application_buflen = 0;
 	waiting = false;
-	
-	// clear receive buffer
-	while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
-		ReceiveBuffer::free(t);
-	}
+
 	// Ports are not reseted
 	// 	dport = TCP_Segment::UNUSED_PORT;
 	// 	sport = TCP_Segment::UNUSED_PORT;
@@ -363,6 +359,10 @@ bool TCP_Socket::connect()
 void TCP_Socket::abort()
 {
 	clearHistory(); //free all pending packets
+	// clear receive buffer
+	while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
+		ReceiveBuffer::free(t);
+	}
 	resetSocketState();
 }
 
