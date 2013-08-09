@@ -17,9 +17,7 @@
 
 #pragma once
 
-#include "as/AS.h"
-#include "os/krn/EnterLeave.h"
-#include "SystemHalt.h"
+#include "as/SystemHalt.h"
 #include "stdio.h"
 
 using namespace ipstack;
