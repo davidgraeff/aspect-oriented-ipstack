@@ -1,0 +1,63 @@
+// This file is part of CiAO/IP.
+//
+// CiAO/IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CiAO/IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with CiAO/IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert
+
+
+#ifndef __IPSTACK_ALARM_SUPPORT_AH__
+#define __IPSTACK_ALARM_SUPPORT_AH__
+
+#include "as/autosar_types.h"
+#include "as/AS.h"
+#include "os/krn/EnterLeave.h"
+
+#include "EventSupport.h"
+#include "AlarmSupport_Slice.ah"
+#include "ipstack_src/tcp/TCP_Socket.h"
+
+using namespace ipstack;
+
+
+aspect Ipstack_AlarmSupport {
+
+  // *** Affect class: TCP_Socket
+  advice "ipstack::TCP_Socket" : slice AlarmSupport_Slice;
+  
+  advice execution("bool ipstack::TCP_Socket::block(%)") &&
+         args(timeout) && that(socket) :
+         around(UInt32 timeout, TCP_Socket& socket) {
+
+    if(timeout != 0){
+//       printf("set timeout in %u msec\n", timeout);
+      
+      os::krn::enterKernel(); //lock
+      AS::SetRelAlarm(socket.alarm, timeout, 0);
+      AS::WaitEvent(IPStackAlarmEvent);
+      AS::ClearEvent(IPStackAlarmEvent);
+      bool alarm_finished = (AS::CancelAlarm(socket.alarm) != E_OK);
+      os::krn::leaveKernel(); //unlock
+      
+      *tjp->result() = alarm_finished;
+      //true := Alarm -> timeout reached, false := Packet arrived
+    }
+    else{
+      *tjp->result() = true;
+    }
+  }
+  
+};
+
+#endif // __IPSTACK_ALARM_SUPPORT_AH__
+
