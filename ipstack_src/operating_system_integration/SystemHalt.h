@@ -22,10 +22,11 @@ namespace ipstack {
 class System {
 public:
 	/**
-	  * Should by provided by the operating system! This implementation
-	  * is x86/x64 only.
+	  * The ipstack calls this method to halt the system on fatal errors
+	  * (should not happen in normal operation mode and only on memory
+	  * corruption).
 	  */
-  static inline void haltsystem() { asm volatile("cli\nhlt"); }
+  static inline void haltsystem() {}
 };
 
 }
