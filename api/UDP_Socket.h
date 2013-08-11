@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "../udp/UDP_Socket.h"
-#include "../util/Mempool.h"
-#include "../util/Ringbuffer.h"
-#include "../IPStack_Config.h"
+#include "ipstack_src/udp/UDP_Socket.h"
+#include "ipstack_src/util/Mempool.h"
+#include "ipstack_src/util/Ringbuffer.h"
+#include "ipstack_src/IPStack_Config.h"
 
 namespace IP {
 

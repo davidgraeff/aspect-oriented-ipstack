@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "../tcp/TCP_Socket.h"
-#include "../util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
-#include "../IPStack_Config.h"
+#include "../src/tcp/TCP_Socket.h"
+#include "../src/util/Mempool.h"
+#include "../src/util/Ringbuffer.h"
+#include "../src/IPStack_Config.h"
 
 namespace IP {
 

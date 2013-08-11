@@ -19,7 +19,7 @@
 #ifndef __IPSTACK_API_SETUP_H__
 #define __IPSTACK_API_SETUP_H__
 
-#include "../router/Router.h"
+#include "../src/router/Router.h"
 
 namespace IP {
 
