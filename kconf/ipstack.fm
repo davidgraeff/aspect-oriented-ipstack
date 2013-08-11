@@ -1,0 +1,1033 @@
+menuconfig ipstack
+	bool "IP-Stack"
+	depends on hal_networking
+
+	menu "Debugging messages"
+		depends on ipstack
+	
+		config ipstack_debug_incoming
+			depends on ipstack
+			bool "Print information about incoming packets"
+			default n
+			
+		config ipstack_debug_failed_checksums
+			depends on ipstack
+			bool "Print a message if a checksum failed on incoming packets somewhere"
+			default n
+			
+		config ipstack_debug_sendbuffer
+			depends on ipstack
+			bool "Sendbuffers debug"
+			default n
+		
+		config ipstack_protect_sendbuffer
+			depends on ipstack
+			bool "Additional protection for sendbuffers: System halt on wrong usage"
+			default n
+			help
+				The wrong usage of a sendbuffer may impact the entire system stability because
+				there is no code that prevents you from writing beyond the buffers size.
+				Therefore this sendbuffer protection aspect should be activated while
+				developing applications and should be disabled for production code.
+				This aspect impact the performance!
+				
+		config ipstack_debug_management_memory
+			depends on ipstack
+			select ipstack_clock
+			bool "Print messages about the management memory usage"
+			default n
+
+		config ipstack_icmp_ipv6_debugout
+			depends on ipstack && ipstack_icmp_ipv6
+			bool "Debug out all ICMPv6 messages"
+			default n
+			
+		config ipstack_icmp_ipv4_debugout
+			depends on ipstack && ipstack_icmp_ipv4
+			bool "Debug out all ICMPv4 messages"
+			default n
+			
+		config ipstack_debug_delay_send_debug
+			depends on ipstack && ipstack_debug_delay_send
+			bool "Print debug messages about delayed send buffers"
+			default n
+			
+		config ipstack_ipv6_dest_cache_debug
+			depends on ipstack && ipstack_ipv6_dest_cache
+			bool "Destination cache debug messages"
+			default n
+			
+		config ipstack_ipv6_ndpcache_debug
+			depends on ipstack && ipstack_ndpcache_ipv6_request_and_store
+			bool "NDP-Cache debug: Add/Remove of entries"
+			default n
+			
+		config ipstack_ipv6_ndcache_expire_debug
+			depends on ipstack && ipstack_ndpcache_ipv6_request_and_store
+			bool "NDP-Cache debug: Auto expiring addresses"
+			default n
+			
+		config ipstack_ipv6_ndplookup_debug
+			depends on ipstack && ipstack_ndpcache_ipv6_request_and_store
+			bool "NDP address resolution debug"
+			default n
+			
+		config ipstack_debug_protected_receive
+			depends on ipstack
+			bool "Protect receiving from beeing rescheduled"
+			default n
+			help
+				Usually while in the receiving process no reschule is allowed.
+				Broken aspects may introduce reschedules and should be fixed.
+				Activate this to halt the system if a reschedule is detected
+				
+	endmenu
+				
+	menu "Link layer"
+		depends on ipstack
+
+		menu "Supported Link Types"
+			depends on ipstack
+			
+			menuconfig ipstack_linklayer_ethernet
+				depends on ipstack
+				bool "Ethernet"
+				default y
+		endmenu
+
+		menuconfig ipstack_linklayer_direct_response
+			depends on ipstack
+			bool "Direct response: Use link layer remote addr as destination"
+			default y
+			help
+				Offers a way to avoid arp/ndp for address resolution but use the remote address directly.
+				This feature is necessary for ip stack managment tasks like ICMP and tcp reset,
+				where an additional address resolution is costly and not necessary.
+				A not implemented alternative is to
+				copy the received frame to the management memory buffer and create another OS Task that
+				soly reacts on received management packets (icmpv4/v6/tcp_reset) and generates (icmp/etc) responses
+				by using the known address resolution (arp/ndp).
+				
+				
+		menuconfig ipstack_linklayer_offloading
+			depends on ipstack
+			bool "Hardware Checksumming Support"
+
+			config ipstack_linklayer_offloading_tx_icmpv4
+				depends on ipstack_linklayer_offloading
+				bool "Tx ICMPv4 Hardware Checksum Offloading Support"
+				help
+					Let the hardware compute the icmpv4 checksum.
+
+			config ipstack_linklayer_offloading_tx_tcp
+				depends on ipstack_linklayer_offloading
+				bool "Tx TCP Hardware Checksum Offloading Support"
+				help
+					Let the hardware compute the tcp checksum.
+
+			config ipstack_linklayer_offloading_tx_udp
+				depends on ipstack_linklayer_offloading
+				bool "Tx UDP Hardware Checksum Offloading Support"
+				help
+					Let the hardware compute the udp checksum.
+
+			config ipstack_linklayer_offloading_rx
+				depends on ipstack_linklayer_offloading
+				bool "Rx Hardware Checksum Offloading Support"
+				help
+					This option makes the sockets accept all packets if the
+					interface has hardware support for checksum rx offloading
+					and trust in the hardware to drop invalid packets. Depending
+					on the hardware version IPv6/ICMPv6 packets may or may not be
+					checked for a valid checksum.
+
+		menu "Address resolution"
+			depends on ipstack
+			
+			menuconfig ipstack_arp
+				depends on ipstack
+				bool "ARP Support"
+				default y
+				help
+					Address resolution for IPv4
+
+				menuconfig ipstack_arp_ipv4
+					depends on ipstack_arp
+					bool "IPv4 over Ethernet"
+					default y
+
+					config ipstack_arp_ipv4_request
+						depends on ipstack_arp_ipv4 && ipstack_clock
+						bool "ARP Request"
+						default y
+					
+					config ipstack_arp_ipv4_reply
+						depends on ipstack_arp_ipv4
+						bool "ARP Reply"
+						default y
+
+					config ipstack_arp_ipv4_cacheincoming
+						depends on ipstack_arp_ipv4
+						bool "Cache remote addresses of incoming requests"
+						default n
+
+					config ipstack_arp_ipv4_static
+						depends on ipstack_arp_ipv4
+						bool "Static ARP Cache Entries"
+						default n
+
+				menuconfig ipstack_arp_timeout
+					depends on ipstack_arp && ipstack_clock
+					bool "ARP Cache Timeout"
+					
+			menu "IPv6 Address Resolution"
+				depends on ipstack
+				
+				menuconfig ipstack_ndpcache_ipv6_reply
+					depends on ipstack
+					bool "NDP Address Resolution reply"
+					default y
+					help
+						Part of the address resolution for IPv6. Even for a very basic and static
+						IPv6 configuration you may want to enable NDP Address Resolution replies. Remote host will
+						deny sending payload to this host if no address propagation is available.
+					
+				menuconfig ipstack_ndpcache_ipv6_request_and_store
+					depends on ipstack
+					bool "NDP Address Resolution request and store"
+					default y
+					help
+						Part of the address resolution for IPv6. Destination cache, NDP redirect,
+						address autoconfiguration and other parts of the IPv6 support need the
+						link layer address storage. For a very basic, static configuration you may
+						disable this and and only enable NDP Address Resolution replies.
+					
+				menuconfig ipstack_ndpcache_ipv6_cacheincoming
+					depends on ipstack_ndpcache_ipv6_request_and_store
+					bool "Cache remote addresses of incoming requests"
+					default n
+					
+				menuconfig ipstack_ndpcache_ipv6_expire
+					depends on ipstack_ndpcache_ipv6_request_and_store
+					bool "Make NDP-Cache entries expireable"
+					default y
+					help
+						Add an expire_value to NDP Cache Entries. Using an entry avoid expiring.
+						An update method has to be called regulary by the OS. If this is not done expiring
+						will not work as expected.
+					
+				menuconfig ipstack_ndpcache_ipv6_async
+					depends on ipstack_ndpcache_ipv6_request_and_store
+					bool "EXPERIMENTAL: Non-blocking address resolution requests"
+					default n
+					help
+						Use non-blocking address resolution. You have to provide a lot more
+						memory with this option as all packets are stores in memory if their
+						destination address is unknown and an address resolution has to be
+						performed.
+			endmenu
+		endmenu
+
+	endmenu
+
+	menu "Network layer"
+		depends on ipstack
+		menuconfig ipstack_ipv4
+			depends on ipstack
+			bool "IPv4 Support"
+
+			menuconfig ipstack_ipv4_send
+				depends on ipstack_ipv4
+				bool "IPv4 Sending"
+
+			menuconfig ipstack_ipv4_recv
+				depends on ipstack_ipv4
+				bool "IPv4 Receiving"
+
+				config ipstack_ipv4_recv_fragments
+					depends on ipstack_ipv4_recv && ipstack_clock
+					bool "IPv4 Fragment Reassembly"
+
+			menuconfig ipstack_ipv4_fwd
+				depends on ipstack_ipv4
+				select ipstack_ipv4_recv
+				bool "IPv4 Forwarding (not implemented yet)"
+				
+		menuconfig ipstack_ifcfg0
+			bool "Static IPv4 Configuration of Interface 0"
+			depends on ipstack_ipv4
+			default n
+
+			config cfIPSTACK_IFCFG0_IP
+				depends on ipstack_ifcfg0
+				string "IPv4 Address"
+				default "192.168.34.34"
+
+			config cfIPSTACK_IFCFG0_SUBNET
+				depends on ipstack_ifcfg0
+				string "IPv4 Subnet Mask"
+				default "255.255.255.0"
+				
+		menuconfig ipstack_ipv6
+			depends on ipstack
+			bool "IPv6 Support"
+			help
+				Activates IPv6 support. Requires ICMPv6 and the neighbor discovery protocol.
+
+			menuconfig ipstack_ipv6_hopbyhop
+				depends on ipstack_ipv6
+				bool "IPv6 hop-by-hop-header Options"
+				default y
+				help
+					Default hop-by-hop options. (Padding 1+Padding N)
+					
+				config ipstack_ipv6_hopbyhop_alert
+					depends on ipstack_ipv6_hopbyhop
+					bool "IPv6 hop-by-hop Alert Option"
+					default y
+					help
+						The alert hop-by-hop option tells routers on the way to the destination to inspect the current packet.
+						This is neccessary for the MLD Protocol (Multicast support)
+			
+
+			menuconfig ipstack_ipv6_destination
+				depends on ipstack_ipv6
+				bool "IPv6 destination-header Options"
+				default y
+				help
+					Default destination options. (Padding 1+Padding N)
+
+			menu "IPv6 Fragmentation NOT IMPLEMENTED"
+				depends on ipstack_ipv6
+
+				config ipstack_ipv6_fragmentation
+					depends on ipstack_ipv6
+					bool "IPv6 Fragmentation"
+					default n
+					help
+						Allow payload that is bigger than the MTU to be fragmented. NOT IMPLEMENTED
+
+				config ipstack_ipv6_fragmentation_reassembly
+					depends on ipstack_ipv6
+					bool "IPv6 fragment reassembly"
+					default n
+					help
+						Reassemble IPv6 fragments. NOT IMPLEMENTED
+						
+			endmenu
+			
+			menuconfig ipstack_ipv6_authheader
+				depends on ipstack_ipv6
+				bool "IPv6 Authentification Header NOT IMPLEMENTED"
+				default n
+				help
+					Authentification header
+
+			menuconfig ipstack_ipv6_espheader
+				depends on ipstack_ipv6
+				bool "IPv6 Encapsulating Security Payload Header NOT IMPLEMENTED"
+				default n
+				help
+					Encapsulating Security Payload header
+
+			menuconfig ipstack_ipv6_mobileheader
+				depends on ipstack_ipv6
+				bool "IPv6 Mobile Header NOT IMPLEMENTED"
+				default n
+				help
+					Mobile header NOT IMPLEMENTED
+
+			menuconfig ipstack_ipv6_routerheader
+				depends on ipstack_ipv6
+				bool "IPv6 router Header NOT IMPLEMENTED"
+				default n
+				help
+					Router header
+
+			menuconfig ipstack_ipv6_headercompression
+				depends on ipstack_ipv6
+				bool "IPv6 Headercompression"
+				help
+					Activates Header compression for IPv6. Requires an encapsulating protocol that propagate the length of the entire packet because the compression header LOWPAN_IPHC does not.
+					Header compression will always elide Traffic control and Flow-Label field of the IPv6 header in this implementation.
+					
+				choice
+					prompt "Encapsulating protocol header"
+					depends on ipstack_ipv6_headercompression
+
+					config ipstack_ipv6_hc_encapsulating_fragmentheader
+						bool "6loWPan Fragmentation header"
+						help
+							Use the 6loWPan-Fragmentation-Header around the compressed ipv6 header and payload. This header contains a length field.
+				endchoice
+				
+				choice
+					prompt "Hop count"
+					depends on ipstack_ipv6_headercompression
+					default ipstack_ipv6_hc_hopcount_uncompressed
+
+					config ipstack_ipv6_hc_hopcount_255
+						bool "Fixed value: 255"
+					config ipstack_ipv6_hc_hopcount_64
+						bool "Fixed value: 64"
+					config ipstack_ipv6_hc_hopcount_1
+						bool "Fixed value: 1"
+						help
+							Use this if all devices are on-link or are in wireless radio range.
+					config ipstack_ipv6_hc_hopcount_uncompressed
+						bool "Uncompressed"
+				endchoice
+					
+				menuconfig ipstack_ipv6_hc_compress_sourceaddr
+					depends on ipstack_ipv6_headercompression
+					bool "Compress source address"
+					default y
+						help
+							Compress source address. This is only for writing the compressed header. All variants can always be read.
+					
+					menuconfig ipstack_ipv6_hc_sourceaddr_sharedcontext
+						depends on ipstack_ipv6_hc_compress_sourceaddr
+						bool "Use a shared context"
+						help
+							The RFC allows up to 16 shared contexts. A context consists of an IPv6 prefix (and a prefix length) and has to be distributed to all participating devices.
+							Here you can setup context 0.
+						
+						config cfIPSTACK_IPV6_HC_SOURCEADDR_CONTEXT_0
+							depends on ipstack_ipv6_hc_sourceaddr_sharedcontext
+							string "Shared address prefix for context 0"
+							default "fd9e:21a7:a92c:2323:0:0:0:1"
+							help
+								An IPv6 prefix to be used as context 0.
+								
+						config cfIPSTACK_IPV6_HC_SOURCEADDR_CONTEXTLEN_0
+							depends on ipstack_ipv6_hc_sourceaddr_sharedcontext
+							int "Shared address prefix length for context 0"
+							default 0
+							help
+								An IPv6 prefix length to be used for context 0.
+								
+					choice
+						prompt "Source address bits"
+						depends on ipstack_ipv6_hc_compress_sourceaddr
+						default ipstack_ipv6_hc_prefix_use0 if ipstack_linklayer_ethernet
+
+						config ipstack_ipv6_hc_sourceaddr_prefix_use64
+							bool "64Bit: Link-local Address prefix + 64Bits for src addresses"
+						config ipstack_ipv6_hc_sourceaddr_prefix_use16
+							bool "16Bit: Link-local Address prefix + 16Bits for src addresses"
+						config ipstack_ipv6_hc_sourceaddr_prefix_use0
+							bool "N/A: Link-local Address prefix + Upper layer address (Ethernet/802.15.4/etc)"
+							depends on ipstack_linklayer_ethernet
+					endchoice
+					
+				menuconfig ipstack_ipv6_hc_compress_destaddr
+					depends on ipstack_ipv6_headercompression
+					bool "Compress destination address"
+					default y
+						help
+							Compress destination address. This is only for writing the compressed header. All variants can always be read.
+					
+					menuconfig ipstack_ipv6_hc_destaddr_sharedcontext
+						depends on ipstack_ipv6_hc_compress_destaddr
+						bool "Use a shared context"
+						help
+							The RFC allows up to 16 shared contexts. A context consists of an IPv6 prefix (and a prefix length) and has to be distributed to all participating devices.
+							Here you can setup context 0.
+					
+						config cfIPSTACK_IPV6_HC_SOURCEADDR_CONTEXT_0
+							depends on ipstack_ipv6_hc_destaddr_sharedcontext
+							string "Shared address prefix for context 0"
+							default "fd9e:21a7:a92c:2323:0:0:0:1"
+							help
+								An IPv6 prefix to be used as context 0.
+								
+						config cfIPSTACK_IPV6_HC_SOURCEADDR_CONTEXTLEN_0
+							depends on ipstack_ipv6_hc_destaddr_sharedcontext
+							int "Shared address prefix length for context 0"
+							default 0
+							help
+								An IPv6 prefix length to be used for context 0.
+								
+					choice
+						prompt "Destination address bits"
+						depends on ipstack_ipv6_hc_compress_destaddr
+						default ipstack_ipv6_hc_prefix_use0 if ipstack_linklayer_ethernet
+
+						config ipstack_ipv6_hc_destaddr_prefix_use64
+							bool "64Bit: Link-local Address prefix + 64Bits for src addresses"
+						config ipstack_ipv6_hc_destaddr_prefix_use16
+							bool "16Bit: Link-local Address prefix + 16Bits for src addresses"
+						config ipstack_ipv6_hc_destaddr_prefix_use0
+							bool "N/A: Link-local Address prefix + Upper layer address (Ethernet/802.15.4/etc)"
+							depends on ipstack_linklayer_ethernet
+					endchoice
+					
+					choice
+						prompt "Compress multicast destination addresses"
+						depends on ipstack_ipv6_hc_compress_destaddr
+						default ipstack_ipv6_hc_multicast_use8
+
+						config ipstack_ipv6_hc_multicast_use48
+							bool "48Bit: Link-local Address prefix + 64Bits for src/dest addresses"
+						config ipstack_ipv6_hc_multicast_use32
+							bool "32Bit: Link-local Address prefix + 16Bits for src/dest addresses"
+						config ipstack_ipv6_hc_multicast_use8
+							bool "8Bit: Link-local Address prefix + Upper layer address (Ethernet/802.15.4/etc)"
+						config ipstack_ipv6_hc_multicast_uncompressed
+							bool "Uncompressed multicast destination addresses"
+					endchoice
+
+			menuconfig ipstack_ipv6_privacy_extension
+				bool "Privacy extension"
+				depends on ipstack_ipv6
+				default n
+				help
+					Use a random number for the lower 64-Bits of the IPv6 link-local address instead of deriving it from the link-layer address (e.g. ethernet mac).
+
+			menuconfig ipstack_ipv6_address_autoconfiguration
+				bool "Stateless address autoconfiguration (Find routers + configure IPv6 addresses)"
+				depends on ipstack_ipv6
+				select ipstack_ndpcache_ipv6_request_and_store
+				select ipstack_multicast_ipv6
+				default y
+				help
+					Find on-link routers. Request all routed prefixes from the on-link routers and generate IPv6 addresses.
+					NDP and multicast support is required for this to work.
+					If there are no routers on-link you may omit this functionality and use on-link
+					ipv6 addresses only or add static ip addresses.
+					
+			menuconfig ipstack_ipv6_address_duplication
+				bool "Address duplication check"
+				depends on ipstack_ipv6
+				default y
+				help
+					Check ipv6 addresses for on-link duplicates, before assigning them to an interface.
+					(In this implementation we assign the address and revert that if we receive a duplication
+					message.)
+					Usually a duplication has a very small chance due to an ipv6 address on ethernet
+					is constructed by using the ethernet mac, that should be globally unique.
+					The IPv6 specification declares this check as mandatory.
+					
+			menuconfig ipstack_ipv6_address_expire
+				bool "IP address expire time"
+				depends on ipstack_ipv6
+				default y
+				help
+					Assigned ip addresses will have a preferred and valid time. An address with a remaining preferred time
+					may be used as normal. If there is no remaining preferred time, the address should not be used for new
+					connections. When the expire time has been reached, the address will be removed from the interface. If
+					NDP router solicitation/advertisement is active, address times will be refreshed regulary.
+					
+			menuconfig ipstack_ipv6_dest_cache
+				bool "IP destination cache"
+				depends on ipstack_ipv6 && ipstack_ndpcache_ipv6_request_and_store
+				default y
+				help
+					Use a destination cache for each socket and use that for outgoing packets instead of looking up the route each time. A destination cache is neccessary if ndp with redirect messages is configured.
+					
+				menuconfig ipstack_icmp_ipv6_ndp_redirect
+					depends on ipstack_ipv6_dest_cache
+					bool "Use redirect messages"
+					default y
+					help
+						If a router knowns a better next hop address for a destination, it will send a redirect message.
+						This will cause an update of our next-hop address in the destination cache.
+						
+			config cfIPSTACK_IPv6_cache
+				depends on ipstack_ipv6
+				int "Cache entries: Store assigned router prefixes and IPv6 addresses and cache link-layer addresses. (per Interface)"
+				default 20
+				help
+					The number of entries in this cache determines the maximum assignable IP addresses / Router prefixes (per interface) and the cached IPv6 to Link-Layer address relations. Because the memory for each entry is preallocated the amount of adresses the device will get and the number of on-link devices the device should remember has to be guessed beforehand and configured statically. One entry consumes 24 Bytes. You MUST allow at least two entries for the local-link IP address and a link layer address cache to another host. The maximum entry limit is 254.
+					IP ADDRESS AND ROUTER PREFIX ENTRY: An entry of this kind fullfills two things: It is a router prefix assigned by the autoconfiguration and an actuall IPv6 Interface address (after neighbor address duplication check).
+					A destination address has to match one of the stored prefixes otherwise the transmission is aborted. A prefix is either on-link (e.g. link-local addresses) or belongs to a router entry.
+					LINK LAYER NEIGHBOUR CACHE ENTRY: Caches the IPv6 to Link-Layer address relation and is used to store all detected routers.
+					
+			menu "Static IPv6 Configuration of Interface 0"
+				depends on ipstack_ipv6
+
+				menuconfig ipstack_ifcfg0v6ip
+					bool "Static IPv6 address"
+					depends on ipstack_ipv6
+					help
+						Configure a static entry for the interface IP address.
+						If you configure a static IPv6-address without auto-configuration and without a static router entry, the IPv6-extension is only able to receive packets!
+					
+					config cfIPSTACK_IFCFG0_IPV6
+						depends on ipstack_ifcfg0v6ip
+						string "IPv6 Address"
+						default "fd9e:21a7:a92c:2323:0:0:0:1"
+						help
+							This is for receiving and sending to this address. If you want a router to route to other IPv6-Adresses you have to set autoconfiguration to on or create a static router entry.
+
+				menuconfig ipstack_ifcfg0v6router
+					bool "Static default router"
+					depends on ipstack_ipv6 && ipstack_ndpcache_ipv6_request_and_store
+					help
+						Configure a static entry in the routing table.
+					
+					config cfIPSTACK_IFCFG0_IPv6_router_in_neigborcache
+						depends on ipstack_ifcfg0v6router
+						bool "Static entry in neighbor cache with state = ESTABLISHED"
+						help
+							Force the static router entry to be used even if NDP unreachable detection says it doesn't exist.
+							This is for debugging purposes only of course. If NDP says the destination is unreachable, most of the time this is the case though :)
+
+					config cfIPSTACK_IFCFG0_IPv6_router_ethernet
+						depends on ipstack_ifcfg0v6router
+						string "Ethernet address of the on-link router"
+						default "2e:60:4f:c0:46:01"
+						help
+							Set the on-link (local reachable) ethernet address of the router.
+						
+					config cfIPSTACK_IFCFG0_IPv6_router_ip
+						depends on ipstack_ifcfg0v6router
+						string "IPv6 on-link router address"
+						default "fe80:0:0:0:1:2:3:4"
+						help
+							Set the on-link (local reachable) IPv6 address of the router.
+						
+				menuconfig ipstack_ifcfg0v6routerprefix
+					bool "A static router prefix"
+					depends on ipstack_ifcfg0v6router
+					help
+						A router propagates IPv6-prefixes to a host. The host generates an IPv6-Adresse for every prefix. 
+						Accepts IPv6 addresses for routing that match the given IPv6 prefix. Similar to IPv4 subnet masks.
+					
+					config cfIPSTACK_IFCFG0_IPv6_router_prefix
+						depends on ipstack_ifcfg0v6routerprefix
+						string "Router: static IPv6-Address and and Router Prefix"
+						default "2090:1:2:3:0:0:0:1"
+						help
+							The generated IPv6-Address (consisting of the router prefix and a host part).
+
+					config cfIPSTACK_IFCFG0_IPv6_router_prefixlen
+						depends on ipstack_ifcfg0v6routerprefix
+						int "Router: Prefix length"
+						default 64
+						help
+							Accepts IPv6 addresses for routing that match prefix-length digits of the IPv6-Router-Prefix. Similar to IPv4 subnet masks.
+			endmenu
+	endmenu
+	
+	menu "Multicast Unterstützung"
+		depends on ipstack
+				
+		menuconfig ipstack_multicast_ipv6
+			depends on ipstack && ipstack_ipv6 && ipstack_icmp_ipv6
+			bool "IPv6 Multicast"
+			default y
+			help
+				Multicast support for the ipstack. Allows to receive and accept traffic that has been send to a multicast address
+			
+			menuconfig ipstack_icmp_ipv6_multicast_listener_discovery
+				depends on ipstack_multicast_ipv6
+				bool "Multicast listener discovery protocol"
+				default y
+				select ipstack_ipv6_hopbyhop
+				select ipstack_ipv6_hopbyhop_alert
+				help
+					By default routers do not deliver multicast traffic to other ports even if the multicast scope would require that.
+					The MLD-protocol let clients register to routers for multicast traffic.
+
+				choice
+					prompt "MLD Version"
+					depends on ipstack_icmp_ipv6_multicast_listener_discovery
+
+					config ipstack_icmp_ipv6_multicast_listener_discovery1
+						bool "Version 1"
+					config ipstack_icmp_ipv6_multicast_listener_discovery2
+						bool "Version 2"
+				endchoice
+	endmenu
+			
+	menu "ICMP Support"
+		depends on ipstack
+	
+		menuconfig ipstack_icmp_ipv4
+			depends on ipstack && ipstack_ipv4 && ipstack_ipv4_recv
+			bool "ICMP over IPv4"
+			select ipstack_linklayer_direct_response
+
+			menuconfig ipstack_icmp_ipv4_echoreply
+				depends on ipstack_icmp_ipv4
+				bool "ICMP Echo reply"
+				default y
+
+			menuconfig ipstack_icmp_ipv4_destinationunreachable
+				depends on ipstack_icmp_ipv4
+				bool "ICMP Destination Unreachable"
+				default n
+
+				config ipstack_icmp_ipv4_destinationunreachable_protocolunreachable
+					depends on ipstack_icmp_ipv4_destinationunreachable
+					bool "ICMP Protocol Unreachable"
+					default y
+
+				config ipstack_icmp_ipv4_destinationunreachable_portunreachable
+					depends on ipstack_icmp_ipv4_destinationunreachable && ipstack_udp
+					bool "ICMP Port Unreachable"
+					default y
+
+		menuconfig ipstack_icmp_ipv6
+			depends on ipstack && ipstack_ipv6
+			bool "ICMP over IPv6"
+			select ipstack_linklayer_direct_response
+			default y
+			help
+				The internet Control Message Protocol Version 6 is mandatory for IPv6 functionality. Because it will also serve as neighbour discovery (similar to IPv4 ARP) and link-layer address resolution this option reserves some memory for spontanous ICMPv6 responses or timed ICMPv6 messages. ICMP response messages consume Management Memory.
+			
+			menuconfig ipstack_debug_delay_send
+				depends on ipstack_icmp_ipv6
+				bool "Delay ICMPv6 responses"
+				default y
+				help
+					An incoming icmpv6 packet may trigger the generation of multiple response messages.
+					For example an incoming "neighbor solicitation message" have to be answered by an
+					"neighbor advertisement message" and additionally if the remote host is unknown we have
+					to send a "neighbor solicitation message" on our own. For the case that the network device has
+					a shared buffer for incoming/outgoing traffic and because we do not copy the incoming
+					packet to a buffer of our own it is recommend to activate this option to delay sending
+					packets until the received packet has been processed entirely.
+			
+			menuconfig ipstack_icmp_ipv6_echoreply
+				depends on ipstack_icmp_ipv6
+				bool "ICMP Echo reply"
+				default y
+
+			menuconfig ipstack_icmp_ipv6_packet_too_big
+				depends on ipstack_icmp_ipv6
+				bool "ICMP error message: Packet too big"
+				default y
+				help
+					This error message is send if the available buffer memory is lower than the received packet. Remote hosts should
+					lower their mtu in response to this message.
+
+			menuconfig ipstack_icmp_ipv6_time_exceeded
+				depends on ipstack_icmp_ipv6
+				bool "ICMP error message: Time exceeded"
+				default y
+				
+			menuconfig ipstack_icmp_ipv6_option_unkown
+				depends on ipstack_icmp_ipv6
+				bool "ICMP error message: Header option unknown"
+				default n
+				help
+					This is for standard compliance only. It can be assumed that remote hosts do not
+					send errornous header options.
+
+			menuconfig ipstack_icmp_ipv6_destinationunreachable
+				depends on ipstack_icmp_ipv6
+				bool "ICMP error message: Destination Unreachable"
+				default n
+
+				config ipstack_icmp_ipv6_destinationunreachable_protocolunreachable
+					depends on ipstack_icmp_ipv6_destinationunreachable
+					bool "ICMP error message: Protocol Unreachable"
+					default y
+
+				config ipstack_icmp_ipv6_destinationunreachable_portunreachable
+					depends on ipstack_icmp_ipv6_destinationunreachable && ipstack_udp_ipv6
+					bool "ICMP error message: Port Unreachable"
+					default y
+
+	endmenu
+			
+	menuconfig ipstack_udp
+		depends on ipstack && (ipstack_ipv4 || ipstack_ipv6)
+		bool "UDP Support"
+
+		menuconfig ipstack_udp_send
+			depends on ipstack_udp && (ipstack_ipv4_send || ipstack_ipv6)
+			bool "UDP Sending"
+
+			config ipstack_udp_send_checksum
+				depends on ipstack_udp_send
+				bool "UDP Tx Checksumming"
+				default y
+
+		menuconfig ipstack_udp_recv
+			depends on ipstack_udp && (ipstack_ipv4_recv || ipstack_ipv6)
+			bool "UDP Receiving"
+
+			config ipstack_udp_recv_checksum
+				depends on ipstack_udp_recv
+				bool "UDP Rx Checksumming"
+				default y
+				
+		menuconfig ipstack_udp_services
+			depends on ipstack_udp && ipstack_udp_send
+			select ipstack_linklayer_direct_response
+			bool "UDP Management Services"
+			default n
+			
+			config ipstack_udp_services_v4
+				depends on ipstack_udp_services && ipstack_ipv4
+				bool "UDP Echo/Reply for IPv4"
+				default y
+				help
+					Enables UDP Echo/Reply on port 7
+				
+			config ipstack_udp_services_v6
+				depends on ipstack_udp_services && ipstack_ipv6
+				bool "UDP Echo/Reply for IPv6"
+				default y
+				help
+					Enables UDP Echo/Reply on port 7
+
+	menuconfig ipstack_tcp
+		depends on ipstack && (ipstack_ipv4 && ipstack_ipv4_send && ipstack_ipv4_recv || ipstack_ipv6) && ipstack_clock
+		bool "TCP Support"
+
+		menuconfig ipstack_tcp_client
+			depends on ipstack_tcp
+			bool "TCP Client Sockets"
+
+		menuconfig ipstack_tcp_listen
+			depends on ipstack_tcp
+			bool "TCP Listen Sockets (Server)"
+
+		menuconfig ipstack_tcp_reset
+			depends on ipstack_tcp
+			select ipstack_linklayer_direct_response
+			bool "Reset invalid packets"
+
+		menu "Sliding Window"
+			depends on ipstack_tcp
+
+			config ipstack_tcp_slidingwnd_send
+				bool "Send Window Support"
+				
+				config ipstack_tcp_congestionavoidance
+					depends on ipstack_tcp_slidingwnd_send
+					bool "Congestion Avoidance"
+					default y
+
+					choice
+						prompt "Congestion Avoidance Algorithm"
+						depends on ipstack_tcp_congestionavoidance
+
+						config ipstack_tcp_congestionavoidance_slowstart
+							bool "Slow Start"
+					endchoice
+
+			config ipstack_tcp_slidingwnd_recv
+				bool "Receive Window Support"
+		endmenu
+
+		menu "Silly Window Syndrome Avoidance (SWS)"
+			depends on ipstack_tcp
+
+			config ipstack_tcp_sws_recv
+				bool "SWS Receiver Side Avoidance"
+
+			config ipstack_tcp_sws_send
+				bool "SWS Sender Side Avoidance"
+		endmenu
+		
+		menuconfig ipstack_tcp_limit_retransmissions
+			depends on ipstack_tcp
+			bool "Limit excessive Retransmissions"
+			default y
+			
+			config cfTCP_MAX_RETRANSMISSIONS
+				depends on ipstack_tcp_limit_retransmissions
+				int MAX_RETRANSMISSIONS
+				default 10
+				range 3 255
+				help
+					Defines the maximum number of retransmissions for a tcp segment.
+					The connection is closed if any segment exceeds this number.
+					Values range from 3 to 255.
+					
+
+		menu "TCP Options"
+			depends on ipstack_tcp
+
+			config ipstack_tcp_mss
+				bool "Maximum Segment Size (MSS)"
+		endmenu
+
+		menuconfig ipstack_tcp_rtt
+			depends on ipstack_tcp
+			bool "RTT Estimation"
+			
+			config ipstack_tcp_rtt_backoff
+				depends on ipstack_tcp_rtt
+				bool "Exponential Backoff"
+
+
+	menu "Host Byte Order"
+		depends on ipstack
+
+		choice
+			prompt "Host Byte Order"
+
+			config ipstack_byteorder_little
+				bool "Little Endian"
+
+			config ipstack_byteorder_big
+				bool "Big Endian"
+
+		endchoice
+	endmenu
+
+	menu "Memory Management"
+		depends on ipstack
+		
+		config cfIPSTACK_MEMORY_GENERIC
+			bool "Generic Memory Management"
+			
+			config cfIPSTACK_PACKET_LIMIT
+				depends on cfIPSTACK_MEMORY_GENERIC
+				int GLOBAL_PACKET_LIMIT_PER_CONNECTION
+				default 16
+
+		config cfIPSTACK_BLOCKSIZE_BIG
+			depends on ipstack
+			int BLOCKSIZE_BIG
+			default 1516
+			help
+				Block size of big packet buffer.
+				Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+		config cfIPSTACK_COUNT_BIG
+			depends on ipstack
+			int COUNT_BIG
+			default 4
+			help
+				Maximum number of big packets which can be buffered.
+
+		config cfIPSTACK_BLOCKSIZE_SMALL
+			depends on ipstack
+			int BLOCKSIZE_SMALL
+			default 64
+			help
+				Block size of small packet buffer.
+				Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+		config cfIPSTACK_COUNT_SMALL
+			depends on ipstack
+			int COUNT_SMALL
+			default 4
+			help
+				Maximum number of small packets which can be buffered.
+
+		menu "Dedicated memory for management tasks"
+			depends on ipstack
+			
+			config cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG
+				depends on ipstack
+				int MANAGEMENT_BLOCKSIZE_BIG
+				default 120
+				help
+					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+					memory blocks, some management packets cannot be received or send or answered.
+					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+			config cfIPSTACK_MANAGEMENT_COUNT_BIG
+				depends on ipstack
+				int MANAGEMENT_COUNT_BIG
+				default 4
+				help
+					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+					memory blocks, some management packets cannot be received or send or answered.
+
+			config cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL
+				depends on ipstack
+				int MANAGEMENT_BLOCKSIZE_SMALL
+				default 52
+				help
+					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+					memory blocks, some management packets cannot be received or send or answered.
+					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+			config cfIPSTACK_MANAGEMENT_COUNT_SMALL
+				depends on ipstack
+				int MANAGEMENT_COUNT_SMALL
+				default 2
+				help
+					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+					memory blocks, some management packets cannot be received or send or answered.
+		
+			config cfIPSTACK_MEMORY_MAX_RESET_SLOTS
+				depends on ipstack
+				int MAX_TCP_RESET_SLOTS
+				default 2
+				help
+					A message of this kind is responded if a remote host try to find
+					out which tcp port is open (port scan). This is for all interfaces!
+		endmenu
+	endmenu
+
+	menuconfig ipstack_udp_debugport
+		bool "DebugPort Support via UDP/IPv4"
+		depends on ipstack && ipstack_udp_send
+		default n
+
+		config cfIPSTACK_UDP_DEBUGPORT_DESTIP
+			depends on ipstack_udp_debugport
+			string "Log Host IP"
+			default "192.168.34.8"
+		
+		config cfIPSTACK_UDP_DEBUGPORT_DESTPORT
+			depends on ipstack_udp_debugport
+			int "Destination Port"
+			default 10443
+
+
+	menu "Autosar OS Integration"
+		depends on ipstack
+		
+		menuconfig ipstack_irqsync
+			bool "Interrupt Synchronization"
+			default y
+			help
+				You really want this
+				
+		menuconfig ipstack_clock
+			depends on hal_SystemClock
+			bool "SystemClock Support"
+			default y
+			help
+				Required for computing timeouts (ARP, TCP, ...)	
+
+		menuconfig ipstack_autosar_event
+			bool "Event Support"
+			default y
+			help
+				Needed for blocking packet reception. To use, your application needs to define an Event with the name "IPStackReceiveEvent" that needs to be marked as used by all tasks that call the receive() function on a socket.
+
+		menuconfig ipstack_autosar_alarm
+			select ipstack_autosar_event
+			bool "Alarm Support"
+			depends on ipstack_tcp
+			default y
+			help
+				Needed for TCP timeouts. To use, your application needs to define an alarm per task that uses TCP sockets. The alarm must be configured to set the "IPStackReceiveEvent" for the corresponding task. The underlying counter should be configured with a major tick interval of 1ms.
+		
+		menuconfig ipstack_autosar_reschudule
+			bool "Reschedule Tasks"
+			default y
+			depends on ipstack_arp_ipv4_request || ipstack_udp_send
+			help
+				Allow the IP-Stack to reschedule other tasks while waiting.
+				This feature makes use of AS::Schedule() if a task is waiting.
+		
+			config ipstack_autosar_reschedule_address_resolution
+				depends on ipstack_autosar_reschudule
+				bool "Reschedule while ARP/NDP address resolution"
+				default y
+				help
+					Allow the IP-Stack to reschedule other tasks while waiting for an ARP or NDP address resolution reply.
+					If not selected, polling is used instead for waiting with an upper limit of 3 seconds.
+		
+			config ipstack_autosar_reschedule_sendbuffer_free
+				depends on ipstack_autosar_reschudule && ipstack_udp_send
+				bool "Reschedule while sending UDP data"
+				default y
+				help
+					Allow the IP-Stack to reschedule other tasks while waiting for an UDP packet to be sent.
+					If not selected, polling is used instead for waiting until the hardware finished sending.
+
+	endmenu
