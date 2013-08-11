@@ -3,6 +3,10 @@ Aspect oriented IPstack for embedded systems
 A highly configurable and easily extendable TCP/IP-Stack with IPv4, IPv6, UDP, TCP, ICMPv4, ICMPv6 support.
 Abandonment of conditional symbols (#ifdef ...) for configurability...
 
+Work in progress (August 2013):
+* Make ipstack independent from CiAO operating system.
+* Add linux userspace ipstack support via raw sockets.
+
 Features:
 =========
 * Dualstack IPv4/IPv6
