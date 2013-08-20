@@ -51,8 +51,13 @@ Transport-Layer:
 
 Configure for your needs
 ========================
-* KConfig
-TODO
+The configuration of this software is done by the kconfig tool, developted and used by the linux-kernel community.
+We're using a slightly modified version, the __kconfig-frontends__ packet (http://ymorin.is-a-geek.org/projects/kconfig-frontends).
+
+__TODO__: Picture of kconfig
+
+Building and execution of kconfig is integrated into the cmake buildsystem. It is even prepared for the case that
+you already using kconfig for your os or application.
 
 Integration
 ===========
@@ -70,6 +75,8 @@ the command line version.
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
 You will be presented with some build options that are discussed in the following sections.
+The configuration editor will be started after clicking on configure in cmake for the first time. If you want to reconfigure,
+select __KCONFIG_RECONFIGURE__.
 
 About multitasking support
 --------------------------
@@ -81,18 +88,22 @@ operating system to make the task sleep while waiting for the next packet or a t
 
 But we realize that on some very restricted systems multitasking support costs valuable space or uses limited ressources like timers.
 We therefore provide the __"BUILD_ONLY_ONE_TASK"__ cmake option. What it does is:
-* Adding an ipstacl_periodic() method that has to be called periodically from your main loop.
+* Adding an ipstack_periodic() method that has to be called periodically from your main loop.
 * You need to check reachability before sending with IP::is_reachable(addr) because we no longer blocking the "application-task" while resolving link layer (e.g. ethernet) addresses.
+
+Example: Look at integration/linux_userspace_without_aspects_multitask
 
 About 8-bit µC
 --------------
 The software is not optimized for running on 8bit systems because we are using 16bit-minimum integers.
-A comparison with other ipstacks on 8bit systems is a TODO.
+A comparison with other ipstacks on 8bit systems is a __TODO__.
 
 Aspect-oriented integration
 ---------------------------
-TODO
+__TODO__
 IRQ-safe
+
+Example: Look at integration/linux_userspace_with_aspects
 
 Static-library integration
 --------------------------
@@ -100,19 +111,42 @@ In CMake:
 * Select the option __"BUILD_ONLY_LIB"__.
 * If you do not have a multitask system, you also need to check __"BUILD_ONLY_ONE_TASK"__.
 
-The configuration editor will be started after clicking on generate.
-
 Code-wise you have to setup the following:
 * Send traffic received from your network card driver to _IP::receive_from_network(char* data, int len)_.
 * Set the function pointer of _IP::send_to_network(char* data, int len)_ to an own function. This is called by the ipstack for outgoing traffic.
-* call IP::init_ipstack()
+* call _IP::init()_ before using any of the ipstack methods.
 * Provide functions for the function pointers IP::disable_irq() and IP::enable_irq() for IRQ/Interrupt safeness.
+* Call _IP::periodic()_ in your main loop.
+
+Example: Look at integration/linux_userspace_without_aspects
 
 Examples
 ========
-TODO
+We provide some example applications and example integrations. The applications aren't executable on their own without an integration.
+
+Example applications
+--------------------
+http_simple_server: __TODO__
+
+icmp_test: __TODO__
+
+tcp_speedtest: __TODO__
+
+telnet: __TODO__
+
+Example integrations
+--------------------
+chibi_os: __TODO__
+
+ciao_os: __TODO__
+
+linux_userspace_with_aspects: __TODO__
+
+linux_userspace_without_aspects: __TODO__
+
+linux_userspace_without_aspects_multitask: __TODO__
 
 Further reading
 ===============
 * papers
-TODO
+__TODO__

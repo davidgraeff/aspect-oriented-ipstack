@@ -1244,7 +1244,7 @@
 	{
 		"vname" : "Template API",
 		"name" : "ipstack_api",
-		"subdir" : "/api",
+		"subdir" : "../api",
 		"comp" : [
 		{
 			"depends" : "&ipstack_udp",
@@ -1255,7 +1255,7 @@
 			"file" : "TCP_Socket.h"
 		},
 		{
-			"file" : "Setup.h"
+			"files" : ["Setup.h","os_integrate.h", "network_integrate.h"]
 		}
 		]
 	},
