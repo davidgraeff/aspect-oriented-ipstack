@@ -1,0 +1,439 @@
+#
+# Automatically generated make config: don't edit
+# CiAO Kernel Configuration
+#
+
+#
+# Toolchain configuration
+#
+# CONFIG_library_build is not set
+CONFIG_toolchain_weaveinapp=y
+# CONFIG_run_global_constructors is not set
+
+#
+# Additional Libraries
+#
+# CONFIG_lib_libcnone is not set
+CONFIG_lib_libcmini=y
+# CONFIG_lib_libc is not set
+# CONFIG_lib_osekcompat is not set
+# CONFIG_lib_fdlibm is not set
+# CONFIG_lib_libwatchdog is not set
+
+#
+# Compiler
+#
+# CONFIG_use_clang is not set
+
+#
+# Debuggers
+#
+CONFIG_ciao_uses_lauterbach=y
+CONFIG_ciao_t32_pandaboard=y
+# CONFIG_ciao_t32_m3_eval_boards is not set
+# CONFIG_ciao_t32_tc is not set
+
+#
+# Pandaboard options
+#
+CONFIG_ciao_t32_pandaboard_user_script="pandaboard.cmm"
+CONFIG_ciao_t32_pandaboard_a9_only=y
+# CONFIG_ciao_t32_pandaboard_dual_core is not set
+
+#
+# Support files for OpenOCD debuggers
+#
+# CONFIG_ciao_platform_test_openocd_files is not set
+
+#
+# Support for Fail* Fault Injection
+#
+# CONFIG_ciao_fail_support is not set
+
+#
+# x86 configuration
+#
+CONFIG_irq=y
+CONFIG_irq_pit=y
+# CONFIG_irq_keyboard is not set
+CONFIG_hal=y
+CONFIG_hal_devices=y
+CONFIG_hal_ast0=y
+CONFIG_hal_astimpl_cpu_src0=y
+# CONFIG_hal_pagefault_isr is not set
+# CONFIG_hal_paging is not set
+# CONFIG_hal_outputdevice is not set
+# CONFIG_hal_inputdevice is not set
+CONFIG_hal_networking=y
+CONFIG_hal_networking_single=y
+# CONFIG_hal_networking_multi is not set
+CONFIG_hal_networking_single_e1000=y
+# CONFIG_hal_networking_single_virtio is not set
+CONFIG_hal_networking_e1000_ast0binding=y
+CONFIG_hal_SystemClock=y
+CONFIG_hal_timer0=y
+CONFIG_hal_timer0_pit=y
+# CONFIG_hal_protection is not set
+CONFIG_hal_debugging=y
+CONFIG_hal_debugport_dev_cga=y
+# CONFIG_hal_debugport_dev_com is not set
+# CONFIG_hal_debugport_hal_nulldbg is not set
+CONFIG_hal_kernellockimplementation=y
+CONFIG_hal_contextswitch=y
+CONFIG_hal_contextswitch_conventional=y
+# CONFIG_hal_contextswitch_tss is not set
+# CONFIG_hal_contextswitch_fpu is not set
+# CONFIG_debug is not set
+CONFIG_dev=y
+CONFIG_dev_ioports=y
+CONFIG_dev_pic=y
+CONFIG_dev_cga=y
+CONFIG_cfDEV_CGA_BASE_ADDRESS=0xb8000
+CONFIG_dev_pit=y
+CONFIG_cfDEV_PIT_C0_ADDRESS=0x40
+CONFIG_cfDEV_PIT_C1_ADDRESS=0x41
+CONFIG_cfDEV_PIT_C2_ADDRESS=0x42
+CONFIG_cfDEV_PIT_CTRL_ADDRESS=0x43
+# CONFIG_dev_rtc is not set
+CONFIG_dev_pci=y
+CONFIG_cfDEV_PCI_CONFIG_ADDRESS=0x0CF8
+CONFIG_cfDEV_PCI_CONFIG_DATA=0x0CFC
+CONFIG_cfDEV_PCI_CONFIGSPACE_MAXSIZE=32
+# CONFIG_dev_ide is not set
+# CONFIG_dev_x87 is not set
+# CONFIG_dev_keyboardctrl is not set
+CONFIG_dev_e1000=y
+CONFIG_cfDEV_E1000_VENDOR=0x8086
+CONFIG_cfDEV_E1000_DEVICE=0x100E
+CONFIG_dev_e1000_sender=y
+CONFIG_cfDEV_E1000_TXD_BUFFERSIZE=16
+CONFIG_dev_e1000_sender_offloading=y
+CONFIG_dev_e1000_receiver=y
+CONFIG_cfDEV_E1000_RXD_BUFFERSIZE=16
+CONFIG_dev_e1000_receiver_offloading=y
+# CONFIG_dev_virtio is not set
+# CONFIG_dev_com1 is not set
+
+#
+# Boot
+#
+# CONFIG_boot_grub is not set
+# CONFIG_boot_grub2 is not set
+
+#
+# Platform
+#
+CONFIG_platform_native=y
+# CONFIG_platform_guest is not set
+# CONFIG_cfPLATFORM_X86_GUEST is not set
+
+#
+# Architecture
+#
+CONFIG_architecture_ia32=y
+# CONFIG_architecture_x86_64 is not set
+# CONFIG_platform_global_descriptor_table is not set
+
+#
+# OS configuration
+#
+# CONFIG_timeprot is not set
+# CONFIG_versuchung is not set
+
+#
+# Kernel
+#
+
+#
+# System Abstractions
+#
+CONFIG_kernel_coordination=y
+# CONFIG_kernel_resources is not set
+CONFIG_kernel_events=y
+CONFIG_cfOS_MAX_NUMBER_OF_EVENTS_PER_TASK=8
+CONFIG_kernel_alarms=y
+
+#
+# Control Flow Abstractions
+#
+
+#
+# support for Tasks
+#
+CONFIG_kernel_tasks=y
+CONFIG_cfOS_MAX_PRIORITY=31
+# CONFIG_kernel_nonpreemptive is not set
+# CONFIG_kernel_mixedpreemptive is not set
+CONFIG_kernel_fullpreemptive=y
+# CONFIG_kernel_multipleactivation is not set
+# CONFIG_kernel_category1isrs is not set
+
+#
+# Support for ISRs Category 2
+#
+CONFIG_cfOS_ISR2_SUPPORT=y
+CONFIG_kernel_kernellockstatic=y
+# CONFIG_kernel_sharedmemory is not set
+# CONFIG_kernel_messageports is not set
+
+#
+# OS Control
+#
+CONFIG_kernel_oscontrol=y
+
+#
+# Hooks
+#
+CONFIG_kernel_protectionhookdefault=y
+# CONFIG_kernel_protectionhookuser is not set
+# CONFIG_kernel_startupshutdownpretaskposttaskhook is not set
+# CONFIG_kernel_errorhook is not set
+
+#
+# Protection
+#
+CONFIG_kernel_applications=y
+# CONFIG_kernel_serviceprotection is not set
+CONFIG_ipstack=y
+
+#
+# Debugging messages
+#
+CONFIG_ipstack_debug_incoming=y
+CONFIG_ipstack_debug_failed_checksums=y
+CONFIG_ipstack_debug_sendbuffer=y
+CONFIG_ipstack_protect_sendbuffer=y
+CONFIG_ipstack_debug_management_memory=y
+CONFIG_ipstack_icmp_ipv6_debugout=y
+CONFIG_ipstack_icmp_ipv4_debugout=y
+CONFIG_ipstack_debug_delay_send_debug=y
+# CONFIG_ipstack_ipv6_ndpcache_debug is not set
+# CONFIG_ipstack_ipv6_ndcache_expire_debug is not set
+CONFIG_ipstack_ipv6_ndplookup_debug=y
+CONFIG_ipstack_debug_protected_receive=y
+
+#
+# Link layer
+#
+
+#
+# Supported Link Types
+#
+CONFIG_ipstack_linklayer_ethernet=y
+CONFIG_ipstack_linklayer_direct_response=y
+# CONFIG_ipstack_linklayer_offloading is not set
+
+#
+# Address resolution
+#
+CONFIG_ipstack_arp=y
+CONFIG_ipstack_arp_ipv4=y
+CONFIG_ipstack_arp_ipv4_request=y
+CONFIG_ipstack_arp_ipv4_reply=y
+# CONFIG_ipstack_arp_ipv4_cacheincoming is not set
+# CONFIG_ipstack_arp_ipv4_static is not set
+# CONFIG_ipstack_arp_timeout is not set
+
+#
+# IPv6 Address Resolution
+#
+CONFIG_ipstack_ndpcache_ipv6_reply=y
+CONFIG_ipstack_ndpcache_ipv6_request_and_store=y
+# CONFIG_ipstack_ndpcache_ipv6_cacheincoming is not set
+# CONFIG_ipstack_ndpcache_ipv6_expire is not set
+# CONFIG_ipstack_ndpcache_ipv6_async is not set
+
+#
+# Network layer
+#
+CONFIG_ipstack_ipv4=y
+CONFIG_ipstack_ipv4_send=y
+CONFIG_ipstack_ipv4_recv=y
+# CONFIG_ipstack_ipv4_recv_fragments is not set
+# CONFIG_ipstack_ipv4_fwd is not set
+# CONFIG_ipstack_ifcfg0 is not set
+CONFIG_ipstack_ipv6=y
+CONFIG_ipstack_ipv6_hopbyhop=y
+CONFIG_ipstack_ipv6_hopbyhop_alert=y
+CONFIG_ipstack_ipv6_destination=y
+
+#
+# IPv6 Fragmentation NOT IMPLEMENTED
+#
+# CONFIG_ipstack_ipv6_fragmentation is not set
+# CONFIG_ipstack_ipv6_fragmentation_reassembly is not set
+# CONFIG_ipstack_ipv6_authheader is not set
+# CONFIG_ipstack_ipv6_espheader is not set
+# CONFIG_ipstack_ipv6_mobileheader is not set
+# CONFIG_ipstack_ipv6_routerheader is not set
+# CONFIG_ipstack_ipv6_headercompression is not set
+# CONFIG_ipstack_ipv6_privacy_extension is not set
+# CONFIG_ipstack_ipv6_address_autoconfiguration is not set
+# CONFIG_ipstack_ipv6_address_duplication is not set
+# CONFIG_ipstack_ipv6_address_expire is not set
+# CONFIG_ipstack_ipv6_dest_cache is not set
+CONFIG_cfIPSTACK_IPv6_cache=20
+
+#
+# Static IPv6 Configuration of Interface 0
+#
+# CONFIG_ipstack_ifcfg0v6ip is not set
+# CONFIG_ipstack_ifcfg0v6router is not set
+
+#
+# Multicast Unterstützung
+#
+CONFIG_ipstack_multicast_ipv6=y
+CONFIG_ipstack_icmp_ipv6_multicast_listener_discovery=y
+# CONFIG_ipstack_icmp_ipv6_multicast_listener_discovery1 is not set
+CONFIG_ipstack_icmp_ipv6_multicast_listener_discovery2=y
+
+#
+# ICMP Support
+#
+CONFIG_ipstack_icmp_ipv4=y
+CONFIG_ipstack_icmp_ipv4_echoreply=y
+CONFIG_ipstack_icmp_ipv4_destinationunreachable=y
+CONFIG_ipstack_icmp_ipv4_destinationunreachable_protocolunreachable=y
+CONFIG_ipstack_icmp_ipv4_destinationunreachable_portunreachable=y
+CONFIG_ipstack_icmp_ipv6=y
+CONFIG_ipstack_debug_delay_send=y
+CONFIG_ipstack_icmp_ipv6_echoreply=y
+# CONFIG_ipstack_icmp_ipv6_packet_too_big is not set
+# CONFIG_ipstack_icmp_ipv6_time_exceeded is not set
+CONFIG_ipstack_icmp_ipv6_option_unkown=y
+CONFIG_ipstack_icmp_ipv6_destinationunreachable=y
+CONFIG_ipstack_icmp_ipv6_destinationunreachable_protocolunreachable=y
+CONFIG_ipstack_udp=y
+CONFIG_ipstack_udp_send=y
+CONFIG_ipstack_udp_send_checksum=y
+CONFIG_ipstack_udp_recv=y
+CONFIG_ipstack_udp_recv_checksum=y
+CONFIG_ipstack_udp_services=y
+CONFIG_ipstack_udp_services_v4=y
+CONFIG_ipstack_udp_services_v6=y
+# CONFIG_ipstack_tcp is not set
+
+#
+# Host Byte Order
+#
+CONFIG_ipstack_byteorder_little=y
+# CONFIG_ipstack_byteorder_big is not set
+
+#
+# Memory Management
+#
+# CONFIG_cfIPSTACK_MEMORY_GENERIC is not set
+CONFIG_cfIPSTACK_BLOCKSIZE_BIG=1514
+CONFIG_cfIPSTACK_COUNT_BIG=4
+CONFIG_cfIPSTACK_BLOCKSIZE_SMALL=64
+CONFIG_cfIPSTACK_COUNT_SMALL=4
+
+#
+# Dedicated memory for management tasks
+#
+CONFIG_cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG=120
+CONFIG_cfIPSTACK_MANAGEMENT_COUNT_BIG=4
+CONFIG_cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL=64
+CONFIG_cfIPSTACK_MANAGEMENT_COUNT_SMALL=2
+CONFIG_cfIPSTACK_MEMORY_MAX_RESET_SLOTS=2
+# CONFIG_ipstack_udp_debugport is not set
+
+#
+# Autosar OS Integration
+#
+CONFIG_ipstack_irqsync=y
+CONFIG_ipstack_clock=y
+CONFIG_ipstack_autosar_event=y
+CONFIG_ipstack_autosar_reschudule=y
+CONFIG_ipstack_autosar_reschedule_address_resolution=y
+CONFIG_ipstack_autosar_reschedule_sendbuffer_free=y
+
+#
+# System Objects
+#
+
+#
+# osapplication
+#
+CONFIG_osapplication___theOneApp___trusted=y
+# CONFIG_osapplication___theOneApp___untrusted is not set
+
+#
+# component
+#
+
+#
+# Component Alpha
+#
+CONFIG_component___Alpha___componentRefApp___theOneApp=y
+
+#
+# Shared Memory
+#
+
+#
+# counter
+#
+
+#
+# Counter SysCounter
+#
+CONFIG_counter___SysCounter___maxallowedvalue=4294967295
+CONFIG_counter___SysCounter___ticksperbase=1
+CONFIG_counter___SysCounter___mincycle=1
+
+#
+# alarm
+#
+
+#
+# Alarm TCPAlarmTask0
+#
+CONFIG_alarm___TCPAlarmTask0___basedOnCounter___SysCounter=y
+# CONFIG_alarm___TCPAlarmTask0___armed is not set
+CONFIG_alarm___TCPAlarmTask0___absolutelifetime=0
+CONFIG_alarm___TCPAlarmTask0___cycletime=0
+CONFIG_alarm___TCPAlarmTask0___activatetask=y
+CONFIG_alarm___TCPAlarmTask0___activatetask___task___Task0=y
+CONFIG_alarm___TCPAlarmTask0___setevent=y
+CONFIG_alarm___TCPAlarmTask0___setevent___event___IPStackReceiveEvent=y
+
+#
+# appmode
+#
+
+#
+# Application Mode myAppName
+#
+
+#
+# autostart tasks
+#
+CONFIG_appmode___myAppName___autostart___Task0=y
+
+#
+# task
+#
+
+#
+# Task Task0
+#
+CONFIG_task___Task0___usesComponent___Alpha=y
+
+#
+# waits for events
+#
+CONFIG_task___Task0___usesEvent___IPStackReceiveEvent=y
+CONFIG_task___Task0___schedule___full=y
+CONFIG_task___Task0___activation=1
+CONFIG_task___Task0___priority=2
+CONFIG_task___Task0___stacksize=2048
+
+#
+# event
+#
+CONFIG_event___IPStackReceiveEvent=y
+CONFIG_hasApplicationHeader=y
+CONFIG_applicationHeaders="appcode.h"
+# CONFIG_hasHooksHeader is not set
