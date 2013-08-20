@@ -30,18 +30,21 @@ This software is currently NOT USABLE as it is.
 
 Features
 ========
-* Features are highly configurable
+* Highly configurable at build time
 * BSD-like sockets API
 * Own memory management for ressource restricted systems. We not not use the heap in the default configuration.
 * Only thin interface to your OS/APP has to be provided, IRQ safe
+
 Link-Layer:
 * Ethernet
 * ARP (IPv4 - Address resolution protocol)
+
 IP-Layer:
 * Dualstack IPv4/IPv6
 * ICMPv4/v6 info/error messages (ping, etc)
 * Neigbor discovery protocol (IPv6 - Address resolution, Duplication Check, Router discovery, Autoconfiguration)
 * MLD (Multicast Listener Discovery) v1/v2
+
 Transport-Layer:
 * UDP
 * TCP (Sliding Window, Avoid Silly Window Syndrome, Round-Trip Time Estimation, Congestion Control, MSS, ...)
