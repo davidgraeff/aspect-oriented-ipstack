@@ -88,8 +88,8 @@ operating system to make the task sleep while waiting for the next packet or a t
 
 But we realize that on some very restricted systems multitasking support costs valuable space or uses limited ressources like timers.
 We therefore provide the __"BUILD_ONLY_ONE_TASK"__ cmake option. What it does is:
-* Adding an ipstack_periodic() method that has to be called periodically from your main loop.
-* You need to check reachability before sending with IP::is_reachable(addr) because we no longer blocking the "application-task" while resolving link layer (e.g. ethernet) addresses.
+* Adding an _IP::periodic()_ method that has to be called periodically from your main loop.
+* You need to check reachability before sending with _IP::is_reachable(addr)_ because we no longer blocking the "application-task" while resolving link layer (e.g. ethernet) addresses.
 
 Example: Look at integration/linux_userspace_without_aspects_multitask
 
@@ -98,10 +98,16 @@ About 8-bit µC
 The software is not optimized for running on 8bit systems because we are using 16bit-minimum integers.
 A comparison with other ipstacks on 8bit systems is a __TODO__.
 
+IRQ-Safeness, timing and fatal-errors
+-------------------------------------
+Provide functions for the function pointers IP::disable_irq() and IP::enable_irq() for IRQ/Interrupt safeness.
+
 Aspect-oriented integration
 ---------------------------
-__TODO__
-IRQ-safe
+Code-wise you have to provide aspects to cover this functionally:
+* Integrate _IP::init()_ into your initialize routines.
+* Route received network traffic to IPStack::Router() __TODO__.
+* Outgoing traffic can be accessed by an aspect with a pointcut to __TODO__.
 
 Example: Look at integration/linux_userspace_with_aspects
 
@@ -112,11 +118,9 @@ In CMake:
 * If you do not have a multitask system, you also need to check __"BUILD_ONLY_ONE_TASK"__.
 
 Code-wise you have to setup the following:
-* Send traffic received from your network card driver to _IP::receive_from_network(char* data, int len)_.
-* Set the function pointer of _IP::send_to_network(char* data, int len)_ to an own function. This is called by the ipstack for outgoing traffic.
 * call _IP::init()_ before using any of the ipstack methods.
-* Provide functions for the function pointers IP::disable_irq() and IP::enable_irq() for IRQ/Interrupt safeness.
-* Call _IP::periodic()_ in your main loop.
+* Route traffic received from your network card driver to _IP::receive_from_network(char* data, int len)_.
+* Implement a function for sending to your network card driver and set the function pointer of _IP::send_to_network(char* data, int len)_ accordingly. This is called by the ipstack for outgoing traffic.
 
 Example: Look at integration/linux_userspace_without_aspects
 
