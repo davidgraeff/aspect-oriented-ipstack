@@ -17,10 +17,10 @@
 
 
 #include "TCP_Socket.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/ReceiveBuffer.h"
-#include "ipstack/as/Clock.h"
+#include "demux/Demux.h"
+#include "SendBuffer.h"
+#include "ReceiveBuffer.h"
+#include "operating_system_integration/Clock.h"
 
 namespace ipstack
 {

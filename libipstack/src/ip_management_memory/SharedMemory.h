@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 #include "../util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
+#include "util/Ringbuffer.h"
 
 #include <string.h>
 #include "util/types.h"

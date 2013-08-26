@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6AddressUtilities.h"
 #include "util/types.h"
 namespace ipstack
 {

@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
-#include "ipstack/ethernet/Eth_Frame.h"
-#include "ipstack/ethernet/EthernetAddressUtilities.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
-#include "ipstack/ipv6/AddressMemory.h"
+#include "router/Interface.h"
+#include "ethernet/Eth_Frame.h"
+#include "ethernet/EthernetAddressUtilities.h"
+#include "router/Router.h"
+#include "SendBuffer.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/IPv6onSockets.h"
+#include "ipv6/AddressMemory.h"
 
 using namespace ipstack;
 

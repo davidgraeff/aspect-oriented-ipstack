@@ -16,8 +16,8 @@
 // Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
 #pragma once
-#include "ipstack/router/Interface.h"
-#include "ipstack/SendBuffer.h"
+#include "router/Interface.h"
+#include "SendBuffer.h"
 
 using namespace ipstack;
 

@@ -16,11 +16,11 @@
 // Copyright (C) 2013 David Gräff
 #pragma once
 #include "util/types.h"
-#include "ipstack/as/SystemHalt.h"
+#include "operating_system_integration/SystemHalt.h"
 #include "stdio.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/Sendbuffer_Protect_Slice.ah"
+#include "SendBuffer.h"
+#include "router/Router.h"
+#include "Sendbuffer_Protect_Slice.ah"
 using namespace ipstack;
 
 /**

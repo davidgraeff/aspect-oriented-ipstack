@@ -17,10 +17,10 @@
 #pragma once
 #include <string.h>
 #include "util/types.h"
-#include "ipstack/as/SystemHalt.h"
-#include "ipstack/as/Clock.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/router/Router.h"
+#include "operating_system_integration/SystemHalt.h"
+#include "operating_system_integration/Clock.h"
+#include "SendBuffer.h"
+#include "router/Router.h"
 #include "SharedMemory.h"
 #include "stdio.h"
 using namespace ipstack;

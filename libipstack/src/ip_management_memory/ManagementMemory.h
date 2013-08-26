@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "util/types.h"
-#include "ipstack/util/Mempool.h"
+#include "util/Mempool.h"
 namespace ipstack
 {
 

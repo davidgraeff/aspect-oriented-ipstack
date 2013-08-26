@@ -16,9 +16,9 @@
 // Copyright (C) 2011 Christoph Borchert
 #pragma once
 
-#include "ipstack/util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
-#include "ipstack/demux/DemuxLinkedListContainer.h"
+#include "util/Mempool.h"
+#include "util/Ringbuffer.h"
+#include "demux/DemuxLinkedListContainer.h"
 #include "TCP.h"
 #include "tcp_history/TCP_History.h"
 #include "tcp_receivebuffer/TCP_ReceiveBuffer.h"

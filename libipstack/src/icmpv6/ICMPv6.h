@@ -18,7 +18,7 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ip/InternetChecksum.h"
+#include "ip/InternetChecksum.h"
 
 namespace ipstack
 {

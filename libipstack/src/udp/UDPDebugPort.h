@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 #include "../api/Setup.h"
 #include "../api/UDP_Socket.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 
 namespace ipstack {
 

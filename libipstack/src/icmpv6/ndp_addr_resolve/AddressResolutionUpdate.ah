@@ -19,12 +19,12 @@
 
 #include "util/types.h"
 #include "../ICMPv6.h"
-#include "ipstack/icmpv6/ndp/NDPNeighborMessages.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/demux/Demux.h"
+#include "icmpv6/ndp/NDPNeighborMessages.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipv6/AddressMemory.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
 
 aspect AddressResolutionUpdate {
 	advice execution("void ipstack::Demux::ndp_neighbor_advertisement_demux(ipstack::IPv6_Packet*, ipstack::NDPNeighborMessages::NeighborAdvertisementMessage*, unsigned, ipstack::Interface*)") &&

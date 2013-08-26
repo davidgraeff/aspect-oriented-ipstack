@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/ipv6/RouteResult.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/SendBuffer.h"
+#include "router/Interface.h"
+#include "ipv6/AddressMemory.h"
+#include "ipv6/RouteResult.h"
+#include "router/Router.h"
+#include "SendBuffer.h"
 #include "../IPv6onSockets.h"
 #include "Interface_Multicast_Slice.ah"
 

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
+#include "router/Interface.h"
 #include "Interface_Expire_Slice.ah"
 #include "NDPCacheEntry_Expire_Slice.ah"
 #include "NDPCacheExpireConfig.h"

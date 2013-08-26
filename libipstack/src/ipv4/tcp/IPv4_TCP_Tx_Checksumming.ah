@@ -19,8 +19,8 @@
 
 #include "../IPv4.h"
 #include "../InternetChecksum.h"
-#include "ipstack/tcp/TCP.h"
-#include "ipstack/SendBuffer.h"
+#include "tcp/TCP.h"
+#include "SendBuffer.h"
 
 using namespace ipstack;
 

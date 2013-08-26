@@ -20,11 +20,11 @@
 #include "util/types.h"
 #include "../ICMPv6.h"
 #include "NDPRouterMessages.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/demux/Demux.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipv6/AddressMemory.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
 
 /**
   * React on router advertisement messages: Add/update all propagated prefixes as ipv6 addresses to the interface on which we received the message.

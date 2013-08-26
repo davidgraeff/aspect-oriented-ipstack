@@ -23,8 +23,8 @@
 #include "Router_Destination_Cache_Slice.ah"
 #include "IPV6_Destination_Cache_Slice.ah"
 #include "../IPv6onSockets.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/router/Interface.h"
+#include "router/Router.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

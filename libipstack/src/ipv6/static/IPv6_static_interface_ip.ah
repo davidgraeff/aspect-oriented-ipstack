@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "cfAttribs.h"
+#include "router/Router.h"
+#include "ipv6/IPv6AddressUtilities.h"
 
 using namespace ipstack;
 

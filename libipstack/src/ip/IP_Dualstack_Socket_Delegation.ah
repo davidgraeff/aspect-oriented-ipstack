@@ -19,8 +19,8 @@
 
 #include "IP_Dualstack_Slice.ah"
 #include "IP_Dualstack_IPVx_Slice.ah"
-#include "ipstack/ipv4/IPv4onSockets.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipv4/IPv4onSockets.h"
+#include "ipv6/IPv6onSockets.h"
 
 /**
  * If both IPv4 and IPv6 are configured, selecting

@@ -21,12 +21,12 @@
 
 #include "util/types.h"
 #include <string.h> //for memcpy
-#include "ipstack/router/Interface.h"
+#include "router/Interface.h"
 #include "../ARP.h"
-#include "ipstack/ethernet/Eth_Frame.h"
+#include "ethernet/Eth_Frame.h"
 #include "Eth_ARP_IPv4_Packet.h"
 
-#include "ipstack/as/Clock.h"
+#include "operating_system_integration/Clock.h"
 
 using namespace ipstack;
 

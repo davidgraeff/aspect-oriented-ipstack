@@ -18,9 +18,9 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/icmpv4/ICMP.h"
+#include "router/Interface.h"
+#include "SendBuffer.h"
+#include "icmpv4/ICMP.h"
 
 using namespace ipstack;
 

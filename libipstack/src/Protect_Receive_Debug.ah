@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "as/SystemHalt.h"
+#include "operating_system_integration/SystemHalt.h"
 #include "stdio.h"
 
 using namespace ipstack;

@@ -24,8 +24,8 @@
 
 #include "IPv6.h"
 #include "../Clock.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6AddressUtilities.h"
 
 using namespace ipstack;
 

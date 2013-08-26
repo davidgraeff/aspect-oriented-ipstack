@@ -18,9 +18,9 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/util/Mempool.h"
-#include "ipstack/ReceiveBuffer.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "util/Mempool.h"
+#include "ReceiveBuffer.h"
+#include "ipv6/IPv6AddressUtilities.h"
 #include <string.h> //for memcpy
 
 namespace ipstack {

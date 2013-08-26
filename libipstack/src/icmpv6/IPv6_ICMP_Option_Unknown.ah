@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/IPv6.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6.h"
 #include "ICMPv6.h"
 #include "ICMPv6_Socket.h"
 

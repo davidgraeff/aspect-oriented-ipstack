@@ -19,13 +19,13 @@
 #ifndef __IPv4_ARP_SEND_RECEIVE_AH__
 #define __IPv4_ARP_SEND_RECEIVE_AH__
 
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 #include "../ARP.h"
 #include "../ARP_Cache.h"
 #include "ARP_Cache_IPv4_Send_Receive_Slice.ah"
-#include "ipstack/ethernet/Eth_Frame.h"
+#include "ethernet/Eth_Frame.h"
 
 using namespace ipstack;
 

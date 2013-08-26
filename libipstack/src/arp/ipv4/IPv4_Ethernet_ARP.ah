@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
-#include "ipstack/arp/ARP_Cache.h"
-#include "ipstack/ethernet/Eth_Frame.h"
-#include "ipstack/ethernet/EthernetAddressUtilities.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/SendBuffer.h"
+#include "router/Interface.h"
+#include "arp/ARP_Cache.h"
+#include "ethernet/Eth_Frame.h"
+#include "ethernet/EthernetAddressUtilities.h"
+#include "router/Router.h"
+#include "SendBuffer.h"
 
 using namespace ipstack;
 

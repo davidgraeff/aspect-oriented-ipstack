@@ -20,7 +20,7 @@
 #include "../router/Interface.h"
 #include "UDP.h"
 #include "UDP_Socket.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 #include "util/types.h"
 
 using namespace ipstack;

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 #include "../util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/tcp/TCP.h"
-#include "ipstack/ip_management_memory/ManagementMemory.h"
+#include "util/Ringbuffer.h"
+#include "SendBuffer.h"
+#include "tcp/TCP.h"
+#include "ip_management_memory/ManagementMemory.h"
 #include <string.h>
 #include "util/types.h"
 

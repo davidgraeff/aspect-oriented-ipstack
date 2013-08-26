@@ -18,8 +18,8 @@
 #pragma once
 
 #include "DelaySendMethod.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/ip_management_memory/SharedMemory.h"
+#include "SendBuffer.h"
+#include "ip_management_memory/SharedMemory.h"
 
 using namespace ipstack;
 

@@ -18,9 +18,9 @@
 #pragma once
 
 #include "../IPv4.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/ethernet/Eth_Frame.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "ethernet/Eth_Frame.h"
 #include "util/types.h"
 
 using namespace ipstack;

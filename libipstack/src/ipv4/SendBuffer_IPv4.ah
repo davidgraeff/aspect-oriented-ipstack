@@ -18,7 +18,7 @@
 #pragma once
 
 #include "../router/Interface.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 #include "IPv4.h"
 #include "util/types.h"
 

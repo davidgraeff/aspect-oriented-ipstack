@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "ipstack/util/Mempool.h"
-#include "ipstack/util/Ringbuffer.h"
+#include "util/Mempool.h"
+#include "util/Ringbuffer.h"
 #include "../demux/DemuxLinkedListContainer.h"
 #include <string.h>
 

@@ -1,5 +1,5 @@
 #include "Management_UDP_Socket.h"
-#include "ipstack/udp/UDP.h"
+#include "udp/UDP.h"
 
 namespace ipstack
 {

@@ -16,7 +16,7 @@
 // Copyright (C) 2012 David Gräff
 
 #include "NDPNeighborMessages.h"
-#include "ipstack/demux/Demux.h"
+#include "demux/Demux.h"
 namespace ipstack
 {
 

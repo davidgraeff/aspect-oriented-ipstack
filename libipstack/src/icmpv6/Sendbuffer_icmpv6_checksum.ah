@@ -18,11 +18,11 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/InternetChecksum.h"
-#include "ipstack/icmpv6/ICMPv6.h"
+#include "router/Interface.h"
+#include "SendBuffer.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/InternetChecksum.h"
+#include "icmpv6/ICMPv6.h"
 
 using namespace ipstack;
 

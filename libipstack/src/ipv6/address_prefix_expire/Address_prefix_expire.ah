@@ -18,10 +18,10 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
-#include "ipstack/router/Interface.h"
+#include "ipv6/AddressMemory.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/IPv6onSockets.h"
+#include "router/Interface.h"
 #include "Address_prefix_expire_Slice.ah"
 #include "Interface_prefix_expire_Slice.ah"
 

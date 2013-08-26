@@ -1,8 +1,8 @@
 #ifndef __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
 #define __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
 
-#include "../cfAttribs.h"
-#include "ipstack/api/Setup.h"
+#include "cfAttribs.h"
+#include "api/Setup.h"
 
 using namespace ipstack;
 

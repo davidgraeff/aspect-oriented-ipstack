@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "ipstack/udp/UDP.h"
-#include "ipstack/udp/UDP_Socket.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
+#include "udp/UDP.h"
+#include "udp/UDP_Socket.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 #include "../IPv6.h"
 #include "ReceiveBufferUDPIPv6.h"
 #include "Demux_UDP_IPv6_Slice.ah"

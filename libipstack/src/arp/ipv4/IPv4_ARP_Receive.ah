@@ -21,10 +21,10 @@
 
 #include "util/types.h"
 #include <string.h> //for memcpy
-#include "ipstack/router/Interface.h"
+#include "router/Interface.h"
 #include "../ARP.h"
 #include "../ARP_Cache.h"
-#include "ipstack/ethernet/Eth_Frame.h"
+#include "ethernet/Eth_Frame.h"
 
 using namespace ipstack;
 

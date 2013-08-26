@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "ipstack/ethernet/Eth_Frame.h"
-#include "ipstack/SendBuffer.h"
+#include "ethernet/Eth_Frame.h"
+#include "SendBuffer.h"
 #include "util/types.h"
-#include "ipstack/router/Interface.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

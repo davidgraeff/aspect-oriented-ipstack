@@ -18,8 +18,8 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/router/Interface.h"
+#include "ipv6/IPv6.h"
+#include "router/Interface.h"
 #include "NDPNeighborMessages.h"
 
 using namespace ipstack;

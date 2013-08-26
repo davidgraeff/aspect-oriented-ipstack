@@ -24,13 +24,13 @@
  * Dependencies: Destination cache, ICMPv6, IPv6
  */
 
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/IPv6onSockets.h"
 #include "../ICMPv6.h"
-#include "ipstack/icmpv6/ndp/NDPMessages.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/demux/Demux.h"
+#include "icmpv6/ndp/NDPMessages.h"
+#include "router/Interface.h"
+#include "router/Router.h"
+#include "demux/Demux.h"
 #include "util/types.h"
 
 aspect NDP_Redirect {

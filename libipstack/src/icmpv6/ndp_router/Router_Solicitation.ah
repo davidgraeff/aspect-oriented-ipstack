@@ -21,12 +21,12 @@
 #include "../ICMPv6.h"
 #include "NDPRouterMessages.h"
 #include "../ICMPv6_Socket.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/ndpcache/NDPCacheEntry.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
-#include "ipstack/router/Interface.h"
-#include "ipstack/demux/Demux.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipv6/AddressMemory.h"
+#include "ipv6/IPv6onSockets.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
 
 using namespace ipstack;
 

@@ -20,7 +20,7 @@
 #include "UDP_Socket.h"
 #include "Demux_UDP_Slice.ah"
 #include "UDP_Receive_Slice.ah"
-#include "ipstack/demux/Demux.h"
+#include "demux/Demux.h"
 
 using namespace ipstack;
 

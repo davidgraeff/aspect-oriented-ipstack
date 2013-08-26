@@ -1,5 +1,5 @@
 #include "IPv6iphc.h"
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 
 namespace ipstack {
 	// Hop count

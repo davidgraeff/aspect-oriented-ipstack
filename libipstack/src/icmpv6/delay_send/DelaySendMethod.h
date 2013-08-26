@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 namespace ipstack {
 
 class DelaySend

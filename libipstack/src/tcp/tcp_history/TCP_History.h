@@ -23,7 +23,7 @@
 #include "../TCP.h"
 #include "../TCP_Config.h"
 #include "TCP_Record.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 
 namespace ipstack {
 

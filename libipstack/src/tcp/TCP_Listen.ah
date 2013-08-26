@@ -21,7 +21,7 @@
 #include "Demux_TCP_Listen_Slice.ah"
 #include "../demux/Demux.h"
 #include "../router/Interface.h"
-#include "ipstack/ReceiveBuffer.h"
+#include "ReceiveBuffer.h"
 
 using namespace ipstack;
 

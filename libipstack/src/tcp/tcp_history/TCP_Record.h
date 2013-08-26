@@ -19,8 +19,8 @@
 
 #include "util/types.h"
 #include "../TCP.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/as/Clock.h"
+#include "SendBuffer.h"
+#include "operating_system_integration/Clock.h"
 
 namespace ipstack
 {

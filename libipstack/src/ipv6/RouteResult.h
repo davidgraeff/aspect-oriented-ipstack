@@ -18,7 +18,7 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "ipv6/IPv6AddressUtilities.h"
 
 namespace ipstack
 {

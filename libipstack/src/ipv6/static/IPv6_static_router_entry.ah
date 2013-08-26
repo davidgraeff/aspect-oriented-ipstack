@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
-#include "ipstack/router/Router.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/ethernet/EthernetAddressUtilities.h"
+#include "cfAttribs.h"
+#include "router/Router.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
+#include "ethernet/EthernetAddressUtilities.h"
 
 #define ROUTERIP_AS_STRING IP_MAKE_STRING(cfIPSTACK_IFCFG0_IPv6_router_ip)
 #define ROUTERMAC_AS_STRING IP_MAKE_STRING(cfIPSTACK_IFCFG0_IPv6_router_ethernet)

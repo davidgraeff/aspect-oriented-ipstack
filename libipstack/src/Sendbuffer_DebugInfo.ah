@@ -17,11 +17,11 @@
 
 #pragma once
 #include "util/types.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv4/IPv4.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ip_management_memory/SharedMemory.h"
-#include "ipstack/Sendbuffer_DebugInfo_Slice.ah"
+#include "ipv6/IPv6.h"
+#include "ipv4/IPv4.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ip_management_memory/SharedMemory.h"
+#include "Sendbuffer_DebugInfo_Slice.ah"
 using namespace ipstack;
 #define MARK_MSG_LEN 100
 

@@ -21,7 +21,7 @@
  */
 #include "util/types.h"
 #include "router/Interface.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 
 using namespace ipstack;
 /**

@@ -16,9 +16,9 @@
 // Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/IPv6AddressUtilities.h"
 
 using namespace ipstack;
 

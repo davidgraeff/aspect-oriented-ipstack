@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "ipstack/ipv6/IPv6.h"
+#include "ipv6/IPv6.h"
 #include "../ipv6/InternetChecksum.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 #include "ICMPv6.h"
 #include "stdio.h"
 

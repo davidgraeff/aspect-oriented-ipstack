@@ -18,8 +18,8 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ipv6/AddressMemory.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
 #include "MulticastEntry.h"
 
 using namespace ipstack;

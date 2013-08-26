@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "ipstack/router/Interface.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/icmpv6/ICMPv6.h"
-#include "ipstack/icmpv6/ICMPv6_Socket.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/IPv6onSockets.h"
+#include "SendBuffer.h"
+#include "icmpv6/ICMPv6.h"
+#include "icmpv6/ICMPv6_Socket.h"
 #include "util/types.h"
 #include "NDPMessages.h"
 namespace ipstack

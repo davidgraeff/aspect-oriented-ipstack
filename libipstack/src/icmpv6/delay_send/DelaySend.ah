@@ -18,9 +18,9 @@
 #pragma once
 
 #include "DelaySendMethod.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/ip_management_memory/SharedMemory.h"
+#include "demux/Demux.h"
+#include "SendBuffer.h"
+#include "ip_management_memory/SharedMemory.h"
 
 using namespace ipstack;
 

@@ -16,7 +16,7 @@
 // Copyright (C) 2012 David Gräff
 
 #pragma once
-#include "ipstack/router/Interface.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 /**

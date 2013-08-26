@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "ipstack/udp/UDP.h"
-#include "ipstack/udp/UDP_Socket.h"
-#include "ipstack/udp/Management_UDP_Socket.h"
-#include "ipstack/ipv4/IPv4.h"
-#include "ipstack/ipv4/InternetChecksum.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
+#include "udp/UDP.h"
+#include "udp/UDP_Socket.h"
+#include "udp/Management_UDP_Socket.h"
+#include "ipv4/IPv4.h"
+#include "ipv4/InternetChecksum.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

@@ -16,6 +16,7 @@
 // Copyright (C) 2011 Christoph Borchert
 
 #pragma once
+#include "cfAttribs.h"
 
 /**
  * Some variables for the entire ip-stack. The are either provided

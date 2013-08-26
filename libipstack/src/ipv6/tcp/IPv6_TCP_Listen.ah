@@ -18,10 +18,10 @@
 #pragma once
 
 #include "../IPv6.h"
-#include "ipstack/tcp/TCP.h"
-#include "ipstack/tcp/TCP_Socket.h"
-#include "ipstack/demux/Demux.h"
-#include "ipstack/router/Interface.h"
+#include "tcp/TCP.h"
+#include "tcp/TCP_Socket.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

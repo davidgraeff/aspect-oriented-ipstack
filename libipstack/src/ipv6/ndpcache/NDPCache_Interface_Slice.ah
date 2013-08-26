@@ -18,12 +18,12 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/ipv6/ndpcache/NDPCacheConfig.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ipv6/AddressMemory.h"
-#include "ipstack/ipv6/IPv6.h"
-#include "ipstack/ipv6/IPv6onSockets.h"
-#include "ipstack/as/Clock.h"
+#include "ipv6/ndpcache/NDPCacheConfig.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
+#include "ipv6/IPv6.h"
+#include "ipv6/IPv6onSockets.h"
+#include "operating_system_integration/Clock.h"
 #include <string.h>
 
 using namespace ipstack;

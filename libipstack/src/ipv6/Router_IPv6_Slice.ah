@@ -17,8 +17,8 @@
 
 #pragma once
 #include "../router/Interface.h"
-#include "ipstack/ipv6/IPv6AddressUtilities.h"
-#include "ipstack/ipv6/AddressMemory.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
 #include "RouteResult.h"
 
 using namespace ipstack;

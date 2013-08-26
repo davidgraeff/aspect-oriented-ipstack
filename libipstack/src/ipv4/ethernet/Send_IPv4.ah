@@ -19,7 +19,7 @@
 
 #include "../../router/Interface.h"
 #include "../../ethernet/Eth_Frame.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 #include "util/types.h"
 #include "../IPv4.h"
 #include "../IPv4onSockets.h"

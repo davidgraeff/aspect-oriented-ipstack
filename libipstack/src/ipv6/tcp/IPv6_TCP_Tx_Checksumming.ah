@@ -19,9 +19,9 @@
 
 #include "../IPv6.h"
 #include "../InternetChecksum.h"
-#include "ipstack/tcp/TCP.h"
-#include "ipstack/SendBuffer.h"
-#include "ipstack/router/Interface.h"
+#include "tcp/TCP.h"
+#include "SendBuffer.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

@@ -18,7 +18,7 @@ endif()
 ############## Project and Compiler ##############
 project (libipstack ACXX)
 SET(CMAKE_GENERIC_ACXX_FLAGS "${CMAKE_GENERIC_ACXX_FLAGS} --real-instances --no_warn_macro --keep_woven -k -p${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../api" "${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../api" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 
 if (NOT EXISTS "${SRC_FILE}")
 	message(FATAL_ERROR "No SRC_FILE variable provided! The file contains the source files depending on the selected features")

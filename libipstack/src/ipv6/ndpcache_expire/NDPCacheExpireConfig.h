@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 
 namespace ipstack {
 // Call releaseOldEntries() method of the ndp cache every NDP_CACHE_REFRESH_IN_MINUTES minutes!

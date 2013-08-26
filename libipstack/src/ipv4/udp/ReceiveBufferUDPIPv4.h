@@ -18,8 +18,8 @@
 #pragma once
 
 #include "util/types.h"
-#include "ipstack/util/Mempool.h"
-#include "ipstack/ReceiveBuffer.h"
+#include "util/Mempool.h"
+#include "ReceiveBuffer.h"
 #include <string.h> //for memcpy
 
 namespace ipstack {

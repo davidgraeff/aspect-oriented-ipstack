@@ -1,6 +1,6 @@
 #include "DelaySendMethod.h"
 
-#include "ipstack/icmpv6/ICMPv6_Socket.h"
+#include "icmpv6/ICMPv6_Socket.h"
 
 namespace ipstack {
 	UInt8 DelaySend::mHoldBack;

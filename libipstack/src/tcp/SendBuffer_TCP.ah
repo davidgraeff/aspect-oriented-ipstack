@@ -21,7 +21,7 @@
 //#include "TCP_Sendbuffer_Slice.ah"
 #include "TCP_Socket.h"
 #include "TCP.h"
-#include "ipstack/SendBuffer.h"
+#include "SendBuffer.h"
 #include "util/types.h"
 
 using namespace ipstack;

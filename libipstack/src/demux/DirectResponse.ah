@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ipstack/demux/Demux.h"
+#include "demux/Demux.h"
 #include "DirectResponse_Slice.ah"
 
 using namespace ipstack;

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../cfAttribs.h"
+#include "cfAttribs.h"
 
 namespace ipstack {
 enum {
