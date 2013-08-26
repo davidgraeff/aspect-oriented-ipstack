@@ -1,7 +1,7 @@
 Aspect oriented IPstack for embedded systems
 ============================================
 A highly configurable and easily extendable TCP/IP-Stack with IPv4, IPv6, UDP, TCP, ICMPv4, ICMPv6 support.
-This network stack is written in AspectC++ and because it is build around the idea of aspects you
+This network stack is written in AspectC++ and because it is build and designed around the idea of aspects you
 may select your desired functionallity during build time in a very fine grained way.
 
 The aspect-IP-Stack is plattform agnostic and supports little and big endian systems and have been tested
@@ -54,7 +54,7 @@ Configure for your needs
 The configuration of this software is done by the kconfig tool, developted and used by the linux-kernel community.
 We're using a slightly modified version, the __kconfig-frontends__ packet (http://ymorin.is-a-geek.org/projects/kconfig-frontends).
 
-__TODO__: Picture of kconfig
+![Picture of kconfig](doc/kconfig.jpg)
 
 Building and execution of kconfig is integrated into the cmake buildsystem. It is even prepared for the case that
 you already using kconfig for your os or application.
@@ -75,9 +75,13 @@ the command line version.
 * Create a directory called "build" (or any other name).
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
-You will be presented with some build options that are discussed in the following sections.
-The configuration editor will be started after clicking on configure in cmake for the first time. If you want to reconfigure,
-select __KCONFIG_RECONFIGURE__.
+* A popup will appear and ask for your favoured project files to generate.
+You will be presented with some build options that are discussed in the following sections. If you are done
+with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
+popup you have VisualStudio project files, make files or something else in your build directory.
+
+The configuration editor will be started after the first build process start (e.g. type __"make"__ in your
+build directory in linux). If you want to reconfigure, execute __"make reconfigure"__ and __"make"__ again.
 
 About multitasking support
 --------------------------
@@ -105,10 +109,11 @@ Provide functions for the function pointers IP::disable_irq() and IP::enable_irq
 
 Aspect-oriented integration
 ---------------------------
+You do not have to select any option in cmake as the Aspect-oriented integration way is the default way to build.
 Code-wise you have to provide aspects to cover this functionally:
 * Integrate _IP::init()_ into your initialize routines.
 * Route received network traffic to IPStack::Router() __TODO__.
-* Outgoing traffic can be accessed by an aspect with a pointcut to __TODO__.
+* Outgoing traffic can be accessed by an aspect with a pointcut to IPStack::SendBuffer::Send(char* data, int len) __TODO__.
 
 Example: Look at integration/linux_userspace_with_aspects
 
@@ -141,15 +146,20 @@ telnet: __TODO__
 
 Example integrations
 --------------------
-chibi_os: __TODO__
-
-ciao_os: __TODO__
-
 linux_userspace_with_aspects: __TODO__
 
 linux_userspace_without_aspects: __TODO__
 
-linux_userspace_without_aspects_multitask: __TODO__
+linux_userspace_without_aspects_multitask: This example demonstrates 
+
+ciao_os: The ipstack orgins at this operating system for embedded systems. Therefore
+support and maintainance are good for this integration. CiAO implements AutoSar
+Events and Alarms and is multitasking capable. Usually there exists the system task
+where traffic is received and the user task where traffic is generated and consumed.
+The integration features IRQ-safeness, reschedules instead of inefficent waits and
+task sleep if waiting for a packet.
+
+chibi_os: __TODO__
 
 Further reading
 ===============
