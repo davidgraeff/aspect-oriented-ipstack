@@ -132,7 +132,8 @@ Example: Look at integration/linux_userspace_without_aspects
 
 Examples
 ========
-We provide some example applications and example integrations. The applications aren't executable on their own without an integration.
+We provide some example applications and example integrations.
+The applications aren't executable on their own without an integration.
 
 Example applications
 --------------------
@@ -146,13 +147,16 @@ telnet: __TODO__
 
 Example integrations
 --------------------
-linux_userspace_with_aspects: __TODO__
+__linux_userspace_with_aspects:__ __TODO__
 
-linux_userspace_without_aspects: __TODO__
+__linux_userspace_without_aspects:__ __TODO__
 
-linux_userspace_without_aspects_multitask: This example demonstrates 
+__linux_userspace_without_aspects_multitask:__ This example demonstrates the usage
+of the ip-stack without using a multitask system. The main loop is responsible for
+routing incoming and outgoing traffic to and from the ipstack and at the same time
+provide the application layer on top of the ipstack.
 
-ciao_os: The ipstack orgins at this operating system for embedded systems. Therefore
+__ciao_os:__ The ipstack origins at this operating system for embedded systems. Therefore
 support and maintainance are good for this integration. CiAO implements AutoSar
 Events and Alarms and is multitasking capable. Usually there exists the system task
 where traffic is received and the user task where traffic is generated and consumed.
@@ -165,3 +169,9 @@ Further reading
 ===============
 * papers
 __TODO__
+
+License
+=======
+The buildsystem is licensed under the terms of the BSL 2-clause license. The source code
+of the ipstack is GPL3 licensed. Please be aware of the implication: Because this software
+is usally build as static library, your code have to be GPL3 compatible code.
