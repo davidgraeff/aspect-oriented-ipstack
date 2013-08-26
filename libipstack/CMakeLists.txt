@@ -67,10 +67,14 @@ endif(NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 
 ############## Source FILES ##############
 # Determine relevant files based on the features selected
+# Get configuration variables from kconfig and store in cfAttribs.h
+if (${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}) # no kconfig -> use predefined cfAttribs.h
+
+endif()
 
 add_subdirectory(buildsystem/determine_relevant_files)
 SET(SRC_FILE "${CMAKE_BINARY_DIR}/relevant_source_files")
-SET(DEFINITIONS_FILE "${CMAKE_BINARY_DIR}/kconfig_definitions")
+SET(DEFINITIONS_FILE "${CMAKE_BINARY_DIR}/cfAttribs.h")
 add_custom_command(OUTPUT "${SRC_FILE}"
 	COMMAND ${CMAKE_COMMAND}
 	-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
