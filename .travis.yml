@@ -1,0 +1,16 @@
+before_install:
+  - sudo add-apt-repository ppa:czchen/travis-ci -y
+  - sudo apt-get update -y
+  - sudo apt-get install cmake git aspectc++ autoconf automake libtool gperf flex -y
+before_script: ./travis-ci/configure.sh
+script: ./travis-ci/make.sh
+language: cpp
+compiler:
+  - g++
+branches:
+  only:
+    - master
+notifications:
+  email:
+    on_success: change
+    on_failure: always

@@ -17,9 +17,12 @@ described in detail below. For a well commented example look at the linux usersp
 If you do not use CMake as your buildsystem, you may just build a static library once
 and use the C++ API calls in libipstack/api.
 
+[![Build Status](https://travis-ci.org/davidgraeff/aspect-oriented-ipstack.png?branch=master)](https://travis-ci.org/davidgraeff/aspect-oriented-ipstack)
+Please use the ticket system of github for bugs and feature suggestions.
+
 Work in progress (August 2013):
 -------------------------------
-This software is currently NOT USABLE as it is.
+This software is currently **NOT USABLE** in its current state.
 * Work on this documentation
 * Build system, CMake
 * Make ipstack independent from CiAO operating system.
