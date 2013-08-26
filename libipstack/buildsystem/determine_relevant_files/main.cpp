@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 	bool definitions = false;
 	bool featureFiles = false;
 
-	// parse options
+	/*************** parse options ***************/
 	int opt;
 	while ((opt = getopt(argc, argv, "b:o:d:k:f:a")) != -1) {
 			switch (opt) {
@@ -117,6 +117,7 @@ int main(int argc, char** argv) {
 			}
 		}
 	
+	/*************** error handling ***************/
 	if (kconfigfile.size() && all_features) {
 		std::cerr << "kconfig_output file and all-features set. all-features overwrite kconfig_output!\n\n";
 	}
@@ -145,32 +146,25 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	// Output stream
+	/*************** Output stream ***************/
 	std::ostream output_files_stream(output_files_file.is_open() ? &output_files_file : std::cout.rdbuf());
 	std::ostream output_definitions_stream(output_definitions_file.is_open() ? &output_definitions_file : std::cout.rdbuf());
 	
-	// read kconfig file
+	/*************** read kconfig file ***************/
 	kconfigparser kparser;
 	if ((definitions || !all_features) && !kparser.load_kconfig_file(kconfigfile)) {
 		std::cerr << "Failed to parse kconfig output file!\n";
 		exit(EXIT_FAILURE);
 	}
 	
+	/*************** output definitions ***************/
 	if (definitions) {
 		for (auto i = kparser.kconfig_keyvalue.begin(); i!=kparser.kconfig_keyvalue.end();++i) {
-			const std::string& key = i->first;
-			const std::string& value = i->second;
-// 			double x ;
-// 			std::stringstream ss;
-// 			ss << value;
-// 			ss >> x;
-// 			if (ss.fail()) // no number
-// 				output_definitions_stream << "#define " << key << " \"" << value << "\"" << std::endl;
-// 			else // number
-			output_definitions_stream << "#define " << key << " " << value << std::endl;
+			output_definitions_stream << "#define " << i->first << " " << i->second << std::endl;
 		}
 	}
 
+	/*************** output files ***************/
 	int res = 0;
 	if (featureFiles) {
 		// read feature_to_files_relation file
@@ -205,6 +199,7 @@ int main(int argc, char** argv) {
 			res = 1;
 	}
 	
+	/*************** close streams ***************/
 	if (output_files_file.is_open()) {
 		output_files_stream.rdbuf(std::cout.rdbuf());
 		output_files_file.close();
