@@ -29,7 +29,7 @@ This software is currently **NOT USABLE** in its current state.
 * Add linux userspace ipstack support via raw sockets or tun device.
 * Add API for non-multitasking support
 * Add build system parts for adding own aspects outside of the libipstack/src directory.
-* Add documentation papers to /doc.
+* Add documentation papers to /doc (e.g. APIs, example step-by-step).
 * Continous integration (Travis CI)
 
 Features
@@ -58,7 +58,7 @@ Configure for your needs
 The configuration of this software is done by the kconfig tool, developted and used by the linux-kernel community.
 We're using a slightly modified version, the __kconfig-frontends__ packet (http://ymorin.is-a-geek.org/projects/kconfig-frontends).
 
-![Picture of kconfig](doc/kconfig.jpg)
+![Picture of kconfig](doc/kconfig.png)
 
 Building and execution of kconfig is integrated into the cmake buildsystem. It is even prepared for the case that
 you already using kconfig for your os or application.
@@ -80,6 +80,7 @@ the command line version.
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
 * A popup will appear and ask for your favoured project files to generate.
+![Picture of cmake](doc/cmake.png)
 You will be presented with some build options that are discussed in the following sections. If you are done
 with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
 popup you have VisualStudio project files, make files or something else in your build directory.

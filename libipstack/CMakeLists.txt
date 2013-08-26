@@ -10,7 +10,7 @@ option (BUILD_ONLY_ONE_TASK  "Assume we have only one main loop and no multitask
 
 # Add files
 if (BUILD_ONLY_ONE_TASK)
-	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.ah" "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.h")
+	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.ah" "${CMAKE_CURRENT_SOURCE_DIR}/api/no_multitask.h")
 endif()
 
 ############## BUILD_WITH_ASPECTLESS_INTERFACE ##############
@@ -20,7 +20,19 @@ option (BUILD_WITH_ASPECTLESS_INTERFACE  "Build the library and provide methods 
 
 # Add files
 if (BUILD_WITH_ASPECTLESS_INTERFACE)
-	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/receive_and_send.ah")
+	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC}
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/receive_and_send.ah"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/os_integration.ah"
+		"${CMAKE_CURRENT_SOURCE_DIR}/api/receive_and_send.h"
+		"${CMAKE_CURRENT_SOURCE_DIR}/api/os_integration.h")
+endif()
+
+############## BUILD_WITH_ASPECTLESS_INTERFACE and not BUILD_ONLY_ONE_TASK ##############
+# irq safeness for aspectless interface with multiple tasks
+if (BUILD_WITH_ASPECTLESS_INTERFACE AND NOT BUILD_ONLY_ONE_TASK)
+	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC}
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/lock_multitask_access.ah"
+		"${CMAKE_CURRENT_SOURCE_DIR}/api/lock_multitask_access.h")
 endif()
 
 ############## KCONFIG ##############
@@ -62,7 +74,10 @@ IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 		-DKCONFIG_PRESET_CONFIGURATION_FILE=${KCONFIG_PRESET_CONFIGURATION_FILE}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig.cmake"
 		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig" VERBATIM)
-endif(NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
+else()
+	# Add dummy target reconfigure_firsttime if kconfig is disabled
+	add_custom_target(reconfigure_firsttime)
+endif()
 
 ############## Source FILES ##############
 # Determine relevant files based on the features selected

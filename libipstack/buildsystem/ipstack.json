@@ -1194,7 +1194,7 @@
 				"file" : "TCP_Socket.h"
 			},
 			{
-				"files" : ["Setup.h","os_integrate.h", "network_integrate.h"]
+				"files" : ["Setup.h"]
 			}
 			]
 		}
