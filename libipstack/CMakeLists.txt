@@ -41,21 +41,21 @@ endif()
 # * The buildsystem tries to setup a working kconfig frontend for you. kconfig
 #   is recommended.
 
+if (NOT DEFINED KCONFIG_RESULT_FILE_DIR)
+	SET(KCONFIG_RESULT_FILE_DIR "${CMAKE_BINARY_DIR}")
+endif()
+SET(KCONFIG_RESULT_FILE "${KCONFIG_RESULT_FILE_DIR}/.config")
+
+if (NOT DEFINED KCONFIG_FEATUREMODEL)
+	SET(KCONFIG_FEATUREMODEL "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.fm")
+endif()
+
+# First copy the default kconfig output file to the build dir.
+if (NOT DEFINED KCONFIG_PRESET_CONFIGURATION_FILE)
+	SET(KCONFIG_PRESET_CONFIGURATION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig_output_default")
+endif()
+
 IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
-	if (NOT DEFINED KCONFIG_RESULT_FILE_DIR)
-		SET(KCONFIG_RESULT_FILE_DIR "${CMAKE_BINARY_DIR}")
-	endif()
-	SET(KCONFIG_RESULT_FILE "${KCONFIG_RESULT_FILE_DIR}/.config")
-
-	if (NOT DEFINED KCONFIG_FEATUREMODEL)
-		SET(KCONFIG_FEATUREMODEL "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.fm")
-	endif()
-
-	# First copy the default kconfig output file to the build dir.
-	if (NOT DEFINED KCONFIG_PRESET_CONFIGURATION_FILE)
-		SET(KCONFIG_PRESET_CONFIGURATION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig_output_default")
-	endif()
-
 	############## KCONFIG Reconfigure ##############
 	add_custom_target(reconfigure
 		COMMAND ${CMAKE_COMMAND}
@@ -83,8 +83,8 @@ endif()
 # Determine relevant files based on the features selected
 # Get configuration variables from kconfig and store in cfAttribs.h
 if (${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}) # no kconfig -> use predefined cfAttribs.h
-	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/cfAttribs.h" TEMP)
-	file(WRITE "${CMAKE_BINARY_DIR}/cfAttribs.h" ${TEMP})
+	file(READ "${KCONFIG_PRESET_CONFIGURATION_FILE}" TEMP)
+	file(WRITE ${KCONFIG_RESULT_FILE} ${TEMP})
 endif()
 
 add_subdirectory(buildsystem/determine_relevant_files)
