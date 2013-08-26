@@ -1,6 +1,5 @@
 menuconfig ipstack
 	bool "IP-Stack"
-	depends on hal_networking
 
 	menu "Debugging messages"
 		depends on ipstack
@@ -974,60 +973,3 @@ menuconfig ipstack
 			depends on ipstack_udp_debugport
 			int "Destination Port"
 			default 10443
-
-
-	menu "Autosar OS Integration"
-		depends on ipstack
-		
-		menuconfig ipstack_irqsync
-			bool "Interrupt Synchronization"
-			default y
-			help
-				You really want this
-				
-		menuconfig ipstack_clock
-			depends on hal_SystemClock
-			bool "SystemClock Support"
-			default y
-			help
-				Required for computing timeouts (ARP, TCP, ...)	
-
-		menuconfig ipstack_autosar_event
-			bool "Event Support"
-			default y
-			help
-				Needed for blocking packet reception. To use, your application needs to define an Event with the name "IPStackReceiveEvent" that needs to be marked as used by all tasks that call the receive() function on a socket.
-
-		menuconfig ipstack_autosar_alarm
-			select ipstack_autosar_event
-			bool "Alarm Support"
-			depends on ipstack_tcp
-			default y
-			help
-				Needed for TCP timeouts. To use, your application needs to define an alarm per task that uses TCP sockets. The alarm must be configured to set the "IPStackReceiveEvent" for the corresponding task. The underlying counter should be configured with a major tick interval of 1ms.
-		
-		menuconfig ipstack_autosar_reschudule
-			bool "Reschedule Tasks"
-			default y
-			depends on ipstack_arp_ipv4_request || ipstack_udp_send
-			help
-				Allow the IP-Stack to reschedule other tasks while waiting.
-				This feature makes use of AS::Schedule() if a task is waiting.
-		
-			config ipstack_autosar_reschedule_address_resolution
-				depends on ipstack_autosar_reschudule
-				bool "Reschedule while ARP/NDP address resolution"
-				default y
-				help
-					Allow the IP-Stack to reschedule other tasks while waiting for an ARP or NDP address resolution reply.
-					If not selected, polling is used instead for waiting with an upper limit of 3 seconds.
-		
-			config ipstack_autosar_reschedule_sendbuffer_free
-				depends on ipstack_autosar_reschudule && ipstack_udp_send
-				bool "Reschedule while sending UDP data"
-				default y
-				help
-					Allow the IP-Stack to reschedule other tasks while waiting for an UDP packet to be sent.
-					If not selected, polling is used instead for waiting until the hardware finished sending.
-
-	endmenu

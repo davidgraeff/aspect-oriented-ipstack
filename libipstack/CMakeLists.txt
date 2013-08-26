@@ -44,25 +44,24 @@ IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 		SET(KCONFIG_PRESET_CONFIGURATION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig_output_default")
 	endif()
 
-	file(READ "${KCONFIG_PRESET_CONFIGURATION_FILE}" TEMP)
-	file(WRITE ${KCONFIG_RESULT_FILE} ${TEMP})
-
-	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${KCONFIG_RESULT_FILE}")
-
 	############## KCONFIG Reconfigure ##############
 	add_custom_target(reconfigure
 		COMMAND ${CMAKE_COMMAND}
 		-DKCONFIG_EXECUTABLE=${KCONFIG_EXECUTABLE} -DKCONFIG_FEATUREMODEL=${KCONFIG_FEATUREMODEL}
 		-DKCONFIG_RESULT_FILE_DIR=${KCONFIG_RESULT_FILE_DIR}
+		-DKCONFIG_RESULT_FILE=${KCONFIG_RESULT_FILE}
+		-DKCONFIG_PRESET_CONFIGURATION_FILE=${KCONFIG_PRESET_CONFIGURATION_FILE}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig.cmake"
 		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig" VERBATIM)
 
-	if (NOT EXISTS "${KCONFIG_RESULT_FILE}")
-		add_custom_command(OUTPUT "${KCONFIG_RESULT_FILE}" DEPENDS reconfigure)
-		add_custom_target(reconfigure_firsttime DEPENDS reconfigure)
-	else()
-		add_custom_target(reconfigure_firsttime)
-	endif()
+	add_custom_target(reconfigure_firsttime
+		COMMAND ${CMAKE_COMMAND}
+		-DKCONFIG_EXECUTABLE=${KCONFIG_EXECUTABLE} -DKCONFIG_FEATUREMODEL=${KCONFIG_FEATUREMODEL}
+		-DKCONFIG_RESULT_FILE_DIR=${KCONFIG_RESULT_FILE_DIR} -DSkip_if_existing=1
+		-DKCONFIG_RESULT_FILE=${KCONFIG_RESULT_FILE}
+		-DKCONFIG_PRESET_CONFIGURATION_FILE=${KCONFIG_PRESET_CONFIGURATION_FILE}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig.cmake"
+		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig" VERBATIM)
 endif(NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 
 ############## Source FILES ##############
@@ -83,9 +82,9 @@ add_custom_command(OUTPUT "${SRC_FILE}"
 	-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
 	-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
 	DEPENDS determine_relevant_files reconfigure_firsttime COMMENT "Executing relevant_source_files" VERBATIM)
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${SRC_FILE}")
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${SRC_FILE}.bak")
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${DEFINITIONS_FILE}")
+
+SET(CLEAN_FILES "${SRC_FILE}" "${SRC_FILE}.bak" "${DEFINITIONS_FILE}" "${KCONFIG_RESULT_FILE}")
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 
 ############## Build ##############
 # Write all variables of cmake to a file that is read in by the buildlib.cmake script
