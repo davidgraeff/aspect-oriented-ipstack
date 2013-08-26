@@ -27,6 +27,7 @@ This software is currently NOT USABLE as it is.
 * Add API for non-multitasking support
 * Add build system parts for adding own aspects outside of the libipstack/src directory.
 * Add documentation papers to /doc.
+* Continous integration (Travis CI)
 
 Features
 ========
@@ -85,11 +86,13 @@ build directory in linux). If you want to reconfigure, execute __"make reconfigu
 
 About multitasking support
 --------------------------
-The ipstack is designed for a multitasking system and an own task for the application execution.
+The ipstack is designed for multitasking systems. Usually there exists the system task
+where interaction with the hardware takes place and traffic is received and
+the user task where traffic is generated and consumed. Places where tasks are used:
 For example we do some busy-waiting while waiting for an arp or IPv6 neighbour response and for timing
 tcp traffic etc. Check out the CiAO-OS integration as an example: We reschedule before entering a busy
 loop to allow for a better usage of the remaining waiting time. We use the alarm/event support of the
-operating system to make the task sleep while waiting for the next packet or a tcp timeout.
+operating system to make the task sleep while waiting for the next packet or tcp timeout.
 
 But we realize that on some very restricted systems multitasking support costs valuable space or uses limited ressources like timers.
 We therefore provide the __"BUILD_ONLY_ONE_TASK"__ cmake option. What it does is:
@@ -137,24 +140,58 @@ The applications aren't executable on their own without an integration.
 
 Example applications
 --------------------
-http_simple_server: __TODO__
+__http_simple_server:__ Provides a very simple http server. Only one page
+is returned and the http headers and content are statically compiled in.
 
-icmp_test: __TODO__
+__icmp_test:__ Only the ip management subsystem is enabled.
+This application is for testing ICMPv4/v6, udp send/receive, tcp reset.
+You can ping by using:
+* ping 10.0.3.2 (for icmp ping, substitue with your configured IP)
+* ping6 fe80::6655:44ff:fe33:2211%tap0 (for icmp ping with ipv6 on tap0 device)
+* echoping -u 10.0.3.2 (for udp ping; use ipv4 addresses, ipv6 is not supported by echoping for udp)
+* sendip -p ipv6 -p udp -us 5070 -ud 7 -d "Hello" -v fe80::6655:44ff:fe33:2211 (for ipv6 udp ping)
+* telnet 10.0.3.2 (for testing the tcp reset capability; use ipv4 or ipv6 address)
+* Send udp to port 88 to get it printed out
 
-tcp_speedtest: __TODO__
+For full network interaction
+* activate ipv6 forwarding: sysctl -w net.ipv6.conf.all.forwarding=1
+* have an ipv6 capable router (or the "radvd" software)
 
-telnet: __TODO__
+__tcp_speedtest:__ This application is for testing the TCP Speed. It is in one of three states:
+* listening for a command 
+* receiving a predetermined amount of data as fast as possible
+* sending a predetermined amount of data as fast as possible
+
+It opens a tcp listen socket on port 1234 and starts in the listen-for-a-command state. Commands:
+* "LISTEN": The application sends back "OK"  and is ready to receive 1024*1024*100 Bytes (100 MByte)
+	of data without further interpretation.
+* "SEND": The application begins immediatelly to send 1024*1024*100 Bytes (100 MByte) of random data.
+
+In the directory "linux_host_program" is a linux host program located for measuring tcp performance.
+Usage: _speedtest 10.0.3.2 1234 LISTEN_ or _speedtest 10.0.3.2 1234 SEND_.
+
+
+__telnet:__ Use the telnet application to test this example. An echo to every
+message is returned.
 
 Example integrations
 --------------------
-__linux_userspace_with_aspects:__ __TODO__
+__linux_userspace_with_aspects:__ In this example we're using aspects to tie
+the ipstack and the linux tun device together. Two threads are initialized.
+One is for receiving traffic and feeding the ipstack buffers and the other one
+is for the application for generating and consuming traffic. All application
+examples from above can be used with this type of integration.
 
-__linux_userspace_without_aspects:__ __TODO__
+__linux_userspace_without_aspects:__ The same as above, but the application
+example, tun-device and threads are tied together without aspects. This example
+demonstrates how to compile the ipstack as a standalone static lib that can
+be used from outside by just using the api methods.
 
 __linux_userspace_without_aspects_multitask:__ This example demonstrates the usage
 of the ip-stack without using a multitask system. The main loop is responsible for
 routing incoming and outgoing traffic to and from the ipstack and at the same time
-provide the application layer on top of the ipstack.
+provide the application layer. We show how to use the IP::periodic() and
+IP::is_reachable(...) methods.
 
 __ciao_os:__ The ipstack origins at this operating system for embedded systems. Therefore
 support and maintainance are good for this integration. CiAO implements AutoSar
@@ -172,6 +209,6 @@ __TODO__
 
 License
 =======
-The buildsystem is licensed under the terms of the BSL 2-clause license. The source code
-of the ipstack is GPL3 licensed. Please be aware of the implication: Because this software
+The buildsystem, example and integration code is licensed under the terms of the BSL 2-clause license.
+The ipstack source code is GPL3 licensed. Please be aware of the implication: Because this software
 is usally build as static library, your code have to be GPL3 compatible code.
