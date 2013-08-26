@@ -1,7 +1,11 @@
 #include "determine_files.h"
+#include <iostream>
+#include <sstream>
 
-FeatureToFiles::FeatureToFiles(const std::string& basedir, const picojson::value::object& obj) :
+FeatureToFiles::FeatureToFiles(const std::string& basedir, const picojson::value::object& obj,
+	const std::set<std::string>& kconfig_enabled) :
 	mdir(basedir) {
+	mEnabled=kconfig_enabled;
 	in=0;
 	msuccess = node(obj);
 }
@@ -16,6 +20,8 @@ bool FeatureToFiles::component(const picojson::value::array& obj) {
 			return false;
 		}
 		result &= node(value.get<picojson::object>());
+		if (!result)
+			return false;
 	}
 	return result;
 }
@@ -41,6 +47,42 @@ std::string FeatureToFiles::getMapString(const picojson::value::object& obj, std
 		return i->second.get<std::string>();
 }
 
+bool FeatureToFiles::checkDepends(const std::string depends) {
+	bool ok = true;
+	bool negate_depend = false;
+	bool all_depend = false;
+	bool min_one_depend = false;
+	std::istringstream iss(depends);
+	while (iss) {
+		std::string sub;
+		iss >> sub;
+		if (!sub.size())
+			continue;
+		if (sub=="not") {
+			negate_depend=true;
+		} else if(sub=="and") {
+			all_depend=true;
+			min_one_depend=false;
+			negate_depend=false;
+		} else if(sub=="or") {
+			min_one_depend=true;
+			all_depend=false;
+			negate_depend=false;
+		} else if (sub.compare(0,1,"&")==0) {
+			sub.erase(0,1);
+			bool enabled = mEnabled.count(sub);
+			enabled = (enabled && !negate_depend) || (!enabled && negate_depend);
+			if (all_depend)
+				ok &= enabled;
+			else if (min_one_depend)
+				ok |= enabled;
+		} else {
+			std::cerr << "Did not understand depends string: " << depends << "; " << sub << std::endl;
+		}
+	};
+	return ok;
+}
+
 bool FeatureToFiles::node(const picojson::value::object& obj) {
 	++in;
 	bool result = true;
@@ -51,6 +93,12 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 	std::list<std::string> files = get_files(obj);
 	
 	std::cerr << std::string(in*2, ' ') << "NODE " << vname << ";" << name << std::endl;
+	
+	if (depends.size() && !checkDepends(depends)) {
+		std::cerr << "Dependency not meet! " << depends << std::endl;
+		return result;
+	}
+	
 	if (subdir.size())
 		mdir.cd(subdir);
 
@@ -58,6 +106,7 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 		std::string& file = *i;
 		file=mdir.dir+'/'+file;
 		std::cerr << std::string(in*2, ' ') << "file " << file << std::endl;
+		//TODO add file to output stream
 	}
 
 	if (obj.count("comp")) {
@@ -66,7 +115,7 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 			std::cerr << "[ARRAY] expected as comp" << std::endl;
 			return false;
 		}
-		component(value.get<picojson::array>());
+		result &= component(value.get<picojson::array>());
 	}
 
 	if (subdir.size())

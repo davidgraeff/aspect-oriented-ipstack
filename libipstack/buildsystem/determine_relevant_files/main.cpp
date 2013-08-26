@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
 			exit(EXIT_FAILURE);
 		}
 		
-		FeatureToFiles ftf(base_directory, featureToFilesRelation.get<picojson::object>());
+		FeatureToFiles ftf(base_directory, featureToFilesRelation.get<picojson::object>(), kparser.kconfig_enabled);
 		// obtain a const reference to the map, and print the contents
 		if (! ftf.success() )
 			res = 1;

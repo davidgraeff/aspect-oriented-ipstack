@@ -4,10 +4,12 @@
 #include "parsekconfig.h"
 #include <string>
 #include <list>
+#include <set>
 
 class FeatureToFiles {
 public:
-	FeatureToFiles(const std::string& basedir, const picojson::value::object& obj);
+	FeatureToFiles(const std::string& basedir, const picojson::value::object& obj,
+				   const std::set<std::string>& kconfig_enabled);
 	bool success();
 private:
 	std::string getMapString(const picojson::value::object& obj, std::string name);
@@ -15,9 +17,11 @@ private:
 	bool value(const picojson::value& value);
 	bool node(const picojson::value::object& obj);
 	bool component(const picojson::value::array& obj);
+	bool checkDepends(const std::string depends);
 	
 	int in;
 	bool msuccess;
+	std::set<std::string> mEnabled;
 	class Dir {
 	public:
 		Dir(std::string dir) {
