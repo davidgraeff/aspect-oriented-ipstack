@@ -116,43 +116,16 @@
 			"file" : "Protect_Receive_Debug.ah"
 		},
 		{
-			"vname" : "Autosar OS Integration",
-			"name" : "ipstack_autosar",
-			"subdir" : "/as",
+			"vname" : "OS Integration",
+			"name" : "ipstack_os_integration",
+			"subdir" : "/operating_system_integration",
 			"comp" : [
 			{
 				"file" : "SystemHalt.h"
 			},
 			{
-				"depends" : "&ipstack_irqsync",
-				"file" : "IRQ_Sync.ah"
-			},
-			{
 				"depends" : "&ipstack_clock",
 				"file" : "Clock.h"
-			},
-			{
-				"depends" : "&ipstack_autosar_event",
-				"files" : [
-					"EventSupport.ah",
-					"EventSupport.h",
-					"EventSupport_Slice.ah"
-				]
-			},
-			{
-				"depends" : "&ipstack_autosar_alarm and &ipstack_autosar_event",
-				"files" : [
-					"AlarmSupport.ah",
-					"AlarmSupport_Slice.ah"
-				]
-			},
-			{
-				"depends" : "&ipstack_autosar_reschedule_address_resolution",
-				"file" : "AddressResolutionReSchedule.ah"
-			},
-			{
-				"depends" : "&ipstack_autosar_reschedule_sendbuffer_free",
-				"file" : "Sendbuffer_free_Reschedule.ah"
 			}
 			]
 		},
@@ -674,6 +647,7 @@
 			},
 			{
 				"depends" : "&ipstack_arp_ipv4_cacheincoming",
+				"subdir" : "/ipv4",
 				"file" : "IPv4_ARP_CacheIncoming.ah"
 			},
 			{

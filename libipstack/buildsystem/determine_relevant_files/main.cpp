@@ -126,15 +126,24 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 	
-	// read feature_to_files_relation file
-	std::filebuf fb;
-	if (!fb.open (featureToFilesRelationfile.c_str(),std::ios::in)) {
-		std::cerr << "Failed to open featureToFilesRelation file!\n";
-		exit(EXIT_FAILURE);
+	if (!all_features) {
+		for (auto i = kparser.kconfig_keyvalue.begin(); i!=kparser.kconfig_keyvalue.end();++i) {
+			const std::string& key = i->first;
+			const std::string& value = i->second;
+// 			std::cerr << "def " << "-D" << key << "="<< value << ";";
+			output_definitions_stream << "-D" << key << "="<< value << ";";
+		}
 	}
-	
+		
 	int res = 0;
-	{
+	if (!only_definitions) {
+		// read feature_to_files_relation file
+		std::filebuf fb;
+		if (!fb.open (featureToFilesRelationfile.c_str(),std::ios::in)) {
+			std::cerr << "Failed to open featureToFilesRelation file!\n";
+			exit(EXIT_FAILURE);
+		}
+
 		std::istream featureToFilesRelation_FileStream(&fb);
 		picojson::value featureToFilesRelation;
 		featureToFilesRelation_FileStream >> featureToFilesRelation;
@@ -153,7 +162,8 @@ int main(int argc, char** argv) {
 			exit(EXIT_FAILURE);
 		}
 		
-		FeatureToFiles ftf(base_directory, featureToFilesRelation.get<picojson::object>(), kparser.kconfig_enabled);
+		FeatureToFiles ftf(base_directory, featureToFilesRelation.get<picojson::object>(),
+						   kparser.kconfig_enabled, &output_files_stream, all_features);
 		// obtain a const reference to the map, and print the contents
 		if (! ftf.success() )
 			res = 1;
@@ -168,8 +178,6 @@ int main(int argc, char** argv) {
 		output_definitions_file.close();
 	}
 	
-	std::cerr << "finished" << std::endl;
-	res = 1;
 	return res;
 }
 

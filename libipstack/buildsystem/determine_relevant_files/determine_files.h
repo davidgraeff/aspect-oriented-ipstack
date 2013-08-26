@@ -5,11 +5,13 @@
 #include <string>
 #include <list>
 #include <set>
+#include <iostream>
 
 class FeatureToFiles {
 public:
 	FeatureToFiles(const std::string& basedir, const picojson::value::object& obj,
-				   const std::set<std::string>& kconfig_enabled);
+				   const std::set<std::string>& kconfig_enabled,
+				   std::ostream* output_files_stream, bool all_features);
 	bool success();
 private:
 	std::string getMapString(const picojson::value::object& obj, std::string name);
@@ -19,9 +21,12 @@ private:
 	bool component(const picojson::value::array& obj);
 	bool checkDepends(const std::string depends);
 	
-	int in;
 	bool msuccess;
 	std::set<std::string> mEnabled;
+	std::ostream* output_files_stream;
+	bool all_features;
+	int in;
+	
 	class Dir {
 	public:
 		Dir(std::string dir) {

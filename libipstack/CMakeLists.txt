@@ -59,6 +59,9 @@ IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 
 	if (NOT EXISTS "${KCONFIG_RESULT_FILE}")
 		add_custom_command(OUTPUT "${KCONFIG_RESULT_FILE}" DEPENDS reconfigure)
+		add_custom_target(reconfigure_firsttime DEPENDS reconfigure)
+	else()
+		add_custom_target(reconfigure_firsttime)
 	endif()
 endif(NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 
@@ -75,7 +78,10 @@ add_custom_command(OUTPUT "${SRC_FILE}"
 	-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
 	-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
 	-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
-	DEPENDS determine_relevant_files "${KCONFIG_RESULT_FILE}" COMMENT "Executing relevant_source_files" VERBATIM)
+	DEPENDS determine_relevant_files reconfigure_firsttime COMMENT "Executing relevant_source_files" VERBATIM)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${SRC_FILE}")
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${SRC_FILE}.bak")
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${DEFINITIONS_FILE}")
 
 ############## Build ##############
 # Write all variables of cmake to a file that is read in by the buildlib.cmake script

@@ -3,10 +3,10 @@
 #include <sstream>
 
 FeatureToFiles::FeatureToFiles(const std::string& basedir, const picojson::value::object& obj,
-	const std::set<std::string>& kconfig_enabled) :
-	mdir(basedir) {
-	mEnabled=kconfig_enabled;
-	in=0;
+	const std::set<std::string>& kconfig_enabled,
+	std::ostream* output_files_stream, bool all_features) :
+	mdir(basedir), mEnabled(kconfig_enabled), output_files_stream(output_files_stream), all_features(all_features), in(0)
+{
 	msuccess = node(obj);
 }
 
@@ -92,9 +92,9 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 	std::string depends = getMapString(obj, "depends");
 	std::list<std::string> files = get_files(obj);
 	
-	std::cerr << std::string(in*2, ' ') << "NODE " << vname << ";" << name << std::endl;
+// 	std::cerr << std::string(in*2, ' ') << "NODE " << vname << ";" << name << std::endl;
 	
-	if (depends.size() && !checkDepends(depends)) {
+	if (!all_features && depends.size() && !checkDepends(depends)) {
 		std::cerr << "Dependency not meet! " << depends << std::endl;
 		return result;
 	}
@@ -105,8 +105,8 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 	for (auto i = files.begin(); i!=files.end();++i) {
 		std::string& file = *i;
 		file=mdir.dir+'/'+file;
-		std::cerr << std::string(in*2, ' ') << "file " << file << std::endl;
-		//TODO add file to output stream
+		//std::cerr << std::string(in*2, ' ') << "file " << file << std::endl;
+		*output_files_stream << file << ";";	
 	}
 
 	if (obj.count("comp")) {

@@ -1,0 +1,45 @@
+{
+	"vname" : "CiAO-OS Integration",
+	"name" : "ipstack_ciao_integration",
+	"subdir" : "/ciao_integration",
+	"comp" : [
+		{
+			"file" : "SystemHalt.h"
+		},
+		{
+			"depends" : "&ipstack_irqsync",
+			"file" : "IRQ_Sync.ah"
+		},
+		{
+			"depends" : "&ipstack_clock",
+			"file" : "Clock.h"
+		},
+		{
+			"depends" : "&ipstack_autosar_event",
+			"subdir" : "/autosar_task_support",
+			"files" : [
+				"EventSupport.ah",
+				"EventSupport.h",
+				"EventSupport_Slice.ah"
+			]
+		},
+		{
+			"depends" : "&ipstack_autosar_alarm and &ipstack_autosar_event",
+			"subdir" : "/autosar_task_support",
+			"files" : [
+				"AlarmSupport.ah",
+				"AlarmSupport_Slice.ah"
+			]
+		},
+		{
+			"depends" : "&ipstack_autosar_reschedule_address_resolution",
+			"subdir" : "/autosar_task_support",
+			"file" : "AddressResolutionReSchedule.ah"
+		},
+		{
+			"depends" : "&ipstack_autosar_reschedule_sendbuffer_free",
+			"subdir" : "/autosar_task_support",
+			"file" : "Sendbuffer_free_Reschedule.ah"
+		}
+	]
+}
