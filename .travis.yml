@@ -1,4 +1,6 @@
 before_install:
+  - sudo add-apt-repository ppa:purplekarrot/cmake -y
+  - sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/purplekarrot-cmake-precise.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" -y
   - sudo apt-get install cmake aspectc++ -y
 before_script: ./travis-ci/configure.sh
 script: ./travis-ci/make.sh
