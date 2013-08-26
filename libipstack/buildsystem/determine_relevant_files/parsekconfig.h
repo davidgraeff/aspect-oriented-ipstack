@@ -18,7 +18,8 @@
  * CONFIG_KERNEL_GZIP=y.
  * Values are stored in a map "kconfig_keyvalue".
  */
-namespace kconfigparser {
+class kconfigparser {
+public:
 	// Result hash and map
 	std::set<std::string> kconfig_enabled;
 	std::map<std::string, std::string> kconfig_keyvalue;
@@ -56,16 +57,16 @@ namespace kconfigparser {
 			if (hasEnding(key, "=y")) {
 				key.resize(key.size()-2);
 				kconfig_enabled.insert(key);
-				std::cout << "found option! " << key << std::endl;
+				//std::cerr << "found option! " << key << std::endl;
 			} else { // detect string/int/whatever option
 				std::string value = key;
 				key.resize(key.find_first_of('='));
 				value.erase(0,key.size()+1);
-				std::cout << "found value! " << key << ": " << value << std::endl;
+				//std::cerr << "found value! " << key << ": " << value << std::endl;
 				kconfig_keyvalue.insert(std::pair<std::string, std::string>(key,value));
 			}
 		}
 		file.close();
 		return true;
 	}
-}
+};

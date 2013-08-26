@@ -15,30 +15,45 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
+#pragma once
 
-#ifndef __IPSTACK_CONFIG_H__
-#define __IPSTACK_CONFIG_H__
+/**
+ * Some variables for the entire ip-stack. The are either provided
+ * by kconfig or set to a default value.
+ */
+namespace ipstack {
+	#ifdef cfIPSTACK_BLOCKSIZE_BIG
+		// *** Default mempool configuration (from kconf)
+		enum {
+		BLOCKSIZE_BIG = cfIPSTACK_BLOCKSIZE_BIG,
+		COUNT_BIG = cfIPSTACK_COUNT_BIG,
+		BLOCKSIZE_SMALL = cfIPSTACK_BLOCKSIZE_SMALL,
+		COUNT_SMALL = cfIPSTACK_COUNT_SMALL
+		};
+	#else
+		// *** Default mempool configuration
+		enum {
+		BLOCKSIZE_BIG = 1514,
+		COUNT_BIG = 4, //a power of 2 is most efficient
+		BLOCKSIZE_SMALL = 64,
+		COUNT_SMALL = 4 //a power of 2 is most efficient
+		};
+	#endif
 
-namespace ipstack{
+	#ifdef cfIPSTACK_MEMORY_GENERIC // from kconfig, default: no
+		enum { MEMORY_GENERIC = 1};
+	#else
+		enum { MEMORY_GENERIC = 0};
+	#endif
 
-// *** Default mempool configuration
-enum {
-  BLOCKSIZE_BIG = 1514,
-  COUNT_BIG = 4, //a power of 2 is most efficient
-  BLOCKSIZE_SMALL = 64,
-  COUNT_SMALL = 4 //a power of 2 is most efficient
-};
-
-// Configuration of the template API, whether generic template parameter are supported
-enum { MEMORY_GENERIC = 0 };
-
-//This specifies the maximum amount of packets that
-//can be buffered for each connection. This affects
-//TCP sending and receiving and UDP receiving.
-//A power of 2 is most efficient.
-enum { PACKET_LIMIT = COUNT_BIG+COUNT_SMALL };
+	//This specifies the maximum amount of packets that
+	//can be buffered for each connection. This affects
+	//TCP sending and receiving and UDP receiving.
+	//A power of 2 is most efficient.
+	#ifdef cfIPSTACK_PACKET_LIMIT
+		enum {PACKET_LIMIT = cfIPSTACK_PACKET_LIMIT};
+	#else
+		enum {PACKET_LIMIT = COUNT_BIG+COUNT_SMALL};
+	#endif
 
 } //namespace ipstack
-
-#endif // __IPSTACK_CONFIG_H__
-

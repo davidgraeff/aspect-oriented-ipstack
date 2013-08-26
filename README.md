@@ -59,16 +59,17 @@ __TODO__: Picture of kconfig
 Building and execution of kconfig is integrated into the cmake buildsystem. It is even prepared for the case that
 you already using kconfig for your os or application.
 
-Integration
-===========
+Build and Integrate
+===================
 If your buildsystem is CMake based, you may want to use aspects to integrate this IP-Stack into your system.
-This allows you more complex integration like using the a networks cards capability of calculating checksums etc
+This allows more complex integration like using network cards capability of calculating checksums etc
 and is described in the _Aspect-oriented integration_ section. In contrast if you just want to provide an interface for connecting the
-ipstack with your network hardware and use it as it is skip this section and read the _Static-library integration_ one.
+ipstack with your network hardware and use it as it is skip that section and read the _Static-library integration_ one.
 
-General procedure for cmake
----------------------------
+General procedure for building
+------------------------------
 You need CMake to build this software in either way. You may obtain it at http://www.cmake.org.
+Additionally you need the aspectc++ compiler from http://www.aspectc.org.
 We only explain the graphical way of configuring the build system (cmake-gui), but you may also use
 the command line version.
 * Create a directory called "build" (or any other name).
