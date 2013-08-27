@@ -106,7 +106,7 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}"
 # Write all variables of cmake to a file that is read in by the buildlib.cmake script
 set(CacheForScript "${CMAKE_CURRENT_BINARY_DIR}/CMakeCacheForScript.cmake")
 file(WRITE ${CacheForScript} "")
-message("write to ${CacheForScript}")
+#message("write to ${CacheForScript}")
 
 get_cmake_property(Vars VARIABLES)
 foreach(Var ${Vars})
