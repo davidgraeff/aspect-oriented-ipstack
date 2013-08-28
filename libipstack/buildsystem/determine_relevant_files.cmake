@@ -4,7 +4,7 @@
 
 # MESSAGE(STATUS "Run determine_relevant_files")
 SET(EXEC "${CMAKE_CURRENT_BINARY_DIR}/buildsystem/determine_relevant_files/determine_relevant_files")
-SET(ARGUMENTS "${EXEC}" "-b" "${base_directory}" "-o" "${output_filename}"
+SET(ARGUMENTS "${EXEC}" "-b" "${base_directory}" "-o" "${output_filename}" "-p" "kconfig_"
 	"-d" "${output_definitions_filename}" "-f" "${featuresFilesRelationFile}" "-k" "${kconfigFile}")
 
 if (all_files) # select all files

@@ -16,35 +16,35 @@
 // Copyright (C) 2011 Christoph Borchert
 
 #pragma once
+#include "cfAttribs.h"
 
 namespace ipstack {
-	class TCP_Config {
-	public:
-		//This is the maximum number of retransmissions for a TCP segment.
-		//The connection is closed if any segment exceeds this number.
-		//Values range from 3 to 255.
-		static inline int get_TCP_MAX_RETRANSMISSIONS() {
-			#ifdef cfTCP_MAX_RETRANSMISSIONS //kconfig value
-				return cfTCP_MAX_RETRANSMISSIONS;
-			#else
-				return 10;
-			#endif
-		}
-		
-		//This is the maximum amount of packets that can be stored in the
-		//tcp receivebuffer foreach connection
-		//set this value to 1 if you don't use a sliding receive window
-		//and if you don't use kconfig
-		static inline int get_TCP_RECEIVEBUFFER_MAX_PACKETS() {
-			return PACKET_LIMIT;
-		}
-		
-		//This is the maximum amount of packets that can be send simultaneously
-		//foreach tcp connection
-		//set this value to 1 if you don't use a sliding send window
-		//and if you don't use kconfig
-		static inline int get_TCP_HISTORY_MAX_PACKETS() {
-			return PACKET_LIMIT;
-		}
-	};
+	//This is the maximum number of retransmissions for a TCP segment.
+	//The connection is closed if any segment exceeds this number.
+	//Values range from 3 to 255.
+	#ifdef kconfig_cfTCP_MAX_RETRANSMISSIONS //kconfig value
+		enum {TCP_MAX_RETRANSMISSIONS=kconfig_cfTCP_MAX_RETRANSMISSIONS};
+	#else
+		enum {TCP_MAX_RETRANSMISSIONS=10};
+	#endif
+	
+	//This is the maximum amount of packets that can be stored in the
+	//tcp receivebuffer foreach connection
+	//set this value to 1 if you don't use a sliding receive window
+	//and if you don't use kconfig
+	#ifdef kconfig_ipstack_tcp_slidingwnd_recv //kconfig value
+		enum {TCP_RECEIVEBUFFER_MAX_PACKETS=PACKET_LIMIT};
+	#else
+		enum {TCP_RECEIVEBUFFER_MAX_PACKETS=1};
+	#endif
+	
+	//This is the maximum amount of packets that can be send simultaneously
+	//foreach tcp connection
+	//set this value to 1 if you don't use a sliding send window
+	//and if you don't use kconfig
+	#ifdef kconfig_ipstack_tcp_slidingwnd_recv //kconfig value
+		enum {TCP_HISTORY_MAX_PACKETS=PACKET_LIMIT};
+	#else
+		enum {TCP_HISTORY_MAX_PACKETS=1};
+	#endif
 }

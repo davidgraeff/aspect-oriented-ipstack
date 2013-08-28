@@ -18,10 +18,10 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include <inttypes.h>
-#include "cfAttribs.h"
-
 #include "ndpcache/NDPCacheEntry.h"
+#include "IPv6_Config.h"
+
+#include <inttypes.h>
 
 namespace ipstack
 {
@@ -83,13 +83,15 @@ class AddressMemory
 {
 #define maxsize(X, Y)  ((X) > (Y) ? (X) : (Y))
 	private:
-		enum {SIZE = maxsize(sizeof(AddressEntry), sizeof(NDPCacheEntry)), ENTRIES = cfIPSTACK_IPv6_cache};
-		unsigned char memory[SIZE* ENTRIES];
+		// Define SIZE
+		enum {SIZE = maxsize(sizeof(AddressEntry), sizeof(NDPCacheEntry))};
+		
+		unsigned char memory[SIZE* IPSTACK_IPV6_CACHE_ENTRIES_SIZE];
 	public:
 		enum { EntryUndefined = 255 };
 		AddressMemory() {
 			// set memory bytes to zero where the id of each entry is located
-			for (uint8_t i = 0; i < ENTRIES; ++i) {
+			for (uint8_t i = 0; i < IPSTACK_IPV6_CACHE_ENTRIES_SIZE; ++i) {
 				memory[i * SIZE] = 0;
 			}
 		}
@@ -105,7 +107,7 @@ class AddressMemory
 		 */
 		template <class resultType, unsigned char type>
 		resultType* findEntry(uint8_t* startentry = 0) {
-			for (uint8_t i = startentry ? *startentry : 0; i < ENTRIES; ++i) {
+			for (uint8_t i = startentry ? *startentry : 0; i < IPSTACK_IPV6_CACHE_ENTRIES_SIZE; ++i) {
 				
 				if (memory[i * SIZE] == type) {
 					if (startentry) *startentry = i + 1;
@@ -116,14 +118,14 @@ class AddressMemory
 		}
 
 		void freeAll(unsigned char type) {
-			for (uint8_t i = 0; i < ENTRIES; ++i) {
+			for (uint8_t i = 0; i < IPSTACK_IPV6_CACHE_ENTRIES_SIZE; ++i) {
 				if (memory[i * SIZE] == type) {
 					freeEntry(&memory[i * SIZE]);
 				}
 			}
 		}
 		uint8_t getPosition(void* entry) {
-			for (uint8_t i = 0; i < ENTRIES; ++i) {
+			for (uint8_t i = 0; i < IPSTACK_IPV6_CACHE_ENTRIES_SIZE; ++i) {
 				if (&memory[i * SIZE] == entry) {
 					return i;
 				}

@@ -51,8 +51,10 @@
 void usage(char** argv) {
 	fprintf(stderr,
 	"Any of the following modes may be combined (if non-exclusive options are set).\n"
-	"Mode OUTPUT DEFINITIONS: [-d output_file_definitions] -k kconfig_output_filename \n"
+	"Mode OUTPUT DEFINITIONS: -d output_file_definitions -p definitions_prefix -k kconfig_output_filename \n"
 	"	If you set output_file_definitions to \"\" the standard output is used.\n"
+	"	Definitions are written like this #define {definitions_prefix}{kconfig_key} {kconfig_value} without the brackets. "
+	"You may omit the prefix.\n"
 	"	The kconfig_output_filename is the output of the kconfig tool (usually .config).\n\n"
 	"Mode OUTPUT ALL FILES: -o output_file [-b base_directory] -f feature_to_files_relation_filename -a\n"
 	"	You may set output_file to \"\" to use the standard output.\n"
@@ -70,6 +72,7 @@ int main(int argc, char** argv) {
 	std::filebuf output_definitions_file;
 	std::string kconfigfile;
 	std::string base_directory;
+	std::string definitions_prefix;
 	std::string featureToFilesRelationfile;
 	bool all_features = false;
 	bool definitions = false;
@@ -77,7 +80,7 @@ int main(int argc, char** argv) {
 
 	/*************** parse options ***************/
 	int opt;
-	while ((opt = getopt(argc, argv, "b:o:d:k:f:a")) != -1) {
+	while ((opt = getopt(argc, argv, "p:b:o:d:k:f:a")) != -1) {
 			switch (opt) {
 			case 'o':
 				featureFiles = true;
@@ -98,6 +101,9 @@ int main(int argc, char** argv) {
 						exit(EXIT_FAILURE);
 					}
 				}
+				break;
+			case 'p':
+				definitions_prefix = std::string(optarg);
 				break;
 			case 'k':
 				kconfigfile = std::string(optarg);
@@ -160,7 +166,10 @@ int main(int argc, char** argv) {
 	/*************** output definitions ***************/
 	if (definitions) {
 		for (auto i = kparser.kconfig_keyvalue.begin(); i!=kparser.kconfig_keyvalue.end();++i) {
-			output_definitions_stream << "#define " << i->first << " " << i->second << std::endl;
+			output_definitions_stream << "#define " << definitions_prefix << i->first << " " << i->second << std::endl;
+		}
+		for (auto i = kparser.kconfig_enabled.begin(); i!=kparser.kconfig_enabled.end();++i) {
+			output_definitions_stream << "#define " << definitions_prefix << *i << std::endl;
 		}
 	}
 

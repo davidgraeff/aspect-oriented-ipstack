@@ -20,15 +20,15 @@
 #define __TCP_HISTORY_H__
 
 #include <inttypes.h>
-#include "../TCP.h"
-#include "../TCP_Config.h"
+#include "tcp/TCP.h"
+#include "tcp/TCP_Config.h"
 #include "TCP_Record.h"
 #include "SendBuffer.h"
 
 namespace ipstack {
 
 
-class TCP_History{
+class TCP_History {
   private:
   TCP_Record records[TCP_HISTORY_MAX_PACKETS];
   TCP_Record* head; //doubly linked (for quick remove) if TCP_History_SlidingWindow.ah

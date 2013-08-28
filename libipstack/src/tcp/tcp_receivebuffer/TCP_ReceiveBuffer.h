@@ -20,10 +20,10 @@
 #define __TCP_RECEIVEBUFFER_H__
 
 #include <inttypes.h>
-#include "../TCP.h"
-#include "../TCP_Config.h"
+#include "tcp/TCP.h"
+#include "tcp/TCP_Config.h"
 #include "TCP_RecvElement.h"
-#include "../../util/Mempool.h"
+#include "util/Mempool.h"
 
 #include <string.h>
 

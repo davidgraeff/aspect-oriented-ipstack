@@ -1,6 +1,11 @@
 menuconfig ipstack
 	bool "IP-Stack"
 
+	config ipstack_clock
+		depends on ipstack
+		bool "Allows to disable all clock depending functionally of the ipstack"
+		default y
+		
 	menu "Debugging messages"
 		depends on ipstack
 	
@@ -812,6 +817,7 @@ menuconfig ipstack
 
 			config ipstack_tcp_slidingwnd_recv
 				bool "Receive Window Support"
+
 		endmenu
 
 		menu "Silly Window Syndrome Avoidance (SWS)"
@@ -881,7 +887,12 @@ menuconfig ipstack
 				depends on cfIPSTACK_MEMORY_GENERIC
 				int GLOBAL_PACKET_LIMIT_PER_CONNECTION
 				default 16
-
+				help
+					This specifies the maximum amount of packets that
+					can be buffered for each connection. This affects
+					TCP sending and receiving and UDP receiving.
+					A power of 2 is most efficient.
+					
 		config cfIPSTACK_BLOCKSIZE_BIG
 			depends on ipstack
 			int BLOCKSIZE_BIG

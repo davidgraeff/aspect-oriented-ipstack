@@ -370,7 +370,7 @@
 			"subdir" : "/ipv6",
 			"comp" : [
 			{
-				"files" : ["AddressMemory.h", "Demux_IPv6_Slice.ah", "ExtensionHeaderOptions.h", "IPv6.ah", "IPv6.h", "IPv6AddressUtilities.cpp", "IPv6AddressUtilities.h", "IPv6_Receive.ah", "IPv6_Receive_Raw.ah", "IPv6_addlinklocalIP.ah", "IPv6onSockets.h", "IPv6onSockets.cpp", "Interface_IPv6_Slice.ah", "RouteResult.h", "Router_IPv6_Slice.ah", "SendBuffer_IPv6.ah", "Socket_IPv6_Slice.ah"]
+				"files" : ["IPv6_Config.h", "AddressMemory.h", "Demux_IPv6_Slice.ah", "ExtensionHeaderOptions.h", "IPv6.ah", "IPv6.h", "IPv6AddressUtilities.cpp", "IPv6AddressUtilities.h", "IPv6_Receive.ah", "IPv6_Receive_Raw.ah", "IPv6_addlinklocalIP.ah", "IPv6onSockets.h", "IPv6onSockets.cpp", "Interface_IPv6_Slice.ah", "RouteResult.h", "Router_IPv6_Slice.ah", "SendBuffer_IPv6.ah", "Socket_IPv6_Slice.ah"]
 			},
 			{
 				"vname" : "Always copy this even if no ndpcache. we need it for addressmemory entry size determination",

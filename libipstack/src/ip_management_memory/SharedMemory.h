@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "cfAttribs.h"
-#include "../util/Mempool.h"
+#include "IPStack_Config.h"
+#include "util/Mempool.h"
 #include "util/Ringbuffer.h"
 
 #include <string.h>
@@ -47,7 +47,7 @@ class SharedMemory {
 	public:
 	
 	//create the type for the following mempool instantiation
-	typedef ipstack::MempoolAPI<cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG, cfIPSTACK_MANAGEMENT_COUNT_BIG, cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL, cfIPSTACK_MANAGEMENT_COUNT_SMALL, ipstack::MEMORY_GENERIC>::Type SharedMemory_Mempool;
+	typedef ipstack::MempoolAPI<IPSTACK_MANAGEMENT_BLOCKSIZE_BIG, IPSTACK_MANAGEMENT_COUNT_BIG, IPSTACK_MANAGEMENT_BLOCKSIZE_SMALL, IPSTACK_MANAGEMENT_COUNT_SMALL, ipstack::MEMORY_GENERIC>::Type SharedMemory_Mempool;
 	
 	//static assertion: check whether at least 2 buffers (a big and small one) are available for this TCP Socket. If not, throw a compile-time error.
 	typedef SharedMemory_Count_Assertion<SharedMemory_Mempool::COUNT_BIG>::CONFIGURATION_ERROR_FOR_TCP__Count_of_buffer_must_not_be_0 big_buf_cnt_assert;
@@ -64,7 +64,7 @@ class SharedMemory {
 	/**
 		* Return amount of memory blocks available.
 		*/
-	enum {SLOTS = cfIPSTACK_MANAGEMENT_COUNT_BIG + cfIPSTACK_MANAGEMENT_COUNT_SMALL};
+	enum {SLOTS = IPSTACK_MANAGEMENT_COUNT_BIG + IPSTACK_MANAGEMENT_COUNT_SMALL};
 
 	SendBuffer* allocatedMemories[SLOTS];
 	/**
