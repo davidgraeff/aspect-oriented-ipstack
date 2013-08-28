@@ -19,7 +19,7 @@
 #ifndef __ETH_FRAME__
 #define __ETH_FRAME__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 
 namespace ipstack {
@@ -30,21 +30,21 @@ class Eth_Frame {
          MAX_FRAME_SIZE = 1518U };
   
   private:
-  UInt8 dst_hwaddr[6];
-  UInt8 src_hwaddr[6];
-  UInt16 type; //big endian
-  UInt8 data[]; //max 1500
+  uint8_t dst_hwaddr[6];
+  uint8_t src_hwaddr[6];
+  uint16_t type; //big endian
+  uint8_t data[]; //max 1500
   
   public:
-  UInt16 get_type(){ return type; }
-  void set_type(UInt16 t) { type = t; }
-  UInt8* get_data() { return data; }
+  uint16_t get_type(){ return type; }
+  void set_type(uint16_t t) { type = t; }
+  uint8_t* get_data() { return data; }
   
-  void set_dst_hwaddr(const UInt8* dst){
-    memcpy(dst_hwaddr, (UInt8*)dst, 6);
+  void set_dst_hwaddr(const uint8_t* dst){
+    memcpy(dst_hwaddr, (uint8_t*)dst, 6);
   }
   
-  UInt8* get_dst_hwaddr() { return dst_hwaddr; }
+  uint8_t* get_dst_hwaddr() { return dst_hwaddr; }
   
   void set_dst_hwaddr_broadcast(){
 	  dst_hwaddr[0] = 0xff;
@@ -55,17 +55,17 @@ class Eth_Frame {
 	  dst_hwaddr[5] = 0xff;
   }
   
-  void set_src_hwaddr(const UInt8* src){
+  void set_src_hwaddr(const uint8_t* src){
 	  src_hwaddr[0] = src[0];
 	  src_hwaddr[1] = src[1];
 	  src_hwaddr[2] = src[2];
 	  src_hwaddr[3] = src[3];
 	  src_hwaddr[4] = src[4];
 	  src_hwaddr[5] = src[5];
-	  //memcpy(src_hwaddr, (UInt8*)src, 6);
+	  //memcpy(src_hwaddr, (uint8_t*)src, 6);
   }
   
-  UInt8* get_src_hwaddr() { return src_hwaddr; }
+  uint8_t* get_src_hwaddr() { return src_hwaddr; }
   
 } __attribute__ ((packed));
 

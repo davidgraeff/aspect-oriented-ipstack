@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP.h"
 #include "SendBuffer.h"
 #include "operating_system_integration/Clock.h"
@@ -29,7 +29,7 @@ namespace ipstack
 class TCP_Record
 {
 	private:
-		UInt64 timeout;
+		uint64_t timeout;
 		SendBuffer* sendbuffer;
 
 	public:
@@ -44,9 +44,9 @@ class TCP_Record
 			return sendbuffer;
 		}
 
-		void setTimeout(UInt32 msec);
+		void setTimeout(uint32_t msec);
 
-		UInt64 getTimeout() {
+		uint64_t getTimeout() {
 			return timeout;
 		}
 
@@ -58,8 +58,8 @@ class TCP_Record
 			}
 		}
 
-		UInt32 getRemainingTime() {
-			UInt64 currentTime = Clock::now();
+		uint32_t getRemainingTime() {
+			uint64_t currentTime = Clock::now();
 			if (currentTime > timeout) {
 				return 0;
 				//is timed out

@@ -21,7 +21,7 @@
  * will introduce a head pointer for a linked list for binded sockets.
  */
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "UDP_Socket.h"
 #include "UDP.h"
 
@@ -30,11 +30,11 @@ using namespace ipstack;
 slice class Demux_UDP_Slice
 {
 	private:
-		UInt16 udp_last_default_port;
+		uint16_t udp_last_default_port;
 		UDP_Socket* udp_head_socket;
 
 		bool bind(UDP_Socket* socket) {
-			UInt16 sport = socket->get_sport();
+			uint16_t sport = socket->get_sport();
 			if (sport == UDP_Packet::UNUSED_PORT) {
 				//choose 'random' source port number
 				socket->set_sport(udp_get_free_port());
@@ -73,7 +73,7 @@ slice class Demux_UDP_Slice
 		}
 
 
-		UInt16 udp_get_free_port() {
+		uint16_t udp_get_free_port() {
 			udp_last_default_port++;
 			if (udp_last_default_port < 1024U) {
 				udp_last_default_port = 1024U;

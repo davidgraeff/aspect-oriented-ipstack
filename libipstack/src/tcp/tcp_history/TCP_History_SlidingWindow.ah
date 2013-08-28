@@ -49,7 +49,7 @@ advice "ipstack::TCP_History" : slice TCP_History_SlidingWindow_Slice;
 	advice execution("void ipstack::TCP_History::add(SendBuffer*, %)") &&
 	that(history) &&
 	args(sendbuffer, msec) :
-		around(TCP_History& history, SendBuffer* sendbuffer, UInt32 msec) {
+		around(TCP_History& history, SendBuffer* sendbuffer, uint32_t msec) {
 
 		//remove from freelist
 		TCP_Record* record = history.freelist;
@@ -100,7 +100,7 @@ advice "ipstack::TCP_History" : slice TCP_History_SlidingWindow_Slice;
 		} else {
 			TCP_Record* current = min->getNext();
 			while (current != 0) {
-				UInt64 timeout = current->getTimeout();
+				uint64_t timeout = current->getTimeout();
 				if (timeout != 0) {
 					if (timeout < min->getTimeout()) {
 						min = current;

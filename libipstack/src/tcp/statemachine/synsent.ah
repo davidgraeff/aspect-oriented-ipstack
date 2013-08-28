@@ -30,9 +30,9 @@ slice class TCP_State_Synsent
 				// waiting for SYN+ACK
 
 				//extract everything we will need later
-				UInt32 seqnum = segment->get_seqnum();
-				UInt32 acknum = segment->get_acknum();
-				UInt16 window = segment->get_window();
+				uint32_t seqnum = segment->get_seqnum();
+				uint32_t acknum = segment->get_acknum();
+				uint16_t window = segment->get_window();
 				bool segment_has_ACK = segment->has_ACK();
 				bool segment_has_SYN = segment->has_SYN();
 				bool segment_has_RST = segment->has_RST();

@@ -25,7 +25,7 @@
 #include "router/Interface.h"
 #include "ethernet/Eth_Frame.h"
 #include "ipv6/IPv6.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

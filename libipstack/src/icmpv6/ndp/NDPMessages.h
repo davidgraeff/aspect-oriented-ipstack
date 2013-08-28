@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 namespace ipstack
 {
 /**
@@ -31,16 +31,16 @@ public:
 	// Source link layer: Neighbor Solicitation, Router Solicitation, and Router Advertisement
 	// Target Link Layer: Neighbor Advertisement and Redirect packets
 	struct OptionSourceTargetLinkLayerAddress {
-		UInt8 type; // 1 for Source Link-layer Address, 2 for Target Link-layer Address
-		UInt8 len_in_octets;
-		UInt8 link_layer_address[];
+		uint8_t type; // 1 for Source Link-layer Address, 2 for Target Link-layer Address
+		uint8_t len_in_octets;
+		uint8_t link_layer_address[];
 	} __attribute__((packed));
 	
 	// MTU Option
 	struct OptionMTU {
-		UInt8 type; // 5
-		UInt8 len_in_octets; // = 1
-		UInt8 mtu[4];
+		uint8_t type; // 5
+		uint8_t len_in_octets; // = 1
+		uint8_t mtu[4];
 	} __attribute__((packed));
 	
 	enum LinkLayerAddressType {SourceLinkLayer=1,TargetLinkLayer=2};
@@ -63,7 +63,7 @@ public:
 	/**
 	  * Count how many octets are necessary for origSize.
 	  */
-	static UInt8 multiple_of_octets(UInt8 origSize) {
+	static uint8_t multiple_of_octets(uint8_t origSize) {
 		// 1: add one unit per 8 bytes additional address length
 		// 2: add one additional unit if origSize is not a multiple of 8
 		return origSize / 8 + (origSize % 8)? 1 : 0;
@@ -72,7 +72,7 @@ public:
 	/**
 	  * neighbor_solicitation and other ndp messages may send an additional option: The link layer address (source or target address)
 	  */
-	static void write_option_linklayer_address(LinkLayerAddressType type, char* data, const unsigned char* linklayerAddress, UInt8 linklayerAddressSize) {
+	static void write_option_linklayer_address(LinkLayerAddressType type, char* data, const unsigned char* linklayerAddress, uint8_t linklayerAddressSize) {
 		OptionSourceTargetLinkLayerAddress* option = (OptionSourceTargetLinkLayerAddress*)data;
 		option->type = type;
 		option->len_in_octets = 1;

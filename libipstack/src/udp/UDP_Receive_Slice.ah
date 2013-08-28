@@ -22,7 +22,7 @@
  * are in the IP(v4/v6) receiving slices.
  */
 #include <string.h> //for memcpy
-#include "../ReceiveBuffer.h"
+#include "ReceiveBuffer.h"
 #include "operating_system_integration/Clock.h"
 
 using namespace ipstack;
@@ -56,12 +56,12 @@ public:
 	/**
 	 * Convenience method: Block until a packet is available or a timeout is reached
 	 */
-	ReceiveBuffer* receive(UInt64 waitForPacketTimeoutMS) {
+	ReceiveBuffer* receive(uint64_t waitForPacketTimeoutMS) {
 		ReceiveBuffer* recv = (ReceiveBuffer*)m_receivequeue->get();
 		if (!recv) {
 			if (!waitForPacketTimeoutMS )
 				return 0;
-			UInt64 timeout = Clock::now() + Clock::ms_to_ticks(waitForPacketTimeoutMS);
+			uint64_t timeout = Clock::now() + Clock::ms_to_ticks(waitForPacketTimeoutMS);
 			while(timeout < Clock::now()){
 				recv = (ReceiveBuffer*)m_receivequeue->get();
 				if (recv)

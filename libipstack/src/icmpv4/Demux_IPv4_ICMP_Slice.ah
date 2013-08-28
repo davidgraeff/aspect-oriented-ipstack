@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../ipv4/IPv4.h"
 #include "ICMP.h"
 #include "../router/Interface.h"

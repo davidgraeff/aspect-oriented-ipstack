@@ -20,7 +20,7 @@
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6onSockets.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "../ExtensionHeaderOptions.h"
 namespace ipstack
 {
@@ -36,7 +36,7 @@ class IPv6HopByHop
 		/**
 		 * HopByHop Option aspects weave here. Return used size
 		 */
-		static unsigned writeOptions(IPV6& ipv6, UInt8* data) {
+		static unsigned writeOptions(IPV6& ipv6, uint8_t* data) {
 			return 0;
 		}
 
@@ -54,7 +54,7 @@ class IPv6HopByHop
 			
 			used_size = all_size - used_size; // := remaining size
 			if (used_size) {
-				ExtensionHeaderOptions::writePaddingOption(((UInt8*)e->options)+used_size, (UInt8)used_size- sizeof(IPv6HeaderExtension));
+				ExtensionHeaderOptions::writePaddingOption(((uint8_t*)e->options)+used_size, (uint8_t)used_size- sizeof(IPv6HeaderExtension));
 			}
 			return all_size;
 		}
@@ -64,7 +64,7 @@ class IPv6HopByHop
 			if (!minsize)
 				return 0;
 			// We have a min size. But we need an aligned size. Each extension header has to be 64bit (8 Byte) aligned.
-			UInt8 rest = minsize % 8;
+			uint8_t rest = minsize % 8;
 			if (!rest)
 				return minsize;
 			else

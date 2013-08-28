@@ -32,8 +32,8 @@ void established(TCP_Segment* segment, unsigned len) {
 
     //calculate payload length
     unsigned payload_len = len - (segment->get_header_len()*4);
-    UInt32 seqnum = segment->get_seqnum();
-    UInt32 acknum = segment->get_acknum();
+    uint32_t seqnum = segment->get_seqnum();
+    uint32_t acknum = segment->get_acknum();
     
     if(segment->has_ACK()){
       handleACK(acknum);
@@ -80,7 +80,7 @@ void established(TCP_Segment* segment, unsigned len) {
         unsigned copyBytes = recvBytes > application_buflen ? application_buflen : recvBytes;
         receiveBuffer.copyData(application_buf, copyBytes);
         application_recv_len += copyBytes; //increment recv_len byte count
-        application_buf = (void*) (((UInt8*)application_buf) + copyBytes); //adjust application_buf pointer
+        application_buf = (void*) (((uint8_t*)application_buf) + copyBytes); //adjust application_buf pointer
         application_buflen -= copyBytes; //adjust data to be still read
         
         processACK();

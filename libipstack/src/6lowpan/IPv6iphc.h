@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/IPv6AddressUtilities.h"
 #include <string.h>
 
@@ -32,14 +32,14 @@ public:
 private:
 	// for the fragment header
 	// no initalizing, no little/big endian. This number is just random and increases with every packet
-	static UInt16 datagram_tag_counter;
+	static uint16_t datagram_tag_counter;
 	
 	char fragmentheader[2];
-	UInt16 datagram_tag;
-	UInt8 data[];
+	uint16_t datagram_tag;
+	uint8_t data[];
 
 	// four bytes
-	void writeFragmentHeader(UInt16 size) ;
+	void writeFragmentHeader(uint16_t size) ;
 
 
 	// aspect weaves in ethernet src addr
@@ -50,21 +50,21 @@ private:
 	}
 public:
 	void setUpHeader() ;
-	UInt16 get_payload_len() ;
-	void set_payload_len(UInt16 len) ;
-	UInt8* get_payload() ;
-	static UInt8 getWriteSrcHeaderSize() {return 16;}
-	static UInt8 getWriteDestHeaderSize() {return 16;}
-	static UInt8 getWriteMulticastDestHeaderSize() {return 16;}
-	static UInt8 getWriteHeaderSize() ;
-	UInt8 calculateHCHeaderSizeWithoutFragmentSize() ;
-	UInt8 calculateHeaderSize() ;
+	uint16_t get_payload_len() ;
+	void set_payload_len(uint16_t len) ;
+	uint8_t* get_payload() ;
+	static uint8_t getWriteSrcHeaderSize() {return 16;}
+	static uint8_t getWriteDestHeaderSize() {return 16;}
+	static uint8_t getWriteMulticastDestHeaderSize() {return 16;}
+	static uint8_t getWriteHeaderSize() ;
+	uint8_t calculateHCHeaderSizeWithoutFragmentSize() ;
+	uint8_t calculateHeaderSize() ;
 
-	UInt8 get_hoplimit() ;
-	void set_hoplimit(UInt8 t) ;
+	uint8_t get_hoplimit() ;
+	void set_hoplimit(uint8_t t) ;
 
-	UInt8 get_nextheader() ;
-	void set_nextheader(UInt8 i) ;
+	uint8_t get_nextheader() ;
+	void set_nextheader(uint8_t i) ;
 
 	ipv6addr get_src_ipaddr() ;
 
@@ -73,12 +73,12 @@ public:
 	ipv6addr get_dst_ipaddr() ;
 	void set_dst_ipaddr(const ipv6addr& addr) ;
 private:
-	ipv6addr read_compressed_ipaddr(ipv6addr& mem, UInt8* readPtr, UInt8 flagbyte) ;
-	ipv6addr read_compressed_multicast_dest_ipaddr(ipv6addr& mem, UInt8* readPtr, UInt8 flagbyte) ;
+	ipv6addr read_compressed_ipaddr(ipv6addr& mem, uint8_t* readPtr, uint8_t flagbyte) ;
+	ipv6addr read_compressed_multicast_dest_ipaddr(ipv6addr& mem, uint8_t* readPtr, uint8_t flagbyte) ;
 
-	void write_compressed_src_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte) ;
-	void write_compressed_dst_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte) ;
-	void write_compressed_multicast_dst_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte) ;
+	void write_compressed_src_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte) ;
+	void write_compressed_dst_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte) ;
+	void write_compressed_multicast_dst_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte) ;
 
 } __attribute__((packed));  //__attribute__ ((aligned(1), packed));
 

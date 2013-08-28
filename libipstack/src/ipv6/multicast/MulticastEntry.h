@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 /**
@@ -30,7 +30,7 @@ struct MulticastGroupEntry {
 	enum { ID = 240};
 	unsigned char id;
 	ipv6addr ipv6;
-	UInt8 state;
+	uint8_t state;
 	/**
 	 * Use this after getting a free memory block from AddressMemory.
 	 * This will mark the memory block as beeing used.

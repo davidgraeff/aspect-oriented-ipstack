@@ -24,7 +24,7 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "ethernet/Eth_Frame.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

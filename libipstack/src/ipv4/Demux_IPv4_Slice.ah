@@ -32,7 +32,7 @@ private:
     void ipv4_forward ( IPv4_Packet *packet, unsigned len, Interface *interface ) {
         //Aspects to be weaved here!
     }
-    bool ipv4_reassemble ( IPv4_Packet* &packet, unsigned &len, Interface *interface, UInt16 fragment_offset ) {
+    bool ipv4_reassemble ( IPv4_Packet* &packet, unsigned &len, Interface *interface, uint16_t fragment_offset ) {
         //Aspects to be weaved here!
         return false; // Packet not completely reassembled, yet. This is not the last fragment!
     }

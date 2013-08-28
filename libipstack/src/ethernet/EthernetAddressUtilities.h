@@ -21,7 +21,7 @@
  * should be optimized out if not used by the compiler and do not need a seperate aspects.
  */
 
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 
@@ -30,14 +30,14 @@ namespace ipstack {
  * @param eth_addr Native mac represenation
  * @param addrstr Memory for the textual address representation. 18 characters are generated.
  */
-void ethernet_addr_tostring(UInt8* eth_addr, char *addrstr);
+void ethernet_addr_tostring(uint8_t* eth_addr, char *addrstr);
 /**
  * Parse a textual ethernet address representation like "20:01:0d:b8:00:00" into the native representation
  * @param addrstr Textual address representation
  * @param ipaddr Resulting native ethernet represenation
  * @return Return true if successful otherwise false.
  */
-bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr);
+bool parse_ethernet_addr(const char *addrstr, uint8_t* eth_addr);
 
 /**
   * Return true if a valid mac addr is set. The first three bytes are
@@ -46,5 +46,5 @@ bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr);
   * The second three bytes of the mac address are usually nic identifier of the network card and
   * should be != 0. This method test the second three bytes.
   */
-bool is_eth_addr_set(UInt8* eth_addr);
+bool is_eth_addr_set(uint8_t* eth_addr);
 } //namespace ipstack

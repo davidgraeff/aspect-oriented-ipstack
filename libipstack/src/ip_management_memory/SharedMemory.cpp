@@ -11,7 +11,7 @@ namespace ipstack
 	}
 
 	bool SharedMemory::insert(SendBuffer* data) {
-		for (UInt16Opt i=0;i<SLOTS;++i) {
+		for (uint_fast16_t i=0;i<SLOTS;++i) {
 			if (!allocatedMemories[i]) {
 				allocatedMemories[i] = data;
 				return true;
@@ -20,9 +20,9 @@ namespace ipstack
 		return false;
 	}
 	
-	bool SharedMemory::remove(UInt16Opt index) {
+	bool SharedMemory::remove(uint_fast16_t index) {
 		SendBuffer* buffer = allocatedMemories[index];
-		UInt8 s = buffer->getState();
+		uint8_t s = buffer->getState();
 		if ( s == SendBuffer::InvalidState || (s == SendBuffer::TransmittedState && buffer->hasBeenSend())) { // if the SendBuffer has been send already, free it
 			mempool.free((void*)buffer);
 			allocatedMemories[index] = 0;
@@ -31,8 +31,8 @@ namespace ipstack
 		return false;
 	}
 	
-	SendBuffer* SharedMemory::getNext(UInt16Opt& index) const {
-		for (UInt16Opt i=index;i<SLOTS;++i) {
+	SendBuffer* SharedMemory::getNext(uint_fast16_t& index) const {
+		for (uint_fast16_t i=index;i<SLOTS;++i) {
 			if (allocatedMemories[i]) {
 				index = i;
 				return allocatedMemories[i];
@@ -42,7 +42,7 @@ namespace ipstack
 	}
 	
 	void SharedMemory::freeAllUnused() {
-		for (UInt16Opt i=0;i<SLOTS;++i) {
+		for (uint_fast16_t i=0;i<SLOTS;++i) {
 			if (allocatedMemories[i]) {
 				remove(i);
 			}

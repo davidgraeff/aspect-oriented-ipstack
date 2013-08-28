@@ -19,7 +19,7 @@
 #ifndef __TCP_HISTORY_H__
 #define __TCP_HISTORY_H__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP.h"
 #include "../TCP_Config.h"
 #include "TCP_Record.h"
@@ -36,7 +36,7 @@ class TCP_History{
   public:
   TCP_History() : head(0) {}
   
-  void add(SendBuffer* b, UInt32 msec);
+  void add(SendBuffer* b, uint32_t msec);
   
   TCP_Record* get() { return head; }
   bool isEmpty() { return (head == 0); }
@@ -44,7 +44,7 @@ class TCP_History{
   
   void remove(TCP_Record* record);
   
-  UInt32 getNextTimeout(); // relative value in msecs
+  uint32_t getNextTimeout(); // relative value in msecs
 
 };
 

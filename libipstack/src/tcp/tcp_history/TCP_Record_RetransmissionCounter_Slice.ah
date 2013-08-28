@@ -20,7 +20,7 @@
 #define __TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
 
 slice class TCP_Record_RetransmissionCounter_Slice {
-  UInt8 retransmission_counter;
+  uint8_t retransmission_counter;
 };
 
 #endif //__TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__

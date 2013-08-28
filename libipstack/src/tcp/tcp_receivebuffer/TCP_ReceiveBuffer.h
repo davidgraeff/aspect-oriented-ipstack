@@ -19,7 +19,7 @@
 #ifndef __TCP_RECEIVEBUFFER_H__
 #define __TCP_RECEIVEBUFFER_H__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP.h"
 #include "../TCP_Config.h"
 #include "TCP_RecvElement.h"
@@ -36,7 +36,7 @@ class TCP_ReceiveBuffer{
   TCP_RecvElement elements[TCP_RECEIVEBUFFER_MAX_PACKETS];
   TCP_RecvElement* head;
   
-  UInt32 read_firstSeqNum;
+  uint32_t read_firstSeqNum;
   bool pushFlag; //deliver all data to the application immediately
   //TODO: safe seqNum, until which data should be pushed
   TCP_Socket* socket; //for freeing packets
@@ -44,7 +44,7 @@ class TCP_ReceiveBuffer{
   public:
   TCP_ReceiveBuffer(TCP_Socket* sock) : head(0), pushFlag(false), socket(sock) {}
   
-  void setFirstSeqNum(UInt32 seqNum) { read_firstSeqNum = seqNum; }
+  void setFirstSeqNum(uint32_t seqNum) { read_firstSeqNum = seqNum; }
   
   bool isPushed() { return pushFlag; }
   
@@ -57,7 +57,7 @@ class TCP_ReceiveBuffer{
     }
   }
 
-  UInt32 getAckNum();
+  uint32_t getAckNum();
   
   void socket_free(TCP_Segment* segment);
   
@@ -65,7 +65,7 @@ class TCP_ReceiveBuffer{
   
   //insert returns 'true' if segment has been added successfully
   //caller must free this packet if it returns 'false'
-  bool insert(TCP_Segment* segment, UInt32 seqnum, unsigned len);
+  bool insert(TCP_Segment* segment, uint32_t seqnum, unsigned len);
   
 };
 

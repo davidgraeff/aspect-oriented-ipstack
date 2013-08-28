@@ -48,7 +48,7 @@ public:
 		Interface* interface = head_interface;
 		while (interface != 0) {
 			if (interface->isIPv6Up()) {
-				UInt8 nextEntry = 0;
+				uint8_t nextEntry = 0;
 				while (AddressEntry* entry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 					if (ipv6_find_route_is_matching(ipv6_dstaddr, entry)) {
 						return RouteResult(entry, interface);
@@ -58,7 +58,7 @@ public:
 				}
 				// Ok, we did not find a valid prefix entry. But may be there are default routers
 				if (!backup_default_router.interface) {
-					UInt8 nextEntry = 0;
+					uint8_t nextEntry = 0;
 					while (NDPCacheEntry* entry = interface->addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
 						if (entry->isRouting) {
 							backup_default_router.interface = interface;

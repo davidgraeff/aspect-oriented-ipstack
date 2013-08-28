@@ -80,7 +80,7 @@ aspect delay_icmpv6_send  {
 		/**
 		 * Initiate the sending for all SendBuffer objects that haven't been send so far.
 		 */
-		UInt16Opt index = 0;
+		uint_fast16_t index = 0;
 		while (SendBuffer* buffer = (SendBuffer*)sharedmemory.getNext(index)) {
 			DelaySend::sendDelayed(buffer);
 			++index;

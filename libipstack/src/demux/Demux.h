@@ -19,7 +19,7 @@
 #ifndef __DEMUX__
 #define __DEMUX__
 
-#include "../router/Interface.h"
+#include "router/Interface.h"
 
 namespace ipstack {
 

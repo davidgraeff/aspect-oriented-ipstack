@@ -19,29 +19,29 @@
 #ifndef __LITTLE_ENDIAN_AH__
 #define __LITTLE_ENDIAN_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 
 //using namespace ipstack;
 
 
 aspect Little_Endian {
 
-	static UInt16 htons_(UInt16 n) {
+	static uint16_t htons_(uint16_t n) {
 		return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
 	}
 
-	static inline UInt16 ntohs_(UInt16 n) {
+	static inline uint16_t ntohs_(uint16_t n) {
 		return htons_(n);
 	}
 
-	static UInt32 htonl_(UInt32 n) {
+	static uint32_t htonl_(uint32_t n) {
 		return ((n & 0xff) << 24) |
 		((n & 0xff00) << 8) |
 		((n & 0xff0000UL) >> 8) |
 		((n & 0xff000000UL) >> 24);
 	}
 
-	static inline UInt32 ntohl_(UInt32 n) {
+	static inline uint32_t ntohl_(uint32_t n) {
 		return htonl_(n);
 	}
 
@@ -58,7 +58,7 @@ aspect Little_Endian {
 
 	advice execution(Network_to_Host_Short()) &&
 	result(res) : // read only
-		after(UInt16 res) {
+		after(uint16_t res) {
 		*tjp->result() = ntohs_(res);
 	}
 
@@ -75,7 +75,7 @@ aspect Little_Endian {
 
 	advice execution(Host_to_Network_Short()) &&
 	args(val) : // read only
-		before(UInt16 val) {
+		before(uint16_t val) {
 		*(tjp->arg<0>()) = htons_(val);
 	}
 
@@ -86,7 +86,7 @@ aspect Little_Endian {
 
 	advice execution(Network_to_Host_Long()) &&
 	result(res) : // read only
-		after(UInt32 res) {
+		after(uint32_t res) {
 		*tjp->result() = ntohl_(res);
 	}
 
@@ -95,7 +95,7 @@ aspect Little_Endian {
 
 	advice execution(Host_to_Network_Long()) &&
 	args(val) : // read only
-		before(UInt32 val) {
+		before(uint32_t val) {
 		*(tjp->arg<0>()) = htonl_(val);
 	}
 

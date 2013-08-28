@@ -41,7 +41,7 @@ aspect InternetChecksum_Tx_Offloading_icmpv4 {
 // 	}
 // 	advice execution("% ipstack::ICMP_Packet::calc_checksum(%, %, ipstack::Interface*)") &&
 // 	args(csum,payloadlen, interface) :
-// 		around(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+// 		around(uint32_t csum, uint16_t payloadlen, Interface* interface) {
 // 
 // 		if ((interface != 0) && (interface->hasTransmitterHardwareChecksumming())) {
 // 			printf("icmp prepare hardware checksum: %u, len: %u\n", InternetChecksum::accumulateCarryBits(csum), payloadlen);

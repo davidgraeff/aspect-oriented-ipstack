@@ -25,7 +25,7 @@
 #include "../Socket_IPv4_Slice.ah"
 #include "ReceiveBufferUDPIPv4.h"
 #include "Demux_UDP_IPv4_Slice.ah"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -49,7 +49,7 @@ aspect IPv4_UDP_Receive {
 		
 		UDP_Packet* udp_packet = (UDP_Packet*) ipv4_packet->get_data();
 
-		UInt16 udp_packet_dport = udp_packet->get_dport();
+		uint16_t udp_packet_dport = udp_packet->get_dport();
 
 		UDP_Socket* socket = demux.udp_head_socket;
 		while (socket != 0) {

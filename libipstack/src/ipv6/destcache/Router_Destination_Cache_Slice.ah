@@ -26,7 +26,7 @@
 
 #include "../IPv6onSockets.h"
 #include "../ndpcache/NDPCacheEntry.h"
-#include "util/types.h"
+#include <inttypes.h>
 using namespace ipstack;
 
 slice class Router_IPv6_DEST_CACHE_Slice

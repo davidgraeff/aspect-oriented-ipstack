@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../ICMPv6.h"
 #include "icmpv6/ndp/NDPNeighborMessages.h"
 #include "../ICMPv6_Socket.h"
@@ -38,7 +38,7 @@ aspect NDP_Address_Duplication {
 	  */
 	static bool is_duplicate_address(const ipstack::ipv6addr& ipv6_dstaddr, Interface* interface) {
 		// duplicate address detection
-		UInt8 nextEntry = 0;
+		uint8_t nextEntry = 0;
 		while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 			if (/*addressentry->state == AddressEntry::AddressEntryStateTemporary &&*/ // Would be nice, but we have no timer -> all addresses are valid until proofed wrong currently
 				compare_ipv6_addr(ipv6_dstaddr, addressentry->ipv6)) {
@@ -64,7 +64,7 @@ aspect NDP_Address_Duplication {
 	 * to select another ip.
 	 */
 	advice execution("% ipstack::Interface::setIPv6AddressState(...)") && args(entry, ipstate) && that(interface) :
-		before(AddressEntry* entry, UInt8 ipstate, Interface& interface) {
+		before(AddressEntry* entry, uint8_t ipstate, Interface& interface) {
 
 		if (ipstate == AddressEntry::AddressEntryStateTemporary) {
 			ipstack::ipv6addr srcaddr = {{0}};

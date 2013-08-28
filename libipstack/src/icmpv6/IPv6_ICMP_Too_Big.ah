@@ -46,7 +46,7 @@ aspect IPv6_ICMP_Too_Big {
 			icmp_error_reply->set_code(ICMPv6_Packet::ICMP_CODE_PACKET_TOO_BIG);
 			// Byte wise copy of the network mtu (4 byte) to the icmp packet -> to handle different byte orders
 			char* mtu = (char*)icmp_error_reply->get_data(); // mtu is 4 bytes
-			UInt32 interface_mtu = interface->getMTU();
+			uint32_t interface_mtu = interface->getMTU();
 			// byte order: do it manually
 			mtu[0] = interface_mtu & 0xff;
 			mtu[1] = (interface_mtu>>8) & 0xff;

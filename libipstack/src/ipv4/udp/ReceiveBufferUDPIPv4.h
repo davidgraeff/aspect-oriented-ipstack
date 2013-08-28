@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "util/Mempool.h"
 #include "ReceiveBuffer.h"
 #include <string.h> //for memcpy
@@ -27,16 +27,16 @@ namespace ipstack {
 class ReceiveBufferUDPIPv4 : public ReceiveBuffer {
 public:
 	struct RemoteInfo {
-		UInt32 ipv4;
-		UInt16 remoteport;
-		UInt8 id;
+		uint32_t ipv4;
+		uint16_t remoteport;
+		uint8_t id;
 	};
 	/**
 	 * Create a receive buffer and return it.
 	 * Changes the ReceiveBuffer list-head pointer if neccessary.
 	 */
-	static ReceiveBufferUDPIPv4* createReceiveBufferUDPIPv4(Mempool* mempool, void*  payload, UInt16 payloadsize, UInt16 remoteport, UInt32 ipv4) {
-		UInt8 padding = (4 - ((payloadsize + sizeof(RemoteInfo)) % 4)) % 4;
+	static ReceiveBufferUDPIPv4* createReceiveBufferUDPIPv4(Mempool* mempool, void*  payload, uint16_t payloadsize, uint16_t remoteport, uint32_t ipv4) {
+		uint8_t padding = (4 - ((payloadsize + sizeof(RemoteInfo)) % 4)) % 4;
 		ReceiveBufferUDPIPv4* r = (ReceiveBufferUDPIPv4*)ReceiveBuffer::createReceiveBuffer(mempool, payload, payloadsize + sizeof(RemoteInfo) + padding);
 		if (!r)
 			return 0;
@@ -58,7 +58,7 @@ public:
 	}
 	
 	RemoteInfo* getRemoteInfo() {
-		UInt8 padding = (4 - ((m_receivedSize + sizeof(RemoteInfo)) % 4)) % 4;
+		uint8_t padding = (4 - ((m_receivedSize + sizeof(RemoteInfo)) % 4)) % 4;
 		char* d = m_dataStart;
 		d += m_receivedSize + padding;
 		return (RemoteInfo*)d;

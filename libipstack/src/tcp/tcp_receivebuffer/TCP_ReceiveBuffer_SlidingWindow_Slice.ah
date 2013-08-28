@@ -85,7 +85,7 @@ slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
 					return;
 				} else {
 					len -= current_len; //current_len bytes copied
-					dst = (void*)(((UInt8*)dst) + current_len);  //increment dst pointer
+					dst = (void*)(((uint8_t*)dst) + current_len);  //increment dst pointer
 				}
 			} else {
 				//consume head only partial
@@ -98,7 +98,7 @@ slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
 
 	//insert returns 'true' if segment has been added successfully
 	//caller must free this packet if it returns 'false'
-	bool insert_SlidingWindow(TCP_Segment* segment, UInt32 seqnum, unsigned len) {
+	bool insert_SlidingWindow(TCP_Segment* segment, uint32_t seqnum, unsigned len) {
 		if (freelist == 0) {
 			//printf("Error: ReceiveBuffer is Full :-(\n");
 			//TODO: delete non-contineous?

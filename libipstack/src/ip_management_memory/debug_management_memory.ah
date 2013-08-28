@@ -16,8 +16,8 @@
 // Copyright (C) 2013 David Gräff
 #pragma once
 #include <string.h>
-#include "util/types.h"
-#include "operating_system_integration/SystemHalt.h"
+#include <inttypes.h>
+#include "operating_system_integration/System.h"
 #include "operating_system_integration/Clock.h"
 #include "SendBuffer.h"
 #include "router/Router.h"
@@ -82,7 +82,7 @@ aspect debug_management_memory {
 				}
 			}
 			
-			UInt16Opt pos=0;
+			uint_fast16_t pos=0;
 			while (tjp->that()->getNext(pos)!=data) {
 				if (pos>SharedMemory::SLOTS) {
 					printf("MM: alloc failed; Did not found new data %p!\n", data);
@@ -101,7 +101,7 @@ aspect debug_management_memory {
 	SendBuffer* buffer;
 	
 	advice execution("% ipstack::SharedMemory::remove(%)")
-		&& args(index): before(UInt16Opt index) {
+		&& args(index): before(uint_fast16_t index) {
 		
 		buffer = tjp->that()->getNext(index);
 		if (buffer==0) {
@@ -124,7 +124,7 @@ aspect debug_management_memory {
 	}
 	
 	advice execution("% ipstack::SharedMemory::remove(%)")
-		&& args(index): after(UInt16Opt index) {
+		&& args(index): after(uint_fast16_t index) {
 		
 		if (*tjp->result()) { // free ok
 			for (int i=0;i<SharedMemory::SLOTS;++i) {
@@ -151,7 +151,7 @@ aspect debug_management_memory {
 		memset(allocatedMemories, 0, SharedMemory::SLOTS);
 		
 		// The allocation-buffer-queue should be empty on start
-		UInt16Opt index = 0;
+		uint_fast16_t index = 0;
 		while (SendBuffer* buffer = (SendBuffer*)tjp->that()->getNext(index)) {
 			printf("MM: invalid buffer start content! @index %u: %p!\n", index, buffer);
 			System::haltsystem();

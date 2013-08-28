@@ -19,9 +19,9 @@
 #ifndef __IPV4_RECEIVE_FRAGMENT_REASSEMBLY_AH__
 #define __IPV4_RECEIVE_FRAGMENT_REASSEMBLY_AH__
 
-#include "IPv4.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
+#include "ipv4/IPv4.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 #include "operating_system_integration/Clock.h"
 
@@ -35,13 +35,13 @@ aspect IPv4_Receive_Fragment_Reassembly {
   enum { TIMEOUT = 60, //seconds, within next fragment must arrive
          BUFFERSIZE = 768 }; //max. size of the entire reassembled IPv4 packet
 
-  UInt64 expired_time;
+  uint64_t expired_time;
   
-  UInt8 buffer[BUFFERSIZE];
-  UInt8 bitmap[BUFFERSIZE / (8 * 8)];
+  uint8_t buffer[BUFFERSIZE];
+  uint8_t bitmap[BUFFERSIZE / (8 * 8)];
 
-  UInt8 header_len; // set when first fragment arrives
-  UInt16 total_len; // 0 until last fragment received
+  uint8_t header_len; // set when first fragment arrives
+  uint16_t total_len; // 0 until last fragment received
   
   void update_bitmap(unsigned start, unsigned end){
     start = start & 0xFFFFFFF8; //start at multiple of 8
@@ -61,7 +61,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
       }
     }    
     //check the last byte now
-    UInt8 value = 0;
+    uint8_t value = 0;
     unsigned last_byte = total_len & 0xFFFFFF40; //start at multiple of 64
     for(unsigned i=last_byte; i <= total_len; i+=8){
       int bitmap_value = (i%64)/8;
@@ -82,9 +82,9 @@ aspect IPv4_Receive_Fragment_Reassembly {
   // *** Affect class: Demux
   advice execution("bool ipstack::Demux::ipv4_reassemble(ipstack::IPv4_Packet*&, unsigned&, ipstack::Interface*, %)") &&
          args(packet, len, interface, fragment_offset) && that(demux) :
-         after(IPv4_Packet* &packet, unsigned &len, Interface* interface, UInt16 fragment_offset, Demux& demux){
+         after(IPv4_Packet* &packet, unsigned &len, Interface* interface, uint16_t fragment_offset, Demux& demux){
 
-    UInt64 curr_time = Clock::now(); //in ticks
+    uint64_t curr_time = Clock::now(); //in ticks
     
     bool copy_data = false; //is set if the current packet shall be copied into buffer
     

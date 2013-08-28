@@ -33,7 +33,7 @@ slice class TCP_State_Synrcvd
 				}
 
 				if (segment->has_ACK()) {
-					UInt32 acknum = segment->get_acknum();
+					uint32_t acknum = segment->get_acknum();
 					handleACK(acknum);
 					if (acknum == seqnum_next) {
 						//This segment ack'ed our SYN

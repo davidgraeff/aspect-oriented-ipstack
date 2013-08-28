@@ -55,23 +55,23 @@ aspect IPv4_ARP_Send_Receive {
       }
 
       //extract destination ipv4_addr out of this ARP packet:
-      UInt8* dst_ipv4_addr_ptr = packet->get_payload() + (2*ARP_Packet::ARP_HW_ADDR_SIZE_ETH + ARP_Packet::ARP_PROTOCOL_ADDR_SIZE_IPV4);
-      UInt32 dst_ipv4_addr = *((UInt32*)dst_ipv4_addr_ptr);
+      uint8_t* dst_ipv4_addr_ptr = packet->get_payload() + (2*ARP_Packet::ARP_HW_ADDR_SIZE_ETH + ARP_Packet::ARP_PROTOCOL_ADDR_SIZE_IPV4);
+      uint32_t dst_ipv4_addr = *((uint32_t*)dst_ipv4_addr_ptr);
 
       if(interface->getIPv4Addr() == dst_ipv4_addr){
         //this ARP packet is for us
         
         //extract source hw- and ipv4-addresses
-        UInt8* src_hw_addr = packet->get_payload();
-        UInt8* src_ipv4_addr = packet->get_payload() + ARP_Packet::ARP_HW_ADDR_SIZE_ETH;
+        uint8_t* src_hw_addr = packet->get_payload();
+        uint8_t* src_ipv4_addr = packet->get_payload() + ARP_Packet::ARP_HW_ADDR_SIZE_ETH;
         
         if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
           //Send ARP-Reply
-          ARP_Cache::Inst().ipv4_reply(src_hw_addr, (UInt32*) src_ipv4_addr, interface);
+          ARP_Cache::Inst().ipv4_reply(src_hw_addr, (uint32_t*) src_ipv4_addr, interface);
 		}
         else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
           //Update ARP Cache entries
-          ARP_Cache::Inst().ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
+          ARP_Cache::Inst().ipv4_update((uint32_t*) src_ipv4_addr, src_hw_addr);
         }
       }
     }

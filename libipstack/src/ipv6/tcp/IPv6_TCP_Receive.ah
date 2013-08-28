@@ -23,7 +23,7 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "../InternetChecksum.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -53,8 +53,8 @@ aspect IPv6_TCP_Receive {
 
 		TCP_Socket* socket = demux.tcp_head_socket;
 		
-		const UInt16 dport = tcp_segment->get_dport();
-		const UInt16 sport = tcp_segment->get_sport();
+		const uint16_t dport = tcp_segment->get_dport();
+		const uint16_t sport = tcp_segment->get_sport();
 		const ipv6addr sip = packet->get_src_ipaddr();
 		const ipv6addr dip = packet->get_dst_ipaddr();
 		

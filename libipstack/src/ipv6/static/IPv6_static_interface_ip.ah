@@ -32,7 +32,7 @@ using namespace ipstack;
   * with the address and the determined prefix length. An address duplication will be triggered.
   */
 aspect ipstack_ifcfg0_v6_static_ip  {
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		Interface* interface = Router::Inst().get_interface(0);
 		if(interface) {
 			ipstack::ipv6addr addr;

@@ -31,19 +31,19 @@
 #include "router/Interface.h"
 #include "router/Router.h"
 #include "demux/Demux.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 aspect NDP_Redirect {
 	// Redirect message
 	struct RedirectMessage {
-		UInt8 type; // 3
-		UInt8 code; // 4
-		UInt16 checksum;
-		UInt32 reserved;
+		uint8_t type; // 3
+		uint8_t code; // 4
+		uint16_t checksum;
+		uint32_t reserved;
 		
 		ipv6addr target_address;
 		ipv6addr destination_address;
-		UInt8 options[];
+		uint8_t options[];
 	} __attribute__((packed));
 	
 	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
@@ -59,7 +59,7 @@ aspect NDP_Redirect {
 			char dest_ethernet_mac[6];
 			bool foundDestMac = NDPMessages::get_option_linklayer_address(NDPMessages::TargetLinkLayer, (char*)message->options, payloadlen, dest_ethernet_mac);
 
-			NDPCacheEntry* ndpcacheentry = interface->addNDPCacheEntry(message->target_address, (UInt8*)dest_ethernet_mac,
+			NDPCacheEntry* ndpcacheentry = interface->addNDPCacheEntry(message->target_address, (uint8_t*)dest_ethernet_mac,
 			foundDestMac ? NDPCacheEntry::NDPCacheEntryState_Reachable : NDPCacheEntry::NDPCacheEntryState_Incomplete);
 
 			if (!ndpcacheentry)

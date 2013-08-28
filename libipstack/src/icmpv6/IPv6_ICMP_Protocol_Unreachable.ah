@@ -30,11 +30,11 @@ using namespace ipstack;
   */
 aspect IPv6_ICMP_Protocol_Unreachable {
 	struct ICMPv6Unrechable {
-		UInt8 type;
-		UInt8 code;
-		UInt16 checksum;
-		UInt32 failure_pointer;
-		UInt8 original_packet[];
+		uint8_t type;
+		uint8_t code;
+		uint16_t checksum;
+		uint32_t failure_pointer;
+		uint8_t original_packet[];
 	} __attribute__((packed));
 	
 	advice execution("void ipstack::Demux::error_no_protocol_handler_v6(ipstack::IPv6_Packet*, ipstack::Interface*)") &&
@@ -54,7 +54,7 @@ aspect IPv6_ICMP_Protocol_Unreachable {
 			reply->type = (ICMPv6_Packet::ICMP_TYPE_PARAMETER_PROBLEM);
 			reply->code = (ICMPv6_Packet::ICMP_CODE_PARAMETER_PROBLEM_UNKNOWN_NEXTHEADER);
 			reply->failure_pointer = 0;
-			((UInt8*)&(reply->failure_pointer))[3] = 7; // point to the next header field (cast to bytes to circumvent byte order problems)
+			((uint8_t*)&(reply->failure_pointer))[3] = 7; // point to the next header field (cast to bytes to circumvent byte order problems)
 			
 			sbi->writtenToDataPointer(sizeof(ICMPv6Unrechable));
 

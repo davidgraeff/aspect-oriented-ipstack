@@ -18,7 +18,7 @@
 #pragma once
 
 #include <string.h>
-#include "util/types.h"
+#include <inttypes.h>
 #include "util/Mempool.h"
 namespace ipstack
 {

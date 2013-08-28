@@ -40,7 +40,7 @@ aspect InternetChecksum_Tx_Offloading_tcp {
 	}
 	advice execution("% ipstack::TCP_Segment::calc_checksum(%, %, ipstack::Interface*)") &&
 	args(csum,payloadlen, interface) :
-		around(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		around(uint32_t csum, uint16_t payloadlen, Interface* interface) {
 
 		if ((interface != 0) && (interface->hasTransmitterHardwareChecksumming())) {
 // 			printf("tcp prepare hardware checksum: %u, len: %u\n", InternetChecksum::accumulateCarryBits(csum), InternetChecksum::byteswap16(InternetChecksum::accumulateCarryBits(csum)), payloadlen);

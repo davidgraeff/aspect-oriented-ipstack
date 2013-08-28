@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 
 slice class IP_Dualstack_IPVx_Slice {
 public:
-	UInt8* m_useipversionPtr;
+	uint8_t* m_useipversionPtr;
 };

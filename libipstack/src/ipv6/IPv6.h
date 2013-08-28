@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/IPv6AddressUtilities.h"
 
 namespace ipstack
@@ -39,18 +39,18 @@ class IPv6_Packet
 		enum { IPV6_UNUSED_ADDR = 0 }; // http://www.rfc-editor.org/rfc/rfc5735.txt
 
 	private:
-		UInt8 traffic_class1: 4,
+		uint8_t traffic_class1: 4,
 			  version: 4;
-		UInt8 traffic_class2_flowLabel1;
-		UInt8 flowLabel2;
-		UInt8 flowLabel3;
-		UInt16 payload_length; // byte order!
-		UInt8 nextheader;
-		UInt8 hoplimit;
+		uint8_t traffic_class2_flowLabel1;
+		uint8_t flowLabel2;
+		uint8_t flowLabel3;
+		uint16_t payload_length; // byte order!
+		uint8_t nextheader;
+		uint8_t hoplimit;
 		ipv6addr src_ipaddr;
 		ipv6addr dst_ipaddr;
 
-		UInt8 payload[];
+		uint8_t payload[];
 
 	public:
 		void setUpHeader() {
@@ -62,28 +62,28 @@ class IPv6_Packet
 			traffic_class1 = 0;
 			version = IPV6_VERSION;
 		}
-		UInt16 get_payload_len() {
+		uint16_t get_payload_len() {
 			return payload_length;
 		}
-		void set_payload_len(UInt16 len) {
+		void set_payload_len(uint16_t len) {
 			payload_length = len;
 		}
 
-		UInt8 get_version() {
+		uint8_t get_version() {
 			return version;
 		}
 		
-		UInt8 get_hoplimit() {
+		uint8_t get_hoplimit() {
 			return hoplimit;
 		}
-		void set_hoplimit(UInt8 t) {
+		void set_hoplimit(uint8_t t) {
 			hoplimit = t;
 		}
 
-		UInt8 get_nextheader() {
+		uint8_t get_nextheader() {
 			return nextheader;
 		}
-		void set_nextheader(UInt8 i) {
+		void set_nextheader(uint8_t i) {
 			nextheader = i;
 		}
 		char* get_nextheaderPointer() {
@@ -105,9 +105,9 @@ class IPv6_Packet
 			copy_ipv6_addr(addr, dst_ipaddr);
 		}
 
-		UInt8* get_payload() {
+		uint8_t* get_payload() {
 			// return pointer to payload
-			return (UInt8*)(payload);
+			return (uint8_t*)(payload);
 		}
 
 		unsigned validPacketLength(unsigned packet_len_in_bytes) {
@@ -122,7 +122,7 @@ class IPv6_Packet
 			//Get length of ipv6 packet. Byte order conversion is
 			//done by an aspect affecting "get_total_len()".
 			//Safe this value to avoid redundant conversions.
-			const UInt16 total_len = get_payload_len();
+			const uint16_t total_len = get_payload_len();
 
 			if (total_len > packet_len_in_bytes) {
 				//ip paket size is bigger than the entire buffer!

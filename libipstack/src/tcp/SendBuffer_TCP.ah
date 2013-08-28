@@ -22,7 +22,7 @@
 #include "TCP_Socket.h"
 #include "TCP.h"
 #include "SendBuffer.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

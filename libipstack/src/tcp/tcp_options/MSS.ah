@@ -19,7 +19,7 @@
 #ifndef __TCP_OPTION_MSS_AH__
 #define __TCP_OPTION_MSS_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP_Socket.h"
 #include "../TCP.h"
 #include "MSS_TCP_Segment_Slice.ah"
@@ -58,7 +58,7 @@ advice "ipstack::TCP_Socket" : slice MSS_TCP_Socket_Slice;
 //
 	//  within(SYN_create())
 
-	advice call("% ipstack::TCP_Socket::requestSendBufferTCP_syn(%)") && args(payloadsize) : before(UInt16Opt payloadsize) {
+	advice call("% ipstack::TCP_Socket::requestSendBufferTCP_syn(%)") && args(payloadsize) : before(uint_fast16_t payloadsize) {
 		//alloc additional bytes for the MSS option
 		*(tjp->arg<0>()) += MSS_OPTION_BYTES;
 	}
@@ -95,7 +95,7 @@ advice "ipstack::TCP_Socket" : slice MSS_TCP_Socket_Slice;
 
 		if (segment->has_SYN()) {
 			//only SYN packets can carry the mss option
-			UInt16 recv_mss = segment->get_option_mss();
+			uint16_t recv_mss = segment->get_option_mss();
 
 			if ((recv_mss != 0) && (recv_mss < socket.mss)) {
 				socket.setMSS(recv_mss); //use remote mss (smaller than ours)

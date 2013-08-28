@@ -25,5 +25,5 @@ using namespace ipstack;
 
 slice class IP_Dualstack_Slice {
 public:
-	UInt8 m_useipversion;
+	uint8_t m_useipversion;
 };

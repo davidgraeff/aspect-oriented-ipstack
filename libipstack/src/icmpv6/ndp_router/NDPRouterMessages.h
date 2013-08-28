@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "icmpv6/ndp/NDPMessages.h"
 namespace ipstack
 {
@@ -31,42 +31,42 @@ class NDPRouterMessages
 public:
 	// Router Solicitation message
 	struct RouterSolicitationMessage {
-		UInt8 type; // 133
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt32 reserved;
+		uint8_t type; // 133
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint32_t reserved;
 		
-		UInt8 options[];
+		uint8_t options[];
 	} __attribute__((packed));
 	
 	// Router Advertisement message
 	struct RouterAdvertisementMessage {
-		UInt8 type; // 134
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt8 curHopLimit; // default value for hop limit; 0:IPV6_DEFAULT
-		UInt8 flags; // |M|O|  Reserved | DHCPv6 information available
-		UInt16 router_lifetime; // in sec; if 0: no default router
-		UInt32 reachable_time;
-		UInt32 retrans_time;
+		uint8_t type; // 134
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint8_t curHopLimit; // default value for hop limit; 0:IPV6_DEFAULT
+		uint8_t flags; // |M|O|  Reserved | DHCPv6 information available
+		uint16_t router_lifetime; // in sec; if 0: no default router
+		uint32_t reachable_time;
+		uint32_t retrans_time;
 		
-		UInt8 options[];
+		uint8_t options[];
 	} __attribute__((packed));
 	
 	// Router advertisement: Prefix Information
 	struct OptionPrefixInformation {
-		UInt8 type; // 3
-		UInt8 len_in_octets; // 4
-		UInt8 prefix_length;
-		UInt8 flags; // |L|A| Reserved1 | L:on-link; A: stateless address configuration allowed
-		UInt32 valid_lifetime; // in sec
-		UInt32 preferred_lifetime; // in sec
-		UInt8 reserved[4];
+		uint8_t type; // 3
+		uint8_t len_in_octets; // 4
+		uint8_t prefix_length;
+		uint8_t flags; // |L|A| Reserved1 | L:on-link; A: stateless address configuration allowed
+		uint32_t valid_lifetime; // in sec
+		uint32_t preferred_lifetime; // in sec
+		uint8_t reserved[4];
 		ipv6addr prefix;
 		bool isOnLink() {return 0x80 & flags;}
 		bool useForStatelessAddressConfiguration() {return 0x40 & flags;}
-		UInt32 get_valid_lifetime() { return valid_lifetime; }
-		UInt32 get_preferred_lifetime() { return preferred_lifetime; }
+		uint32_t get_valid_lifetime() { return valid_lifetime; }
+		uint32_t get_preferred_lifetime() { return preferred_lifetime; }
 	} __attribute__((packed));
 
 	

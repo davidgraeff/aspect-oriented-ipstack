@@ -19,7 +19,7 @@
 #ifndef __TCP_SLOWSTART_AH__
 #define __TCP_SLOWSTART_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP_Socket.h"
 #include "../TCP.h"
 #include "../tcp_history/TCP_Record.h"
@@ -37,7 +37,7 @@ advice "ipstack::TCP_Socket" :
 	advice execution("void ipstack::TCP_Socket::lowerSendWindow(%)") &&
 	args(subtract) &&
 	that(socket) :
-		after(UInt16 subtract, TCP_Socket& socket) {
+		after(uint16_t subtract, TCP_Socket& socket) {
 
 		//increment 'outstanding_bytes' count due to normal sending
 		socket.outstanding_bytes += subtract;
@@ -46,10 +46,10 @@ advice "ipstack::TCP_Socket" :
 	advice execution("void ipstack::TCP_Socket::set_seqnum_unacked(%)") &&
 	args(acknum) &&
 	that(socket) :
-		before(UInt32 acknum, TCP_Socket& socket) {
+		before(uint32_t acknum, TCP_Socket& socket) {
 
 		// decrement 'outstanding_bytes' count
-		UInt16 acked = (UInt16)(acknum - socket.seqnum_unacked);
+		uint16_t acked = (uint16_t)(acknum - socket.seqnum_unacked);
 		if (acked < socket.outstanding_bytes) {
 			socket.outstanding_bytes -= acked;
 		} else {

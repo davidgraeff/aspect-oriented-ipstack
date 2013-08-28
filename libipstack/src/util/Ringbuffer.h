@@ -19,10 +19,10 @@
 #ifndef __IPSTACK_RINGBUFFER_H__
 #define __IPSTACK_RINGBUFFER_H__
 
-#include "util/types.h"
+#include <inttypes.h>
 
 #include "RingbufferBase.h"
-#include "../IPStack_Config.h"
+#include "IPStack_Config.h"
 
 namespace ipstack {
 
@@ -35,8 +35,8 @@ class BasicRingbuffer : public tBASE {
 
 	void* buffer[BUFFERSIZE];
 
-	UInt8 inpos_;
-	UInt8 outpos_;
+	uint8_t inpos_;
+	uint8_t outpos_;
 
 public:
 	BasicRingbuffer() : inpos_(0), outpos_(0) {}
@@ -89,13 +89,13 @@ typedef RingbufferType<MEMORY_GENERIC>::Packetbuffer Packetbuffer;
 
 
 // only used for the API
-template<UInt8 tBUFFERSIZE, unsigned tGENERIC=0>
+template<uint8_t tBUFFERSIZE, unsigned tGENERIC=0>
 class PacketbufferAPI {
   public:
   typedef Packetbuffer Type;
 };
 
-template<UInt8 tBUFFERSIZE>
+template<uint8_t tBUFFERSIZE>
 class PacketbufferAPI<tBUFFERSIZE, 1> {
   public:
   typedef BasicRingbuffer<PolymorphRingbufferBase, tBUFFERSIZE> Type;

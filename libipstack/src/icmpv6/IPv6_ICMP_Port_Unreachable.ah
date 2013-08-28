@@ -30,11 +30,11 @@ using namespace ipstack;
   */
 aspect IPv6_ICMP_Port_Unreachable {
 	struct ICMPv6Unrechable {
-		UInt8 type;
-		UInt8 code;
-		UInt16 checksum;
-		UInt32 reserved;
-		UInt8 original_packet[];
+		uint8_t type;
+		uint8_t code;
+		uint16_t checksum;
+		uint32_t reserved;
+		uint8_t original_packet[];
 	} __attribute__((packed));
 	
 	advice execution("void ipstack::Demux::error_port_not_reachable_v6(ipstack::IPv6_Packet*, ipstack::Interface*)") &&

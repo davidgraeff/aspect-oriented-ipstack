@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../ICMPv6.h"
 #include "icmpv6/ndp/NDPNeighborMessages.h"
 #include "ipv6/IPv6.h"
@@ -71,7 +71,7 @@ aspect AddressResolutionUpdate {
 					// This will trigger a neighbor solicitation send to that remote host
 					// If address expire is activated and the remote host does not respond (is not reachable), we will remove
 					// the entry at same time in the future.
-					entry = interface->addNDPCacheEntry(packet->get_src_ipaddr(), (UInt8*)dest_ethernet_mac, NDPCacheEntry::NDPCacheEntryState_Stale);
+					entry = interface->addNDPCacheEntry(packet->get_src_ipaddr(), (uint8_t*)dest_ethernet_mac, NDPCacheEntry::NDPCacheEntryState_Stale);
 				}
 			}
 

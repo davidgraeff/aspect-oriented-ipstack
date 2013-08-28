@@ -42,7 +42,7 @@ aspect IPv4_ICMP_Echo_Reply {
 			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
 			// the destination interface into account
 			icmpv4instance.ipv4.set_dst_addr(packet->get_src_ipaddr());
-			UInt16 maxlen = icmpv4instance.getMaxPayloadLength();
+			uint16_t maxlen = icmpv4instance.getMaxPayloadLength();
 			if (payloadlen > maxlen) {
 				payloadlen = maxlen;
 			}

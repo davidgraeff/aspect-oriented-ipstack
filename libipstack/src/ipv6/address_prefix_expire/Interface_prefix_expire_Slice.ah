@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../AddressMemory.h"
 
 using namespace ipstack;
@@ -27,12 +27,12 @@ public:
 	// This may be used by the ndp address unreachable detection
 	// Call this method every IPV6_REFRESH_IN_MINUTES
 	void refreshIPv6Addresses() {
-		UInt8 nextEntry = 0;
+		uint8_t nextEntry = 0;
 		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
-			if (entry->valid_time_minutes==(UInt32)AddressEntry::NoTimeExpire)
+			if (entry->valid_time_minutes==(uint32_t)AddressEntry::NoTimeExpire)
 				continue;
 			
-			if (entry->valid_time_minutes <= (UInt32)IPV6_REFRESH_IN_MINUTES) {
+			if (entry->valid_time_minutes <= (uint32_t)IPV6_REFRESH_IN_MINUTES) {
 				addressmemory.freeEntry(entry);
 				continue;
 			}

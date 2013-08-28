@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "IPv6AddressUtilities.h"
 
 
@@ -40,7 +40,7 @@ public:
 	friend class Router; // allow to call resolveRoute()
 private:
 	ipv6addr dst_ipv6_addr;
-	UInt8 hoplimit;
+	uint8_t hoplimit;
 	IPV6(const ipstack::IPV6 &) {} // Bug in aspectc++: Segfault if no copy constructur
 
 	/**
@@ -85,7 +85,7 @@ public:
 	 */
 	void restoreDefaultSendingConfiguration() ;
 
-	void setHoplimit(UInt8 h) ;
+	void setHoplimit(uint8_t h) ;
 
 	/**
 	 * Set the destination address. If

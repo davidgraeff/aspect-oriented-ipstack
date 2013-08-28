@@ -20,17 +20,17 @@
 #define __ROUTER_IPV4_SLICE__
 
 #include "../router/Interface.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
 
 slice class Router_IPv4_Slice {
 private:
-	UInt32 ipv4_gateway_addr; //IP Address of default gateway
+	uint32_t ipv4_gateway_addr; //IP Address of default gateway
 
 public:
-	Interface* ipv4_find_route(UInt32 ipv4_dstaddr) {
+	Interface* ipv4_find_route(uint32_t ipv4_dstaddr) {
 		//search for local interface. check ip addr AND subnet masks
 		Interface* interface = head_interface;
 		while (interface != 0) {
@@ -47,11 +47,11 @@ public:
 		return 0;
 	}
 
-	UInt32 ipv4_get_gateway_addr() {
+	uint32_t ipv4_get_gateway_addr() {
 		return ipv4_gateway_addr;
 	}
 
-	void ipv4_set_gateway_addr(UInt32 ipv4_addr) {
+	void ipv4_set_gateway_addr(uint32_t ipv4_addr) {
 		ipv4_gateway_addr = ipv4_addr;
 	}
 };

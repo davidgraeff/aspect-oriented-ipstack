@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
 #include "MulticastEntry.h"
@@ -38,7 +38,7 @@ slice class Interface_Multicast_IPv6_Slice
 		  */
 		bool is_solicitedNode_multicast_addr(const ipstack::ipv6addr& multicast_addr) {
 			if (multicast_addr.ipaddrB8[0] == 0xff && multicast_addr.ipaddrB8[1] == 0x02) {
-				UInt8 nextEntry = 0;
+				uint8_t nextEntry = 0;
 				while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 					ipv6addr ip = entry->ipv6;
 					if (ip.ipaddrB8[13] ==  multicast_addr.ipaddrB8[13] && ip.ipaddrB8[14] ==  multicast_addr.ipaddrB8[14] &&
@@ -54,7 +54,7 @@ slice class Interface_Multicast_IPv6_Slice
 		  * Return true if the given multicast address is already assigned to this interface
 		  */
 		bool multicast_addr_joined(const ipstack::ipv6addr& multicast_addr) {
-			UInt8 nextEntry = 0;
+			uint8_t nextEntry = 0;
 			while (MulticastGroupEntry* entry = addressmemory.findEntry<MulticastGroupEntryType>(&nextEntry)) {
 				if (compare_ipv6_addr(entry->ipv6, multicast_addr)) {
 					return true;
@@ -127,7 +127,7 @@ slice class Interface_Multicast_IPv6_Slice
 		 */
 		void leave_multicastGroup(const ipstack::ipv6addr& multicast_addr) {
 			// remove if found
-			UInt8 nextEntry = 0;
+			uint8_t nextEntry = 0;
 			while (MulticastGroupEntry* entry = addressmemory.findEntry<MulticastGroupEntryType>(&nextEntry)) {
 				if (compare_ipv6_addr(entry->ipv6, multicast_addr)) {
 					addressmemory.freeEntry(entry);

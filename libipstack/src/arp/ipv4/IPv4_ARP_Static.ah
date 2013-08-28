@@ -37,7 +37,7 @@ aspect IPv4_ARP_Static {
   advice execution("% ipstack::ARP_Cache::ipv4_lookup(%, ipstack::Interface*)") &&
          args(ipv4_addr, interface) &&
          that(cache) :
-         around(UInt32 ipv4_addr, Interface* interface, ARP_Cache& cache) {
+         around(uint32_t ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
     for(unsigned i=0; i<ARP_Cache::MAX_STATIC_ENTRIES; i++){      
       ARP_Cache::static_entry& entry = cache.static_entries[i];

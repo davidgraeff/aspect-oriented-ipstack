@@ -21,7 +21,7 @@
 #include "SendBuffer.h"
 #include "IPv6.h"
 #include "IPv6onSockets.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -45,7 +45,7 @@ aspect Sendbuffer_IPv6 {
 		if (tjp->that()->m_useipversion == 6) {
 // 			printf("Sendbuffer_IPv6 content\n");
 			IPV6& ipv6 = tjp->that()->ipv6;
-			UInt16Opt headersize = ipv6.getSpecificHeaderSize();
+			uint_fast16_t headersize = ipv6.getSpecificHeaderSize();
 			sendbuffer->memstart_ip = sendbuffer->getDataPointer();
 			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
 			ipv6.setupHeader(ip, sendbuffer->getRemainingSize());

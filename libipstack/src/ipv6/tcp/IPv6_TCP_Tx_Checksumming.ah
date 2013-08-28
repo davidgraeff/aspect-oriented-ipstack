@@ -36,7 +36,7 @@ aspect IPv6_TCP_Tx_Checksumming {
 		TCP_Segment* tcp = (TCP_Segment*) dataToSend->memstart_transport;
 
 		Interface* interface = dataToSend->getInterface();
-		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
 		tcp->set_checksum(0);
 		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
 

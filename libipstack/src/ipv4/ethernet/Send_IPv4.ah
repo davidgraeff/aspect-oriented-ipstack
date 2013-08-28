@@ -20,7 +20,7 @@
 #include "../../router/Interface.h"
 #include "../../ethernet/Eth_Frame.h"
 #include "SendBuffer.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "../IPv4.h"
 #include "../IPv4onSockets.h"
 
@@ -56,15 +56,15 @@ aspect Sendbuffer_IPv4_Ethernet {
 		sendbuffer->memstart_ethernet = eth_frame;
 		sendbuffer->writtenToDataPointer(Eth_Frame::ETH_HEADER_SIZE);
 		
-		UInt32 ip = tjp->that()->ipv4.get_nexthop_ipaddr();
+		uint32_t ip = tjp->that()->ipv4.get_nexthop_ipaddr();
 		
 		eth_frame->set_type(IPv4_Packet::ETH_TYPE_IPV4);
 		eth_frame->set_src_hwaddr(interface->getAddress());
 		
-		UInt8 leftpart = (UInt8)(ip>>24);
+		uint8_t leftpart = (uint8_t)(ip>>24);
 		
 		// If this is a broadcast ip address (255.255.255.255), use the broadcast mac
-		if (ip == (UInt32) - 1) { // Broadcast address -1==255.255.255.255==all bits 1
+		if (ip == (uint32_t) - 1) { // Broadcast address -1==255.255.255.255==all bits 1
 			eth_frame->set_dst_hwaddr_broadcast();
 		}
 		
@@ -72,7 +72,7 @@ aspect Sendbuffer_IPv4_Ethernet {
 		else if ( leftpart >=224 && leftpart<=239) {
 			// that is 01-00-5e-00-00-00 filled with the last 23 Bits of the ip address.
 			leftpart &= 0x7f;
-			UInt8 emptymac[6] = {0x01, 0x00, 0x5e, leftpart,((UInt8) (ip>>16)),((UInt8) ip)};
+			uint8_t emptymac[6] = {0x01, 0x00, 0x5e, leftpart,((uint8_t) (ip>>16)),((uint8_t) ip)};
 			eth_frame->set_dst_hwaddr(emptymac);
 		} else {
 			sendbuffer->setState(SendBuffer::WritingState | SendBuffer::ResolveLinkLayerStateOption);

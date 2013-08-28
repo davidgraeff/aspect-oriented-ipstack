@@ -53,7 +53,7 @@ aspect DirectResponse_aspect_ethernet {
 	}
 
 	// Direct response has to be initalized to off.
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		Demux& demux = Demux::Inst();
 		demux.setDirectResponse(false);
 		demux.mDirectResponseInputData = 0;

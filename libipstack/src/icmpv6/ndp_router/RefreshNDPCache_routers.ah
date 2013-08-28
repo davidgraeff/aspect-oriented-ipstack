@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "NDPRouterMessages.h"
 #include "../ICMPv6_Socket.h"
 #include "ipv6/IPv6AddressUtilities.h"
@@ -49,7 +49,7 @@ aspect NDP_RefreshNDPCache_RouterEntries {
 			}
 			
 			// Warning: We support ethernet only at the moment, because we reserving 8 additional bytes (2 bytes reserved) -> 6 bytes remaining for link layer address
-			const UInt8 resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
+			const uint8_t resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)+NDPMessages::multiple_of_octets(interface.getAddressSize())*8;
 			
 			Demux::Inst().setDirectResponse(true);
 			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, resSize);

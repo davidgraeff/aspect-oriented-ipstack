@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "cfAttribs.h"
 
 #include "ndpcache/NDPCacheEntry.h"
@@ -40,20 +40,20 @@ struct AddressEntry {
 	unsigned char id;
 	
 	ipv6addr ipv6;
-	UInt8 prefixlen;
+	uint8_t prefixlen;
 	
 	enum { AddressEntryStateTemporary = 0, AddressEntryStateValid = 1};
 	union {
-		UInt8 stateflag;
+		uint8_t stateflag;
 		struct {
-			UInt8 state:2;
-			UInt8 isOnLink:1;
-			UInt8 toBeRemoved:1;
+			uint8_t state:2;
+			uint8_t isOnLink:1;
+			uint8_t toBeRemoved:1;
 		} __attribute__((packed));
 	};
 	
-	UInt8 routerEntryPosition;
-	UInt8 hoplimit;
+	uint8_t routerEntryPosition;
+	uint8_t hoplimit;
 	/**
 	 * Use this after getting a free memory block from AddressMemory.
 	 * This will mark the memory block as beeing used.
@@ -89,7 +89,7 @@ class AddressMemory
 		enum { EntryUndefined = 255 };
 		AddressMemory() {
 			// set memory bytes to zero where the id of each entry is located
-			for (UInt8 i = 0; i < ENTRIES; ++i) {
+			for (uint8_t i = 0; i < ENTRIES; ++i) {
 				memory[i * SIZE] = 0;
 			}
 		}
@@ -104,8 +104,8 @@ class AddressMemory
 		 * type==0: free entry
 		 */
 		template <class resultType, unsigned char type>
-		resultType* findEntry(UInt8* startentry = 0) {
-			for (UInt8 i = startentry ? *startentry : 0; i < ENTRIES; ++i) {
+		resultType* findEntry(uint8_t* startentry = 0) {
+			for (uint8_t i = startentry ? *startentry : 0; i < ENTRIES; ++i) {
 				
 				if (memory[i * SIZE] == type) {
 					if (startentry) *startentry = i + 1;
@@ -116,14 +116,14 @@ class AddressMemory
 		}
 
 		void freeAll(unsigned char type) {
-			for (UInt8 i = 0; i < ENTRIES; ++i) {
+			for (uint8_t i = 0; i < ENTRIES; ++i) {
 				if (memory[i * SIZE] == type) {
 					freeEntry(&memory[i * SIZE]);
 				}
 			}
 		}
-		UInt8 getPosition(void* entry) {
-			for (UInt8 i = 0; i < ENTRIES; ++i) {
+		uint8_t getPosition(void* entry) {
+			for (uint8_t i = 0; i < ENTRIES; ++i) {
 				if (&memory[i * SIZE] == entry) {
 					return i;
 				}
@@ -131,7 +131,7 @@ class AddressMemory
 			return EntryUndefined;
 		}
 		
-		void* getEntryAtPosition(UInt8 i) {
+		void* getEntryAtPosition(uint8_t i) {
 			return &memory[i * SIZE];
 		}
 };

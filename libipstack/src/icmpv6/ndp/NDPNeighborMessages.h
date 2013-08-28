@@ -23,7 +23,7 @@
 #include "SendBuffer.h"
 #include "icmpv6/ICMPv6.h"
 #include "icmpv6/ICMPv6_Socket.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "NDPMessages.h"
 namespace ipstack
 {
@@ -37,27 +37,27 @@ public:
 
 	// Neighbor Solicitation message
 	struct NeighborSolicitationMessage {
-		UInt8 type; // 135
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt32 reserved;
+		uint8_t type; // 135
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint32_t reserved;
 		
 		ipv6addr target_address;
-		UInt8 options[]; // Source link-layer address
+		uint8_t options[]; // Source link-layer address
 	} __attribute__((packed));
 	
 	// Neighbor Advertisement message
 	struct NeighborAdvertisementMessage {
-		UInt8 type; // 136
-		UInt8 code; // 0
-		UInt16 checksum;
+		uint8_t type; // 136
+		uint8_t code; // 0
+		uint16_t checksum;
 		
-		UInt8 flags; // |R|S|O|  Reserved | //R: Router; S: Response to NeighborSolicitationMessage; O: Override cache entry
-		UInt8 reserved1;
-		UInt16 reserved2;
+		uint8_t flags; // |R|S|O|  Reserved | //R: Router; S: Response to NeighborSolicitationMessage; O: Override cache entry
+		uint8_t reserved1;
+		uint16_t reserved2;
 		
 		ipv6addr target_address;
-		UInt8 options[]; // Source link-layer address
+		uint8_t options[]; // Source link-layer address
 		
 		inline bool isRouter() {return 0x80 & flags;}
 		inline bool isResponse() {return 0x40 & flags;}

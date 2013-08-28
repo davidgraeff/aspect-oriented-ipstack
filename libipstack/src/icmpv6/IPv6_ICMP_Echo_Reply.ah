@@ -42,7 +42,7 @@ aspect IPv6_ICMP_Echo_Reply {
 			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
 			// the destination interface into account
 			icmpv6instance.ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
-			UInt16Opt maxlen = icmpv6instance.getMaxPayloadLength();
+			uint_fast16_t maxlen = icmpv6instance.getMaxPayloadLength();
 
 			if (payloadlen > maxlen) {
 				payloadlen = maxlen;

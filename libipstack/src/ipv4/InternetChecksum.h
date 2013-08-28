@@ -20,25 +20,25 @@
 #define __INTERNET_CHECKSUM__
 
 #include "IPv4.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 
 class InternetChecksumV4 {
 	public:
-	static inline UInt16 byteswap16(UInt16 val) {
+	static inline uint16_t byteswap16(uint16_t val) {
 		return ((val & 0xFF) << 8) | ((val & 0xFF00) >> 8);
 	}
-	static UInt32 computePseudoHeader(IPv4_Packet* packet, UInt16 payloadlen, UInt8 upper_layer_nextheader){
-		UInt32 csum = payloadlen; //length of (udp, tcp) frame
+	static uint32_t computePseudoHeader(IPv4_Packet* packet, uint16_t payloadlen, uint8_t upper_layer_nextheader){
+		uint32_t csum = payloadlen; //length of (udp, tcp) frame
 	
 		csum += upper_layer_nextheader; // protocol
 	
-		UInt32 src = packet->get_src_ipaddr();
+		uint32_t src = packet->get_src_ipaddr();
 		csum += byteswap16(src); // source address (1)
 		csum += byteswap16(src>>16); // source address (2)
 
-		UInt32 dst = packet->get_dst_ipaddr();
+		uint32_t dst = packet->get_dst_ipaddr();
 		csum += byteswap16(dst); // destination address (1)
 		csum += byteswap16(dst>>16); // destination address (2)
 	

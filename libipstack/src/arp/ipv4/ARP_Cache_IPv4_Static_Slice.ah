@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_STATIC_SLICE__
 #define __ARP_CACHE_IPV4_STATIC_SLICE__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 
 using namespace ipstack;
@@ -33,18 +33,18 @@ slice class ARP_Cache_IPv4_Static_Slice {
   private:
   
   struct static_entry {
-    UInt32 ipv4_addr;
-    UInt8 hw_addr[6];
+    uint32_t ipv4_addr;
+    uint8_t hw_addr[6];
   } static_entries[MAX_STATIC_ENTRIES];
   
   public:
   
-  bool ipv4_insert(UInt32 ipv4_addr, const UInt8* hw_addr);
-  void ipv4_remove(UInt32 ipv4_addr);
+  bool ipv4_insert(uint32_t ipv4_addr, const uint8_t* hw_addr);
+  void ipv4_remove(uint32_t ipv4_addr);
   
 };
 
-slice bool ARP_Cache_IPv4_Static_Slice::ipv4_insert(UInt32 ipv4_addr, const UInt8* hw_addr){
+slice bool ARP_Cache_IPv4_Static_Slice::ipv4_insert(uint32_t ipv4_addr, const uint8_t* hw_addr){
   for(int i=0; i<MAX_STATIC_ENTRIES; i++){
     static_entry& entry = static_entries[i];
     if(entry.ipv4_addr == 0){
@@ -56,7 +56,7 @@ slice bool ARP_Cache_IPv4_Static_Slice::ipv4_insert(UInt32 ipv4_addr, const UInt
   return false;
 }
 
-slice void ARP_Cache_IPv4_Static_Slice::ipv4_remove(UInt32 ipv4_addr){
+slice void ARP_Cache_IPv4_Static_Slice::ipv4_remove(uint32_t ipv4_addr){
   for(int i=0; i<MAX_STATIC_ENTRIES; i++){
     static_entry& entry = static_entries[i];
     if(entry.ipv4_addr == ipv4_addr){

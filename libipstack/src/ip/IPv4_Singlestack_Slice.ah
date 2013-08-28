@@ -16,7 +16,7 @@
 // Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
 #pragma once
-#include "util/types.h"
+#include <inttypes.h>
 
 /**
  * Purspose: Define the m_useipversion. Because the network-stack is a single-stack
@@ -28,6 +28,6 @@ using namespace ipstack;
 slice class IPv4_Singlestack_Slice {
 public:
 	//#define m_useipversion 4
-	//const UInt8 m_useipversion = 4;
+	//const uint8_t m_useipversion = 4;
 	enum {m_useipversion = 4};
 };

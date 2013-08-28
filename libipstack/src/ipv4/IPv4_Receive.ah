@@ -70,7 +70,7 @@ advice "ipstack::Demux" : slice Demux_IPv4_Slice;
 		if (packet->get_dst_ipaddr() == interface->ipv4_addr) {
 			//this packet is destined for this local host
 
-			UInt16 fragment_offset = packet->get_fragment_offset();
+			uint16_t fragment_offset = packet->get_fragment_offset();
 			if ((packet->get_flags() == IPv4_Packet::IPV4_MF_FLAG) || (fragment_offset != 0)) {
 				//this is a fragmented ipv4 packet. try to reassemble ...
 				if (demux.ipv4_reassemble(packet, len, interface, fragment_offset * 8) == false) {

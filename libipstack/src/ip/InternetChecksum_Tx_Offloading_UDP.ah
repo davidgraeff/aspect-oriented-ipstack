@@ -40,7 +40,7 @@ aspect InternetChecksum_Tx_Offloading_udp {
 	}
 	advice execution("% ipstack::UDP_Packet::calc_checksum(%, %, ipstack::Interface*)") &&
 	args(csum,payloadlen, interface) :
-		around(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		around(uint32_t csum, uint16_t payloadlen, Interface* interface) {
 
 		if ((interface != 0) && (interface->hasTransmitterHardwareChecksumming())) {
 // 			printf("udp prepare hardware checksum: %u, len: %u\n", InternetChecksum::accumulateCarryBits(csum), payloadlen);

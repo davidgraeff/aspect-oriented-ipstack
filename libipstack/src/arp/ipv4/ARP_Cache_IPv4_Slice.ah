@@ -20,13 +20,13 @@
 #define __ARP_CACHE_IPV4_SLICE__
 
 #include "router/Interface.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
 slice class ARP_Cache_IPv4_Slice {
   public:
-  const UInt8* ipv4_lookup(UInt32 ipv4_addr, Interface* interface){
+  const uint8_t* ipv4_lookup(uint32_t ipv4_addr, Interface* interface){
     // Aspects to be weaved here!
     return 0;
   }

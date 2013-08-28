@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/ndpcache/NDPCacheConfig.h"
 #include "ipv6/ndpcache_expire/NDPCacheExpireConfig.h"
 #include "ipv6/IPv6AddressUtilities.h"
@@ -92,9 +92,9 @@ slice class Interface_NDPCacheExpire_Slice
 		 * This method should be called regulary (~2min).
 		 * @return Return number of released entries
 		 */
-		UInt8 releaseOldEntries() {
-			UInt8 nextEntry = 0;
-			UInt8 releasedEntries = 0;
+		uint8_t releaseOldEntries() {
+			uint8_t nextEntry = 0;
+			uint8_t releasedEntries = 0;
 			while (NDPCacheEntry* entry = addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
 				if (entry->expire_value < NDPCACHE_EXPIRE_RATE_PER_MINUTE) {
 					freeNDPCacheEntry(entry);
@@ -113,10 +113,10 @@ slice class Interface_NDPCacheExpire_Slice
 		 * For example if the ndp cache is full, but we have to save an
 		 * important link layer address lookup.
 		 */
-		void releaseEntryBelowImportance(UInt8 importance_below_value) {
+		void releaseEntryBelowImportance(uint8_t importance_below_value) {
 			NDPCacheEntry* oldest_entry = 0;
 
-			UInt8 nextEntry = 0;
+			uint8_t nextEntry = 0;
 			while (NDPCacheEntry* entry = addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
 				if (entry->expire_value != 255 && entry->expire_value < importance_below_value) {
 					importance_below_value = entry->expire_value;

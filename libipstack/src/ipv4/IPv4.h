@@ -19,7 +19,7 @@
 #ifndef __IPV4__
 #define __IPV4__
 
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 
@@ -39,29 +39,29 @@ class IPv4_Packet{
   enum{ IPV4_UNUSED_ADDR = 0 }; // http://www.rfc-editor.org/rfc/rfc5735.txt
 
   private:
-  UInt8 ihl:4,
+  uint8_t ihl:4,
         version:4;
-  UInt8 tos; //type of service -> diff'serv
-  UInt16 total_len;
-  UInt16 id; //uniquely identifying fragments
+  uint8_t tos; //type of service -> diff'serv
+  uint16_t total_len;
+  uint16_t id; //uniquely identifying fragments
   union{
-    UInt16 flags; //upper 3 bits //TODO: UInt8?
-    UInt16 fragment_offset; //lower 13 bits (measured in units of eight-byte blocks)
+    uint16_t flags; //upper 3 bits //TODO: uint8_t?
+    uint16_t fragment_offset; //lower 13 bits (measured in units of eight-byte blocks)
   };
-  UInt8 ttl;
-  UInt8 protocol;
-  UInt16 hdr_checksum;
-  UInt32 src_ipaddr;
-  UInt32 dst_ipaddr;
+  uint8_t ttl;
+  uint8_t protocol;
+  uint16_t hdr_checksum;
+  uint32_t src_ipaddr;
+  uint32_t dst_ipaddr;
   //options -> data
-  UInt8 data[];
+  uint8_t data[];
   
-  static const UInt16 FRAGMENT_MASK = 0xFF1F;
+  static const uint16_t FRAGMENT_MASK = 0xFF1F;
   
   private:
   //from: Internetworking with TCP/IP Vol. 2, Page 70
-  UInt16 cksum(UInt16* buf, int nwords){
-    UInt32 sum;
+  uint16_t cksum(uint16_t* buf, int nwords){
+    uint32_t sum;
     
     for(sum=0; nwords>0; nwords--){
       sum += *buf++;
@@ -73,56 +73,56 @@ class IPv4_Packet{
   }
   
   public:
-	  UInt16 payload_len() { return get_total_len()-get_ihl()*4; } // no get_ to be not influenced by aspects
-  UInt16 get_total_len() { return total_len; }
-  void set_total_len(UInt16 len) { total_len = len; }
+	  uint16_t payload_len() { return get_total_len()-get_ihl()*4; } // no get_ to be not influenced by aspects
+  uint16_t get_total_len() { return total_len; }
+  void set_total_len(uint16_t len) { total_len = len; }
   
-  UInt8 get_ihl() { return ihl; }
-  void set_ihl(UInt8 i) { ihl = i; }
+  uint8_t get_ihl() { return ihl; }
+  void set_ihl(uint8_t i) { ihl = i; }
   
-  UInt8 get_version() { return version; }
-  void set_version(UInt8 ver) { version = ver; }
+  uint8_t get_version() { return version; }
+  void set_version(uint8_t ver) { version = ver; }
   
-  UInt8 get_tos() { return tos; }
-  void set_tos(UInt8 t) { tos = t; }
+  uint8_t get_tos() { return tos; }
+  void set_tos(uint8_t t) { tos = t; }
   
-  UInt16 get_id() { return id; }
-  void set_id(UInt16 i) { id = i; }
+  uint16_t get_id() { return id; }
+  void set_id(uint16_t i) { id = i; }
   
-  UInt8 get_flags() { return ((flags >> 5) & 0x7); }
-  void set_flags(UInt8 f) { 
+  uint8_t get_flags() { return ((flags >> 5) & 0x7); }
+  void set_flags(uint8_t f) { 
     flags &= FRAGMENT_MASK; //clean up bits first
     flags |= ((f & 0x7) << 5) ;
   }
   
-  UInt16 get_fragment_offset() { return (fragment_offset & FRAGMENT_MASK); }
-  void set_fragment_offset(UInt16 fo) { 
+  uint16_t get_fragment_offset() { return (fragment_offset & FRAGMENT_MASK); }
+  void set_fragment_offset(uint16_t fo) { 
     fragment_offset &= ~(FRAGMENT_MASK); //clean up bits first
     fragment_offset |= (fo & FRAGMENT_MASK);
   }
   
-  UInt8 get_ttl() { return ttl; }
-  void set_ttl(UInt8 t) { ttl = t; }
+  uint8_t get_ttl() { return ttl; }
+  void set_ttl(uint8_t t) { ttl = t; }
   
-  UInt8 get_protocol() { return protocol; }
-  void set_protocol(UInt8 proto) { protocol = proto; }
+  uint8_t get_protocol() { return protocol; }
+  void set_protocol(uint8_t proto) { protocol = proto; }
   char* get_nextheaderPointer() {
 	  return (char*)&protocol;
   }
   
-  UInt16 get_hdr_checksum() { return hdr_checksum; }
-  void set_hdr_checksum(UInt16 csum) { hdr_checksum = csum; }
+  uint16_t get_hdr_checksum() { return hdr_checksum; }
+  void set_hdr_checksum(uint16_t csum) { hdr_checksum = csum; }
   
-  UInt32 get_src_ipaddr() { return src_ipaddr; }
-  void set_src_ipaddr(UInt32 src) { src_ipaddr = src; }
+  uint32_t get_src_ipaddr() { return src_ipaddr; }
+  void set_src_ipaddr(uint32_t src) { src_ipaddr = src; }
   
-  UInt32 get_dst_ipaddr() { return dst_ipaddr; }
-  void set_dst_ipaddr(UInt32 dst) { dst_ipaddr = dst; }
+  uint32_t get_dst_ipaddr() { return dst_ipaddr; }
+  void set_dst_ipaddr(uint32_t dst) { dst_ipaddr = dst; }
   
-  UInt8* get_data() {
+  uint8_t* get_data() {
     //remove ip header + ip options
     //do not return data[] directly because of variable header length
-    return (UInt8*) (((UInt32*) this) + get_ihl());
+    return (uint8_t*) (((uint32_t*) this) + get_ihl());
   }
   
   unsigned validPacketLength(unsigned packet_len){
@@ -134,7 +134,7 @@ class IPv4_Packet{
       return 0;
     }
     
-    UInt8 ihl = get_ihl() * 4;
+    uint8_t ihl = get_ihl() * 4;
     //Internet Header Lenght == length of ipv4 header in 4 byte units
     if(ihl < IPV4_MIN_HEADER_SIZE){
       //bad ihl value
@@ -149,7 +149,7 @@ class IPv4_Packet{
     //Get length of ipv4 packet. Byte order conversion is
     //done by an aspect affecting "get_total_len()".
     //Safe this value to avoid redundant conversions.
-    UInt16 total_len = get_total_len();
+    uint16_t total_len = get_total_len();
     
     if(total_len < ihl){
       //invalid packet size: entire packet smaller than header size
@@ -165,35 +165,35 @@ class IPv4_Packet{
   }
 
   bool validPacketChecksum(void*){
-    return (cksum((UInt16*)this, (get_ihl()*2)) == 0);
+    return (cksum((uint16_t*)this, (get_ihl()*2)) == 0);
   }
   
   inline bool validPacketChecksum(){
-    return (cksum((UInt16*)this, (get_ihl()*2)) == 0);
+    return (cksum((uint16_t*)this, (get_ihl()*2)) == 0);
   }
     
   inline void computeChecksum(){
     hdr_checksum = 0;
-    hdr_checksum = cksum((UInt16*)this, (get_ihl()*2));
+    hdr_checksum = cksum((uint16_t*)this, (get_ihl()*2));
   }
   
   void clearChecksum(){
     hdr_checksum = 0;
   }
   
-  static UInt32 convert_ipv4_addr(UInt8 a, UInt8 b, UInt8 c, UInt8 d){
-    UInt32 addr = (((UInt32)(a & 0xFF))   )  |
-                  (((UInt32)(b & 0xFF))<<8)  |
-                  (((UInt32)(c & 0xFF))<<16) |
-                  (((UInt32)(d & 0xFF))<<24) ;
+  static uint32_t convert_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
+    uint32_t addr = (((uint32_t)(a & 0xFF))   )  |
+                  (((uint32_t)(b & 0xFF))<<8)  |
+                  (((uint32_t)(c & 0xFF))<<16) |
+                  (((uint32_t)(d & 0xFF))<<24) ;
     return addr;
   }
   
-  static void convert_ipv4_addr(UInt32 ip, UInt8& a, UInt8& b, UInt8& c, UInt8& d) {
-	  a = ((UInt8)(ip      )) & 0xFF;
-	  b = ((UInt8)(ip >>  8)) & 0xFF;
-	  c = ((UInt8)(ip >> 16)) & 0xFF;
-	  d = ((UInt8)(ip >> 24)) & 0xFF;
+  static void convert_ipv4_addr(uint32_t ip, uint8_t& a, uint8_t& b, uint8_t& c, uint8_t& d) {
+	  a = ((uint8_t)(ip      )) & 0xFF;
+	  b = ((uint8_t)(ip >>  8)) & 0xFF;
+	  c = ((uint8_t)(ip >> 16)) & 0xFF;
+	  d = ((uint8_t)(ip >> 24)) & 0xFF;
   }
   
 } __attribute__ ((packed)); //__attribute__ ((aligned(1), packed));

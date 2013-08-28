@@ -19,7 +19,7 @@
 #ifndef __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
 #define __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP_Socket.h"
 
 using namespace ipstack;
@@ -31,7 +31,7 @@ aspect SillyWindowSyndrome_Receiver_Avoidance {
   
   advice execution("% ipstack::TCP_Socket::getReceiveWindow()") &&
          that(socket) && result(window) :
-         after(TCP_Socket& socket, UInt16 window){
+         after(TCP_Socket& socket, uint16_t window){
     if(socket.state != TCP_Socket::SYNSENT && socket.state != TCP_Socket::CLOSED){
       if( (window*2U < socket.maxReceiveWindow_Bytes) && (window < socket.mss) ) {
         //artificially close the advertised window until

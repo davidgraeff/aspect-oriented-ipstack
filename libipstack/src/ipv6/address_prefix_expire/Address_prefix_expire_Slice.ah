@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 /**
@@ -31,6 +31,6 @@ slice class Address_prefix_expire_Slice
 {
 public:
 	enum { NoTimeExpire = -1 };
-	UInt32 valid_time_minutes;
-	UInt32 preferred_time_minutes;
+	uint32_t valid_time_minutes;
+	uint32_t preferred_time_minutes;
 };

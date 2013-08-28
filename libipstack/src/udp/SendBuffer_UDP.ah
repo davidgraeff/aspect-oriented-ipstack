@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "../router/Interface.h"
+#include "router/Interface.h"
 #include "UDP.h"
 #include "UDP_Socket.h"
 #include "SendBuffer.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

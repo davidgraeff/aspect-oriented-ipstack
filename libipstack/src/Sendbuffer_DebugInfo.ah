@@ -16,7 +16,7 @@
 // Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/IPv6.h"
 #include "ipv4/IPv4.h"
 #include "ipv6/IPv6AddressUtilities.h"
@@ -42,7 +42,7 @@ aspect sendbuffer_debuginfo {
 	mark_msg_struct messages[SharedMemory::SLOTS];
 	unsigned nextMsg;
 	
-	void addDigitsForGetDestIPstring(char* buffer, UInt8 d) {
+	void addDigitsForGetDestIPstring(char* buffer, uint8_t d) {
 		buffer[0] = d / 100 + '0';
 		if (buffer[0]=='0') buffer[0] = ' ';
 		d = d % 100;
@@ -57,7 +57,7 @@ aspect sendbuffer_debuginfo {
 		if (packet->get_version() == 6) {
 			ipstack::ipv6_addr_toString(packet->get_dst_ipaddr(), tempbuf);
 		} else {
-			UInt8 a,b,c,d;
+			uint8_t a,b,c,d;
 			IPv4_Packet* packet = (IPv4_Packet*)sendbuffer.memstart_ip;
 			IPv4_Packet::convert_ipv4_addr(packet->get_dst_ipaddr(), a, b, c, d);
 			addDigitsForGetDestIPstring(&(tempbuf[0]), a);
@@ -86,12 +86,12 @@ aspect sendbuffer_debuginfo {
 		getDestIPstring(sendbuffer, tempbuf);
 		printf("   Destination: %s\n", tempbuf);
 	
-		UInt8* lastByte = (UInt8*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
-		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (UInt8*)sendbuffer.memstart_ip-(UInt8*)sendbuffer.memstart_ethernet,
-				(UInt8*)sendbuffer.memstart_transport-(UInt8*)sendbuffer.memstart_ip, lastByte-(UInt8*)sendbuffer.memstart_transport);
+		uint8_t* lastByte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
+		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (uint8_t*)sendbuffer.memstart_ip-(uint8_t*)sendbuffer.memstart_ethernet,
+				(uint8_t*)sendbuffer.memstart_transport-(uint8_t*)sendbuffer.memstart_ip, lastByte-(uint8_t*)sendbuffer.memstart_transport);
 	}
 	
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		nextMsg = 0;
 	}
 

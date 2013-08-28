@@ -32,7 +32,7 @@ void finwait2(TCP_Segment* segment, unsigned len) {
     
     //calculate payload length
     unsigned payload_len = len - (segment->get_header_len()*4);
-    UInt32 seqnum = segment->get_seqnum();
+    uint32_t seqnum = segment->get_seqnum();
     
     handleFIN(segment, seqnum, payload_len);
     bool needToFree = handleData(segment, seqnum, payload_len);

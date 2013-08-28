@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__
 #define __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../../router/Interface.h"
 #include "Eth_ARP_IPv4_Packet.h"
 
@@ -38,12 +38,12 @@ slice class ARP_Cache_IPv4_Send_Receive_Slice {
   Eth_ARP_IPv4_Packet* getNextFreePacket();
   public:
   
-  void ipv4_reply(const UInt8* src_hwaddr, const UInt32* src_ipv4_addr, Interface* interface){
+  void ipv4_reply(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, Interface* interface){
     // Aspects to be weaved here!
     // handle incoming arp request: return an arp reply packet to the requesting host 
   }
   
-  void ipv4_update(const UInt32* ipv4_addr, const UInt8* hw_addr){
+  void ipv4_update(const uint32_t* ipv4_addr, const uint8_t* hw_addr){
     // Aspects to be weaved here!
     // handle incoming arp replies: update own cache
   }

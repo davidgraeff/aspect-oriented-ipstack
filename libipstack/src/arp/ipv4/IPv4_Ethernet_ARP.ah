@@ -38,7 +38,7 @@ aspect IPv4_Socket_Ethernet_ARP_Aspect {
 			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
 			Interface* interface = sendbuffer->getInterface();
 
-			const UInt8* dst_hw_addr = ARP_Cache::Inst().ipv4_lookup(ip->get_dst_ipaddr(), interface);
+			const uint8_t* dst_hw_addr = ARP_Cache::Inst().ipv4_lookup(ip->get_dst_ipaddr(), interface);
 			if (dst_hw_addr == 0) {
 				sendbuffer->setState(SendBuffer::InvalidState);
 				return; //don't send this packet: destination MAC address unknown!

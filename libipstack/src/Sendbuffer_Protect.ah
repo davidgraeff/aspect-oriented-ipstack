@@ -15,8 +15,8 @@
 //
 // Copyright (C) 2013 David Gräff
 #pragma once
-#include "util/types.h"
-#include "operating_system_integration/SystemHalt.h"
+#include <inttypes.h>
+#include "operating_system_integration/System.h"
 #include "stdio.h"
 #include "SendBuffer.h"
 #include "router/Router.h"
@@ -44,12 +44,12 @@ using namespace ipstack;
   */
 aspect sendbuffer_protect {
 	SendBuffer* lastbuffer;
-	UInt8* checkbyte;
+	uint8_t* checkbyte;
 	
 	/* Affect class: SendBuffer */
 	advice "ipstack::SendBuffer" : slice SendBuffer_Protect_Slice;
 	
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		printf("SendBuffer protection: on\n");
 	}
 	
@@ -75,11 +75,11 @@ aspect sendbuffer_protect {
 		// store pointer to the sendbuffer. we will compare that in writtenToDataPointer.
 		lastbuffer = &sendbuffer;
 		// store the byte directly after the sendbuffer. If this changed we have a buffer overrun
-		checkbyte = (UInt8*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
+		checkbyte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
 	}
 	
 	advice execution("% ipstack::SendBuffer::writtenToDataPointer(%)") && args(length) && that(sendbuffer) :
-		around(UInt16Opt length, SendBuffer& sendbuffer) {
+		around(uint_fast16_t length, SendBuffer& sendbuffer) {
 			
 		if (lastbuffer != &sendbuffer) {
 			printf("SendBuffer::writtenToDataPointer: getDataPointer() have to be called before writtenToDataPointer()!\n");
@@ -90,14 +90,14 @@ aspect sendbuffer_protect {
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
-		UInt16Opt availsize = sendbuffer.getRemainingSize();
+		uint_fast16_t availsize = sendbuffer.getRemainingSize();
 		if (length>availsize) {
 			printf("SendBuffer::writtenToDataPointer: length too big. Requested: %u, Available: %u!\n", length, availsize);
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
 		tjp->proceed();
-		UInt8* cbyte = (UInt8*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
+		uint8_t* cbyte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
 		if (*checkbyte != *cbyte) {
 			printf("SendBuffer::writtenToDataPointer: buffer overrun (%u)!=(%u)!\n", *checkbyte, *cbyte);
 			sendbuffer.printAdditionalInfo();
@@ -110,7 +110,7 @@ aspect sendbuffer_protect {
 	}
 	
 	advice execution("% ipstack::SendBuffer::write(%,%)") && args(newdata, length) && that(sendbuffer) :
-		around(const void* newdata, UInt16Opt length, SendBuffer& sendbuffer) {
+		around(const void* newdata, uint_fast16_t length, SendBuffer& sendbuffer) {
 			
 		// reset getDataPointer() -> writtenToDataPointer() sendbuffer pointer
 		// This is usually not wanted to first call getDataPointer() after that write() and than writtenToDataPointer()
@@ -126,7 +126,7 @@ aspect sendbuffer_protect {
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
-		UInt16Opt availsize = sendbuffer.getRemainingSize();
+		uint_fast16_t availsize = sendbuffer.getRemainingSize();
 		if (length>availsize) {
 			printf("SendBuffer::write: length too big. Requested: %u, Available: %u!\n", length, availsize);
 			sendbuffer.printAdditionalInfo();
@@ -177,7 +177,7 @@ aspect sendbuffer_protect {
 		}
 		
 		// check if all tcp/ip layers put their content into the buffer: we check the next header fields for known values
-		UInt8* lastByte = (UInt8*)(dataToSend->getDataStart()) + dataToSend->getSize();
+		uint8_t* lastByte = (uint8_t*)(dataToSend->getDataStart()) + dataToSend->getSize();
 		
 		if (dataToSend->memstart_ethernet>=dataToSend->getDataStart() && dataToSend->memstart_ethernet<=lastByte) {
 			//Eth_Frame* dest_eth_frame = (Eth_Frame*)(dataToSend->memstart_ethernet);

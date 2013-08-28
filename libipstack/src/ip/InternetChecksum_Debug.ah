@@ -15,7 +15,7 @@
 //
 // Copyright (C) 2012 David Gräff
 #pragma once
-#include "util/types.h"
+#include <inttypes.h>
 #include "stdio.h"
 
 using namespace ipstack;

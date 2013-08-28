@@ -1,7 +1,7 @@
 #include "ICMPv6_Socket.h"
 #include "ICMPv6.h"
 #include "ipv6/IPv6.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack
 {

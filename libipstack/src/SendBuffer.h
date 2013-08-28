@@ -20,7 +20,7 @@
 #include "util/Mempool.h"
 #include "router/Interface.h"
 #include <string.h> //for memcpy
-#include "util/types.h"
+#include <inttypes.h>
 namespace ipstack
 {
 
@@ -38,7 +38,7 @@ class SendBuffer
 		  * is returned. You should provide the destination interface. It is recommend to use the convenience
 		  * methods of yout socket instead of a raw SendBuffer directly.
 		  */
-		static SendBuffer* createInstance(Mempool* mempool, UInt16Opt requestedSize, Interface* interface) {
+		static SendBuffer* createInstance(Mempool* mempool, uint_fast16_t requestedSize, Interface* interface) {
 			SendBuffer* r = (SendBuffer*)mempool->alloc(requestedSize + sizeof(SendBuffer));
 			if (!r)
 				return 0;
@@ -89,7 +89,7 @@ class SendBuffer
 		/**
 		 * Use this method to increment the data pointer after writing to it directly
 		 */
-		void writtenToDataPointer(UInt16Opt length) {
+		void writtenToDataPointer(uint_fast16_t length) {
 			data = (char*)data + length;
 		}
 
@@ -98,8 +98,8 @@ class SendBuffer
 		 * This is less efficient if you incrementally compute data and aggregate those instead
 		 * of directly write to the data pointer in incremental steps.
 		 */
-		void write(const void* newdata, UInt16Opt length) {
-			UInt16Opt availableLength = getRemainingSize();
+		void write(const void* newdata, uint_fast16_t length) {
+			uint_fast16_t availableLength = getRemainingSize();
 			if (availableLength < length)
 				length = availableLength;
 
@@ -123,9 +123,9 @@ class SendBuffer
 		  * be send.
 		  */
 		enum {InvalidState= 0x00, WritingState = 0x01, AboutToBeTransmittedState= 0x02, TransmittedState = 0x04, ResolveLinkLayerStateOption= 0x10};
-		inline void setState(UInt8 s) { m_state = s; }
-		inline UInt8 getState() { return m_state;}
-		inline UInt8 getStateWithoutOptions() { return m_state & 0x0f;} // lower bits only
+		inline void setState(uint8_t s) { m_state = s; }
+		inline uint8_t getState() { return m_state;}
+		inline uint8_t getStateWithoutOptions() { return m_state & 0x0f;} // lower bits only
 		
 		/**
 		  * A sendbuffer may be recycled if no negative effects can occur anymore.
@@ -140,10 +140,10 @@ class SendBuffer
 		 * Return the size in bytes that is available for your data.
 		 * Cache this value!
 		 * */
-		UInt16Opt getRemainingSize() {
+		uint_fast16_t getRemainingSize() {
 			return m_memsize - ((char*) data - (char*) getDataStart());
 		}
-		UInt16Opt getSize() {
+		uint_fast16_t getSize() {
 			return m_memsize;
 		}
 		/**
@@ -161,8 +161,8 @@ class SendBuffer
 		SendBuffer(const SendBuffer& s) {} // private copy constructor
 		
 // 		Mempool* m_mempool;
-		UInt16Opt m_memsize; // set to  user requested size
-		UInt8 m_state;
+		uint_fast16_t m_memsize; // set to  user requested size
+		uint8_t m_state;
 		Interface* m_interface;
 		void* data;
 };

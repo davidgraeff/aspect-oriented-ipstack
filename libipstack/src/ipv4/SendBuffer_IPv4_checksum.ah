@@ -20,7 +20,7 @@
 #include "../router/Interface.h"
 #include "SendBuffer.h"
 #include "IPv4.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

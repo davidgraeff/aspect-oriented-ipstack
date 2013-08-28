@@ -20,7 +20,7 @@
 
 namespace ipstack {
 
-	void TCP_History::add(SendBuffer* b, UInt32 msec){ //msec -> timeout for rexmit
+	void TCP_History::add(SendBuffer* b, uint32_t msec){ //msec -> timeout for rexmit
   //be sure to check isFull _BEFORE_ using this function!
   
   head = &records[0];
@@ -33,7 +33,7 @@ void TCP_History::remove(TCP_Record* record){
   head = 0;
 }
 
-UInt32 TCP_History::getNextTimeout(){ // relative value in msecs
+uint32_t TCP_History::getNextTimeout(){ // relative value in msecs
   if(head == 0){
     return 0;
   }

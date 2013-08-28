@@ -19,7 +19,7 @@
 
 #include "router/Interface.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 namespace ipstack
 {
 /**
@@ -28,46 +28,46 @@ namespace ipstack
 class MLDMessages
 {
 	struct mldv1_listener_report {
-		UInt8 type; // 131
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt16 maximum_response_delay;
-		UInt16 reserved;
+		uint8_t type; // 131
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint16_t maximum_response_delay;
+		uint16_t reserved;
 		ipv6addr addr;
 	} __attribute__((packed));
 	
 	struct mldv1_listener_done {
-		UInt8 type; // 132
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt16 maximum_response_delay;
-		UInt16 reserved;
+		uint8_t type; // 132
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint16_t maximum_response_delay;
+		uint16_t reserved;
 		ipv6addr addr;
 	} __attribute__((packed));
 	
 	struct mldv2_listener_report_message_record {
-		UInt8 record_type;
-		UInt8 aux_data_len; // 0
-		UInt16 number_of_sources;
+		uint8_t record_type;
+		uint8_t aux_data_len; // 0
+		uint16_t number_of_sources;
 		ipv6addr multicast_addr;
 		ipv6addr src_addresses[];
 	} __attribute__((packed));
 	
 	struct mldv2_listener_report_message {
-		UInt8 type; // 143
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt16 reserved;
-		union { UInt16 multicast_address_records; UInt8 multicast_address_records8[2];};
+		uint8_t type; // 143
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint16_t reserved;
+		union { uint16_t multicast_address_records; uint8_t multicast_address_records8[2];};
 		mldv2_listener_report_message_record records[];
 	} __attribute__((packed));
 	
 	struct mld_multicast_listener_query {
-		UInt8 type; // 130
-		UInt8 code; // 0
-		UInt16 checksum;
-		UInt16 maximum_response_delay;
-		UInt16 reserved;
+		uint8_t type; // 130
+		uint8_t code; // 0
+		uint16_t checksum;
+		uint16_t maximum_response_delay;
+		uint16_t reserved;
 		ipv6addr addr;
 	} __attribute__((packed));
 	
@@ -109,7 +109,7 @@ class MLDMessages
 		r->number_of_sources = 0;
 		copy_ipv6_addr(multicast_addr, r->multicast_addr);
 	}
-	static const UInt8 mldv2_listener_report_message_size() { return sizeof(mldv2_listener_report_message)+sizeof(mldv2_listener_report_message_record); }
+	static const uint8_t mldv2_listener_report_message_size() { return sizeof(mldv2_listener_report_message)+sizeof(mldv2_listener_report_message_record); }
 };
 
 } //namespace ipstack

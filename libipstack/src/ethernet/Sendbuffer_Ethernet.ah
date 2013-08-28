@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "Eth_Frame.h"
 #include "../router/Interface.h"
 #include "Sendbuffer_Ethernet_Slice.ah"

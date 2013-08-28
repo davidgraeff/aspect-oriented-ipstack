@@ -61,9 +61,9 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		unsigned maxReceiveWindow_MSS; //in units of mss
 		unsigned maxReceiveWindow_Bytes; //in bytes (ie. maxReceiveWindow_MSS * mss)
 
-		bool handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len);
+		bool handleData(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len);
 
-		UInt16 getReceiveWindow();
+		uint16_t getReceiveWindow();
 
 	protected:
 		bool packetBufferFull() {
@@ -104,33 +104,33 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		// *** TCP Sending ***
 		// **************************************************************************
 	private:
-		UInt32 seqnum_unacked;
-		UInt32 seqnum_next;
+		uint32_t seqnum_unacked;
+		uint32_t seqnum_next;
 
 		TCP_History history;
 
-		UInt16 sendWindow; //advertised window of remote peer
-		UInt32 lwack, lwseq; //Acknum and Seqnum of last window update (sendWindow)
+		uint16_t sendWindow; //advertised window of remote peer
+		uint32_t lwack, lwseq; //Acknum and Seqnum of last window update (sendWindow)
 
 		enum { DEFAULT_RTO = 6000U }; //the default (6 sec) 'retransmission timeout'
-		UInt32 getRTO() {
+		uint32_t getRTO() {
 			return DEFAULT_RTO;    //overwritten by "RTT estimation'
 		}
 
-		void set_seqnum_unacked(UInt32 acknum) {
+		void set_seqnum_unacked(uint32_t acknum) {
 			seqnum_unacked = acknum;
 		}
 
-		void initSendWindow(UInt16 window, UInt32 seqnum, UInt32 acknum) {
+		void initSendWindow(uint16_t window, uint32_t seqnum, uint32_t acknum) {
 			sendWindow = window;
 			lwseq = seqnum;
 			lwack = acknum;
 		}
 
-		UInt16 getSendWindow() {
+		uint16_t getSendWindow() {
 			return sendWindow;
 		}
-		void lowerSendWindow(UInt16 subtract) {
+		void lowerSendWindow(uint16_t subtract) {
 			sendWindow -= subtract;
 		}
 
@@ -138,7 +138,7 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 			return (a < b) ? (a < c ? a : c) : (b < c ? b : c);
 		}
 
-		void updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum);
+		void updateSendWindow(TCP_Segment* segment, uint32_t seqnum, uint32_t acknum);
 
 		void retransmit(ipstack::TCP_Record* record);
 
@@ -146,7 +146,7 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 
 		void processSendData();
 		bool sendNextSegment();
-		bool sendSegment(UInt16Opt len);
+		bool sendSegment(uint_fast16_t len);
 
 	protected:
 		void updateHistory(bool do_retransmit = true);
@@ -161,14 +161,14 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		Packetbuffer* packetbuffer;
 		Packetbuffer* get_packetbuffer() { return packetbuffer; }
 		
-		SendBuffer* requestSendBufferTCP(UInt16Opt payloadsize = 0) ;
+		SendBuffer* requestSendBufferTCP(uint_fast16_t payloadsize = 0) ;
 		/**
 		 * Returns a ready to send tcp SYN packet.
 		 * This is an extra function because SYN packets may be handled in special
 		 * ways in tcp. E.g. the maximum segment size option is only valid in SYN
 		 * packets.
 		 */
-		SendBuffer* requestSendBufferTCP_syn(UInt16Opt payloadsize = 0);
+		SendBuffer* requestSendBufferTCP_syn(uint_fast16_t payloadsize = 0);
 		
 	protected:
 		void set_Mempool(Mempool* m) { mempool = m; }
@@ -181,9 +181,9 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		// **************************************************************************
 	private:
 		bool FIN_received;
-		UInt32 FIN_seqnum;
+		uint32_t FIN_seqnum;
 
-		void handleFIN(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len) {
+		void handleFIN(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len) {
 			if (segment->has_FIN() && (FIN_received == false)) {
 				FIN_seqnum = seqnum + payload_len;
 				FIN_received = true;
@@ -209,13 +209,13 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 			ACK_triggered = true;
 		}
 
-		bool sendACK(UInt32 ackNum);
+		bool sendACK(uint32_t ackNum);
 		bool sendACK() {
 			ACK_triggered = false;
 			return sendACK(receiveBuffer.getAckNum());
 		}
 
-		void handleACK(UInt32 acknum);
+		void handleACK(uint32_t acknum);
 
 	protected:
 		void processACK();
@@ -227,8 +227,8 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 	private:
 		TCP_Socket(const TCP_Socket& copy); //prevent copying
 
-		UInt16 dport;
-		UInt16 sport;
+		uint16_t dport;
+		uint16_t sport;
 
 		unsigned mss;
 
@@ -238,14 +238,14 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		bool waiting;
 
 		void writeHeader(SendBuffer* sendbuffer);
-		void writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack);
+		void writeHeaderWithAck(SendBuffer* sendbuffer, uint32_t ack);
 
 		/** 
 		 * To be influenced by header expanding options.
 		 * Is used for the header-size field in the tcp header and for reserving fitting
 		 * memory blocks.
 		 */
-		UInt8 getSpecificTCPHeaderSize(){return TCP_Segment::TCP_MIN_HEADER_SIZE;}
+		uint8_t getSpecificTCPHeaderSize(){return TCP_Segment::TCP_MIN_HEADER_SIZE;}
 		void gen_initial_seqnum();
 		void abort();
 
@@ -258,7 +258,7 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 
 		//wait for incoming packet for a given time (timeout)
 		//false := packet arrived, true := timeout reached
-		bool block(UInt32 timeout);
+		bool block(uint32_t timeout);
 		void block(); //wait for incoming packets only
 
 		void setMSS(unsigned max_segment_size);
@@ -295,10 +295,10 @@ class TCP_Socket : public DemuxLinkedList<TCP_Socket>
 		 * close a tcp connection
 		 */
 		bool close();
-		void set_dport(UInt16 d) ;
-		UInt16 get_dport() ;
-		void set_sport(UInt16 s) ;
-		UInt16 get_sport() ;
+		void set_dport(uint16_t d) ;
+		uint16_t get_dport() ;
+		void set_sport(uint16_t s) ;
+		uint16_t get_sport() ;
 };
 
 } //namespace ipstack

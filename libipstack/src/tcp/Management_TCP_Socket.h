@@ -24,7 +24,7 @@
 #include "tcp/TCP.h"
 #include "ip_management_memory/ManagementMemory.h"
 #include <string.h>
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack
 {
@@ -40,7 +40,7 @@ class Management_TCP_Socket : public ManagementMemory
 		/**
 		 * Prepare a sendbuffer for answering half-open tcp requests
 		 */
-		void prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len) ;
+		void prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, uint_fast16_t payload_len) ;
 
 		SendBuffer* requestSendBufferTCP(Interface* interface) ;
 		static Management_TCP_Socket& instance() {

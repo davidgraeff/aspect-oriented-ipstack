@@ -20,7 +20,7 @@
 #define __IPSTACK_MEMPOOL_H__
 
 #include "MempoolBase.h"
-#include "../IPStack_Config.h"
+#include "IPStack_Config.h"
 
 namespace ipstack
 {

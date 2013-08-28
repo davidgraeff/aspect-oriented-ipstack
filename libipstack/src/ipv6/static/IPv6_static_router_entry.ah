@@ -38,17 +38,17 @@ using namespace ipstack;
   */
 aspect ipstack_ifcfg0_v6_addrouter  {
 	// advice ordering: always execute this aspect before router prefix entry
-	advice execution("void os::init()") : 
+	advice execution("void ipstack::System::init()") : 
 	order( "ipstack_ifcfg0_v6_forcerouter", "ipstack_ifcfg0_v6_addrouter" );
 	
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		Interface* interface = Router::Inst().get_interface(0);
 		if(interface) {
 			ipstack::ipv6addr addr;
 			if (!parse_ipv6_addr(ROUTERIP_AS_STRING, addr)) {
 				return;
 			}
-			UInt8 hwaddr[6];
+			uint8_t hwaddr[6];
 			if (!parse_ethernet_addr(ROUTERMAC_AS_STRING, hwaddr)) {
 				return;
 			}

@@ -21,7 +21,7 @@
 
 namespace ipstack {
 
-UInt32 TCP_ReceiveBuffer::getAckNum(){
+uint32_t TCP_ReceiveBuffer::getAckNum(){
   if(head == 0){
     return read_firstSeqNum;
   }
@@ -54,7 +54,7 @@ void TCP_ReceiveBuffer::copyData(void* dst, unsigned len){
   
 //insert returns 'true' if segment has been added successfully
 //caller must free this packet if it returns 'false'
-bool TCP_ReceiveBuffer::insert(TCP_Segment* segment, UInt32 seqnum, unsigned len){
+bool TCP_ReceiveBuffer::insert(TCP_Segment* segment, uint32_t seqnum, unsigned len){
   if(seqnum == read_firstSeqNum){
     //packet is in order
     if(head == 0){

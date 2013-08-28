@@ -22,7 +22,7 @@
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -46,7 +46,7 @@ aspect expire_debug {
  		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
 	}
 	
-	advice execution("% ipstack::Interface::releaseOldEntries()") && result(r) && that(interface) :
+	advice execution("% ipstack::Interface::releaseOldEntries()") && that(interface) :
 		after(Interface& interface) {
  		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
 	}

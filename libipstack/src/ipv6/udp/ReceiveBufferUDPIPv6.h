@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "util/Mempool.h"
 #include "ReceiveBuffer.h"
 #include "ipv6/IPv6AddressUtilities.h"
@@ -28,15 +28,15 @@ namespace ipstack {
 class ReceiveBufferUDPIPv6 : public ReceiveBuffer {
 public:
 	struct RemoteInfo {
-		UInt8 id;
-		UInt16 remoteport;
+		uint8_t id;
+		uint16_t remoteport;
 		ipv6addr ipv6;
 	};
 	/**
 	 * Create a receive buffer and return it.
 	 * Changes the ReceiveBuffer list-head pointer if neccessary.
 	 */
-	static ReceiveBufferUDPIPv6* createReceiveBufferUDPIPv6(Mempool* mempool, void*  payload, UInt16 payloadsize, UInt16 remoteport, ipv6addr ipv6) {
+	static ReceiveBufferUDPIPv6* createReceiveBufferUDPIPv6(Mempool* mempool, void*  payload, uint16_t payloadsize, uint16_t remoteport, ipv6addr ipv6) {
 		ReceiveBufferUDPIPv6* r = (ReceiveBufferUDPIPv6*)ReceiveBuffer::createReceiveBuffer(mempool, payload, payloadsize + sizeof(RemoteInfo));
 		if (!r)
 			return 0;

@@ -78,7 +78,7 @@ aspect TCP_ReceiveBuffer_SlidingWindow {
   advice execution("bool ipstack::TCP_ReceiveBuffer::insert(ipstack::TCP_Segment*, %, unsigned)") &&
          that(receiveBuffer) &&
          args(segment, seqnum, len) :
-         around(TCP_ReceiveBuffer& receiveBuffer, TCP_Segment* segment, UInt32 seqnum, unsigned len) {
+         around(TCP_ReceiveBuffer& receiveBuffer, TCP_Segment* segment, uint32_t seqnum, unsigned len) {
     *tjp->result() = receiveBuffer.insert_SlidingWindow(segment, seqnum, len);
   }
   

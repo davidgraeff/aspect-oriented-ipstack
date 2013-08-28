@@ -18,12 +18,12 @@
 #pragma once
 
 #include "cfAttribs.h"
-#include "../util/Mempool.h"
+#include "util/Mempool.h"
 #include "util/Ringbuffer.h"
 #include "SendBuffer.h"
 #include "ip_management_memory/ManagementMemory.h"
 #include <string.h>
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack
 {

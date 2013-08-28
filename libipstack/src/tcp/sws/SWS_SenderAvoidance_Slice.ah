@@ -19,13 +19,13 @@
 #ifndef __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
 #define __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
 
-#include "util/types.h"
+#include <inttypes.h>
 
 //using namespace ipstack;
 
 
 slice class SWS_SenderAvoidance_Slice {  
-  UInt16 max_sendWindow; //max seen advertised window of remote peer
+  uint16_t max_sendWindow; //max seen advertised window of remote peer
 };
 
 #endif //__SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__

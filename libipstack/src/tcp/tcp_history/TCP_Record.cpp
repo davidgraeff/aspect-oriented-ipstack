@@ -20,7 +20,7 @@
 
 namespace ipstack {
 
-void TCP_Record::setTimeout(UInt32 msec) {
+void TCP_Record::setTimeout(uint32_t msec) {
   if(msec != 0){
     timeout = Clock::now() + Clock::ms_to_ticks(msec);
   }

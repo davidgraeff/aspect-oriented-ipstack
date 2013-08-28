@@ -73,22 +73,22 @@ void TCP_Socket::input(TCP_Segment* segment, unsigned len)
 	}
 }
 
-UInt16 TCP_Socket::getReceiveWindow()
+uint16_t TCP_Socket::getReceiveWindow()
 {
 	if (state == SYNSENT || state == CLOSED) {
-		return (UInt16)TCP_Segment::DEFAULT_MSS; //no mss negotiated so far
+		return (uint16_t)TCP_Segment::DEFAULT_MSS; //no mss negotiated so far
 	} else {
 		unsigned currRecvWnd = maxReceiveWindow_Bytes - receiveBuffer.getRecvBytes();
 		if (currRecvWnd > 0xFFFFU) {
 			//advertised window is only 16 bit wide
 			return 0xFFFFU;
 		} else {
-			return (UInt16)currRecvWnd;
+			return (uint16_t)currRecvWnd;
 		}
 	}
 }
 
-void TCP_Socket::updateSendWindow(TCP_Segment* segment, UInt32 seqnum, UInt32 acknum)
+void TCP_Socket::updateSendWindow(TCP_Segment* segment, uint32_t seqnum, uint32_t acknum)
 {
 	if (TCP_Segment::SEQ_LT(seqnum, lwseq)) {
 		return; // this segment arrived out-of-order
@@ -130,7 +130,7 @@ void TCP_Socket::updateHistory(bool do_retransmit)
 	while (record != 0) {
 		SendBuffer* buffer = record->getSendBuffer();
 		TCP_Segment* segment = (TCP_Segment*)buffer->memstart_transport;
-		UInt64 timeout = record->getTimeout();
+		uint64_t timeout = record->getTimeout();
 		if (((timeout != 0) && (TCP_Segment::SEQ_LT(segment->get_seqnum(), seqnum_unacked))) ||
 			((timeout == 0) && interface->hasBeenSent(buffer->getDataStart()))) {
 			// 1) Segment is ack'ed (sequence number) OR
@@ -157,7 +157,7 @@ void TCP_Socket::retransmit(TCP_Record* record)
 	record->setTimeout(getRTO());
 }
 
-void TCP_Socket::handleACK(UInt32 acknum)
+void TCP_Socket::handleACK(uint32_t acknum)
 {
 	//this segments contains an acknowledgement number
 	if (TCP_Segment::SEQ_LEQ(acknum, seqnum_unacked)) {
@@ -178,7 +178,7 @@ void TCP_Socket::handleACK(UInt32 acknum)
 	set_seqnum_unacked(acknum); // seqnums < seqnum_unacked are ack'ed now
 }
 
-bool TCP_Socket::handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payload_len)
+bool TCP_Socket::handleData(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len)
 {
 	bool needToFree = true; //caller must free this segment?
 	if (payload_len > 0) {
@@ -189,7 +189,7 @@ bool TCP_Socket::handleData(TCP_Segment* segment, UInt32 seqnum, unsigned payloa
 	return needToFree;
 }
 
-bool TCP_Socket::sendACK(UInt32 ackNum)
+bool TCP_Socket::sendACK(uint32_t ackNum)
 {
 	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
 	SendBuffer* b = requestSendBufferTCP();
@@ -260,9 +260,9 @@ void TCP_Socket::processACK()
 	}
 }
 
-void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack)
+void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, uint32_t ack)
 {
-	UInt8 headersize = getSpecificTCPHeaderSize();
+	uint8_t headersize = getSpecificTCPHeaderSize();
 	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(dport);
 	segment->set_sport(sport);
@@ -279,7 +279,7 @@ void TCP_Socket::writeHeaderWithAck(SendBuffer* sendbuffer, UInt32 ack)
 
 void TCP_Socket::writeHeader(SendBuffer* sendbuffer)
 {
-	UInt8 headersize = getSpecificTCPHeaderSize();
+	uint8_t headersize = getSpecificTCPHeaderSize();
 	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(dport);
 	segment->set_sport(sport);
@@ -295,7 +295,7 @@ void TCP_Socket::writeHeader(SendBuffer* sendbuffer)
 	sendbuffer->writtenToDataPointer(headersize);
 }
 
-SendBuffer* TCP_Socket::requestSendBufferTCP_syn(UInt16Opt payloadsize) {
+SendBuffer* TCP_Socket::requestSendBufferTCP_syn(uint_fast16_t payloadsize) {
 	return requestSendBufferTCP(payloadsize);
 }
 
@@ -305,7 +305,7 @@ void TCP_Socket::setMSS(unsigned max_segment_size)
 
 	if (sizeof(unsigned) == 2) {
 		//8 or 16 bit machine
-		UInt32 maxRecvWnd = ((UInt32)maxReceiveWindow_MSS) * max_segment_size;
+		uint32_t maxRecvWnd = ((uint32_t)maxReceiveWindow_MSS) * max_segment_size;
 		if (maxRecvWnd > 0xFFFFU) {
 			//limit to 16 bit (65 KByte)
 			maxReceiveWindow_Bytes = 0xFFFFU;
@@ -314,7 +314,7 @@ void TCP_Socket::setMSS(unsigned max_segment_size)
 		}
 	} else {
 		// 32 or 64 bit machine
-		UInt64 maxRecvWnd = ((UInt64)maxReceiveWindow_MSS) * max_segment_size;
+		uint64_t maxRecvWnd = ((uint64_t)maxReceiveWindow_MSS) * max_segment_size;
 		if (maxRecvWnd > 0xFFFFFFFFUL) {
 			//limit to 32 bit (4 GByte)
 			maxReceiveWindow_Bytes = (unsigned) 0xFFFFFFFFUL;
@@ -395,7 +395,7 @@ bool TCP_Socket::close()
 	return isClosed();
 }
 
-bool TCP_Socket::block(UInt32 timeout)
+bool TCP_Socket::block(uint32_t timeout)
 {
 	return false;
 }
@@ -435,7 +435,7 @@ void TCP_Socket::processSendData()
 		}
 	}
 }
-bool TCP_Socket::sendSegment(UInt16Opt len) {
+bool TCP_Socket::sendSegment(uint_fast16_t len) {
 	// Create a sendbuffer. Hint: Within TCP_Socket a SendBuffer is created without a tcp header.
 	SendBuffer* b = requestSendBufferTCP(len);
 	if (b != 0) {
@@ -444,7 +444,7 @@ bool TCP_Socket::sendSegment(UInt16Opt len) {
 
 		b->write(application_buf, len);
 		application_buflen -= len;
-		application_buf = (void*)(((UInt8*)application_buf) + len);
+		application_buf = (void*)(((uint8_t*)application_buf) + len);
 		
 		//set PUSH flag on last segment
 		if (application_buflen == 0) {
@@ -470,19 +470,19 @@ bool TCP_Socket::sendNextSegment()
 	//calculate length of packet to be send as the following minimum:
 	return sendSegment(min(getSendWindow(), application_buflen, mss));
 }
-void TCP_Socket::set_dport(UInt16 d)
+void TCP_Socket::set_dport(uint16_t d)
 {
 	dport = d;
 }
-UInt16 TCP_Socket::get_dport()
+uint16_t TCP_Socket::get_dport()
 {
 	return dport;
 }
-void TCP_Socket::set_sport(UInt16 s)
+void TCP_Socket::set_sport(uint16_t s)
 {
 	sport = s;
 }
-UInt16 TCP_Socket::get_sport()
+uint16_t TCP_Socket::get_sport()
 {
 	return sport;
 }
@@ -500,7 +500,7 @@ bool TCP_Socket::listen()
 void TCP_Socket::gen_initial_seqnum()
 {
 	//RFC 793 (TCP Illustrated Vol.1 page 232)
-	UInt64 usec = Clock::ticks_to_ms(Clock::now()) * 1000UL; // microseconds
+	uint64_t usec = Clock::ticks_to_ms(Clock::now()) * 1000UL; // microseconds
 	seqnum_next = usec / 4; // 'increment' every 4 usec ;-)
 	seqnum_unacked = seqnum_next;
 }
@@ -521,7 +521,7 @@ int TCP_Socket::poll(unsigned int msec)
 		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
 		if (receiveB == 0) {
 			//no gratuitous packets received, yet
-			bool timeout_reached = block((UInt32)msec); //wait for max. msec
+			bool timeout_reached = block((uint32_t)msec); //wait for max. msec
 			if (timeout_reached == false) {
 				receiveB = (ReceiveBuffer*)packetbuffer->get(); //check for new packet, since timeout was not reached
 			}
@@ -582,7 +582,7 @@ void TCP_Socket::unbind()
 {
 	Demux::Inst().unbind(this);
 }
-SendBuffer* TCP_Socket::requestSendBufferTCP(UInt16Opt payloadsize)
+SendBuffer* TCP_Socket::requestSendBufferTCP(uint_fast16_t payloadsize)
 {
 	if (history.isFull()) {
 		updateHistory(false); //update history ... (false := do not trigger any retransmissions)

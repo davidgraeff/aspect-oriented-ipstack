@@ -22,7 +22,7 @@
 #include "util/Ringbuffer.h"
 
 #include <string.h>
-#include "util/types.h"
+#include <inttypes.h>
 namespace ipstack
 {
 class SendBuffer;
@@ -74,14 +74,14 @@ class SharedMemory {
 	/**
 	  * Remove a SendBuffer pointer from the management list identified by the list number.
 	  */
-	bool remove(UInt16Opt index);
+	bool remove(uint_fast16_t index);
 	/**
 	  * Use this to iterate over all used list entries. "index" will be modified
 	  * to point to the next found list number where the returned Sendbuffer has been
 	  * found. Return 0 if no valid entry could be found. The search start with the given
 	  * index.
 	  */
-	SendBuffer* getNext(UInt16Opt& index) const;
+	SendBuffer* getNext(uint_fast16_t& index) const;
 	/**
 	  * Check for all allocated SendBuffers if the data has been send already.
 	  * If this is the case, free the memory block / Sendbuffer.

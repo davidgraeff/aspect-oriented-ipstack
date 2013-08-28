@@ -22,7 +22,7 @@
 #include "../IPv6onSockets.h"
 #include "SendBuffer.h"
 #include "IPv6HopByHop.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -49,7 +49,7 @@ aspect Sendbuffer_IPv6_HopByHop_extension {
 		if (tjp->that()->m_useipversion == 6) {
 			IPV6& ipv6 = tjp->that()->ipv6;
 			char* nextHeader = (char*)sendbuffer->getDataPointer(); // the next header field is always the first byte of an IPv6 extension header.
-			UInt16Opt size = IPv6HopByHop::writeExtensionHeader(ipv6, nextHeader);
+			uint_fast16_t size = IPv6HopByHop::writeExtensionHeader(ipv6, nextHeader);
 
 			if (!size) {
 				tjp->proceed();

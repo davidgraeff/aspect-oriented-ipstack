@@ -19,7 +19,7 @@
 #ifndef __IPV4_ARP_SEND_AH__
 #define __IPV4_ARP_SEND_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"
@@ -41,7 +41,7 @@ aspect IPv4_ARP_Send {
   advice execution("void ipstack::ARP_Cache::ipv4_update(%, %)") &&
          args(ipv4_addr, hw_addr) &&
          that(cache) :
-         after(const UInt32* ipv4_addr, const UInt8* hw_addr, ARP_Cache& cache) {
+         after(const uint32_t* ipv4_addr, const uint8_t* hw_addr, ARP_Cache& cache) {
 
     unsigned selected_index = ARP_Cache::MAX_CACHE_ENTRIES;
     unsigned first_free_index = ARP_Cache::MAX_CACHE_ENTRIES;
@@ -79,9 +79,9 @@ aspect IPv4_ARP_Send {
  
   advice execution("% ipstack::ARP_Cache::ipv4_lookup(%, ipstack::Interface*)") &&
          args(ipv4_addr, interface) && that(cache) :
-         after(UInt32 ipv4_addr, Interface* interface, ARP_Cache& cache) {
+         after(uint32_t ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
-    UInt8* hw_addr = cache.ipv4_find(ipv4_addr);
+    uint8_t* hw_addr = cache.ipv4_find(ipv4_addr);
     for(int retries=0; (hw_addr==0) && (retries<3); retries++){
       cache.ipv4_request(ipv4_addr, interface);
       cache.ipv4_wait(ipv4_addr);

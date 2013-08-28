@@ -3,7 +3,7 @@
 #include "icmpv6/ICMPv6_Socket.h"
 
 namespace ipstack {
-	UInt8 DelaySend::mHoldBack;
+	uint8_t DelaySend::mHoldBack;
 
 	void DelaySend::sendDelayed(SendBuffer* buffer) {
 		if (buffer->getState()==SendBuffer::AboutToBeTransmittedState) {

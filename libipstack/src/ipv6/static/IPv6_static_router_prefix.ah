@@ -33,7 +33,7 @@ using namespace ipstack;
   * inferface ip will be removed if the router entry goes away.
   */
 aspect ipstack_ifcfg0_v6_forcerouter  {
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		Interface* interface = Router::Inst().get_interface(0);
 		if(interface) {
 			ipstack::ipv6addr addr;
@@ -51,7 +51,7 @@ aspect ipstack_ifcfg0_v6_forcerouter  {
 			if (!entry) {
 				return;
 			}
-			UInt8 position = interface->addressmemory.getPosition(entry);
+			uint8_t position = interface->addressmemory.getPosition(entry);
 
 			// add an IP address with router prefix information
 			interface->makeIPv6AddressByPrefix(addr, cfIPSTACK_IFCFG0_IPv6_router_prefixlen, AddressEntry::AddressEntryStateTemporary, position);

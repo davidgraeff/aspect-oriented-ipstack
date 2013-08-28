@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -28,5 +28,5 @@ slice class NDPCacheEntry_Ethernet_Slice
 {
 	public:
 	enum  {LINK_LAYER_ADDRESS_SIZE = 6}; // for a 6 byte link layer address
-	UInt8 hw[LINK_LAYER_ADDRESS_SIZE];
+	uint8_t hw[LINK_LAYER_ADDRESS_SIZE];
 };

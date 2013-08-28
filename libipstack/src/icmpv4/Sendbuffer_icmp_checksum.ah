@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "router/Interface.h"
 #include "SendBuffer.h"
 #include "icmpv4/ICMP.h"
@@ -33,7 +33,7 @@ aspect Sendbuffer_ICMPv4_Checksum  {
 	before(SendBuffer* dataToSend) {
 		
 		ICMP_Packet* icmp = (ICMP_Packet*) dataToSend->memstart_transport;
-		const UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		const uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
 		Interface* interface = dataToSend->getInterface();
 		icmp->set_checksum(0);
 		icmp->set_checksum(icmp->calc_checksum(0, payloadsize, interface));

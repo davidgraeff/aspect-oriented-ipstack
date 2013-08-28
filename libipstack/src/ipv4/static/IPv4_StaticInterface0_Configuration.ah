@@ -2,13 +2,13 @@
 #define __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
 
 #include "cfAttribs.h"
-#include "api/Setup.h"
+#include "router/Router.h"
 
 using namespace ipstack;
 
 aspect ipstack_ifcfg0_init  {
-	advice execution( "void os::init()" ) : after() {
-		Interface* interface = IP::getInterface(0);
+	advice execution( "void ipstack::System::init()" ) : after() {
+		Interface* interface = Router::Inst().get_interface(0);
 		if(interface) {
 			interface->setIPv4Addr(cfIPSTACK_IFCFG0_IP);
 			interface->setIPv4Subnetmask(cfIPSTACK_IFCFG0_SUBNET);

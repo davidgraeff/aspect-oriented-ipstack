@@ -19,11 +19,11 @@
 
 namespace ipstack {
 
-	bool is_eth_addr_set(UInt8* eth_addr) {
+	bool is_eth_addr_set(uint8_t* eth_addr) {
 		return (eth_addr[3] || eth_addr[4] || eth_addr[5]);
 	}
 	
-	UInt8 numberFromAsciiE(char c) {
+	uint8_t numberFromAsciiE(char c) {
 		switch (c) {
 			case '0': return 0;
 			case '1': return 1;
@@ -52,7 +52,7 @@ namespace ipstack {
 		};
 	}
 	
-	UInt8 numberToAsciiE(UInt8 digit)
+	uint8_t numberToAsciiE(uint8_t digit)
 {
 	switch (digit) {
 		case 0:
@@ -93,7 +93,7 @@ namespace ipstack {
 }
 
 // Return 18 bytes: mac address as string
-void ethernet_addr_tostring(UInt8* eth_addr, char *addrstr)
+void ethernet_addr_tostring(uint8_t* eth_addr, char *addrstr)
 {
 	*addrstr = numberToAsciiE(((*eth_addr) & 0x0f)>>4); ++addrstr;
 	*addrstr = numberToAsciiE((*eth_addr) & 0x0f); ++addrstr;
@@ -120,13 +120,13 @@ void ethernet_addr_tostring(UInt8* eth_addr, char *addrstr)
  * @param ipaddr Resulting native ethernet represenation
  * @return Return true if successful otherwise false. ipaddr is not altered if the parsing was not successful
  */
-bool parse_ethernet_addr(const char *addrstr, UInt8* eth_addr)
+bool parse_ethernet_addr(const char *addrstr, uint8_t* eth_addr)
 {
-	UInt8 blockIndex = 0;
+	uint8_t blockIndex = 0;
 	char* currentCharPtr = (char*)addrstr;
 	while (blockIndex < 6) {
-		UInt8 blockdata[2] = {0};
-		UInt8 position = 0;
+		uint8_t blockdata[2] = {0};
+		uint8_t position = 0;
 // 		printf("ebl ");
 		while(*currentCharPtr != ':') {
 // 			printf ("%c", *currentCharPtr);

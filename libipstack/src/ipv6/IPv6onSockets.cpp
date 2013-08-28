@@ -60,7 +60,7 @@ namespace ipstack {
 		hoplimit = IPv6_Packet::IPV6_DEFAULT_HOPLIMIT;
 	}
 
-	void IPV6::setHoplimit(UInt8 h)
+	void IPV6::setHoplimit(uint8_t h)
 	{
 		hoplimit = h;
 	}

@@ -34,7 +34,7 @@ void NDPNeighborMessages::send_neighbor_solicitation(const ipstack::ipv6addr& ip
 		solicitedNode_multicast_addr(ipv6_dstaddr, (ipv6addr&)ipv6.get_dst_addr());
 	ipv6.set_src_addr(ipv6_srcaddr);
 	
-	const UInt8 resSize = sizeof(NeighborSolicitationMessage)+NDPMessages::multiple_of_octets(interface->getAddressSize())*8;
+	const uint8_t resSize = sizeof(NeighborSolicitationMessage)+NDPMessages::multiple_of_octets(interface->getAddressSize())*8;
 
 	Demux::Inst().setDirectResponse(true);
 	SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, resSize);

@@ -18,46 +18,46 @@
 #pragma once
 
 #include "../router/Interface.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 
 class InternetChecksum {
 public:
-	static inline UInt16 byteswap16(UInt16 val) {
+	static inline uint16_t byteswap16(uint16_t val) {
 		return ((val & 0xFF) << 8) | ((val & 0xFF00) >> 8);
 	}
-	static inline UInt16 invert(UInt16 csum, Interface* interface) {
+	static inline uint16_t invert(uint16_t csum, Interface* interface) {
 		return ~csum;
 	}
 
-	static inline UInt16 accumulateCarryBits(UInt32 csum) {
+	static inline uint16_t accumulateCarryBits(uint32_t csum) {
 		while (csum >> 16) {
 			csum = (csum & 0xFFFF) + (csum >> 16); // accumulate carry bits
 		}
 		return csum;
 	}
-	static UInt32 computePayload(UInt8* payloaddata, UInt16 payloadlen) {
+	static uint32_t computePayload(uint8_t* payloaddata, uint16_t payloadlen) {
 		//Software Checksumming
-		UInt32 csum = 0;
+		uint32_t csum = 0;
 
 		if (payloadlen & 0x1) {
 			//odd datasize: add padding byte (zero)
-			UInt16 odd = payloaddata[payloadlen - 1];
+			uint16_t odd = payloaddata[payloadlen - 1];
 			csum += (odd & 0xFF) << 8;
 		}
 
 		payloadlen /= 2;
 
-		UInt16* payload = (UInt16*) payloaddata;
+		uint16_t* payload = (uint16_t*) payloaddata;
 		for (unsigned i = 0; i < payloadlen; ++i) {
 			csum += byteswap16(*payload++);
 		}
 		return csum;
 	}
 
-	static UInt16 computePayloadChecksum(UInt8* payloaddata, UInt16 payloadlen) {
-		UInt32 csum = computePayload(payloaddata, payloadlen);
+	static uint16_t computePayloadChecksum(uint8_t* payloaddata, uint16_t payloadlen) {
+		uint32_t csum = computePayload(payloaddata, payloadlen);
 		return (~accumulateCarryBits(csum)); // one's complement
 	}
 };

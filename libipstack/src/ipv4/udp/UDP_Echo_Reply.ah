@@ -51,7 +51,7 @@ aspect UDP_IPv4_ECHO_REPLY {
 		
 		// extract udp packet and dest port
 		UDP_Packet* udp_packet = (UDP_Packet*) ipv4_packet->get_data();
-		const UInt16 udp_packet_dport = udp_packet->get_dport();
+		const uint16_t udp_packet_dport = udp_packet->get_dport();
 
 		// UDP Echo Service is on port 7
 		if (7 == udp_packet_dport) {
@@ -59,7 +59,7 @@ aspect UDP_IPv4_ECHO_REPLY {
 			// the destination interface into account
 			Management_UDP_Socket &udpmanagmentinstance = Management_UDP_Socket::instance();
 			udpmanagmentinstance.ipv4.set_dst_addr(ipv4_packet->get_src_ipaddr());
-			UInt16 maxlen = udpmanagmentinstance.getMaxPayloadLength();
+			uint16_t maxlen = udpmanagmentinstance.getMaxPayloadLength();
 			if (len > maxlen) {
 				len = maxlen;
 			}

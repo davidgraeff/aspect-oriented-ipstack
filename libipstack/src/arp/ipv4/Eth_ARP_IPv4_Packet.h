@@ -19,7 +19,7 @@
 #ifndef __ETH_ARP_IPV4_PACKET__
 #define __ETH_ARP_IPV4_PACKET__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ethernet/Eth_Frame.h"
 #include "../ARP.h"
 #include "router/Interface.h"
@@ -40,16 +40,16 @@ class Eth_ARP_IPv4_Packet {
   
   //Ethernet + ARP header
   private:
-  UInt8 header[HEADER_SIZE];
+  uint8_t header[HEADER_SIZE];
   
   public:
   //ARP Payload
   //Source (sender):
-  UInt8 arp_src_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
-  UInt32 arp_src_ipv4_addr;
+  uint8_t arp_src_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
+  uint32_t arp_src_ipv4_addr;
   //Destination (receiver):
-  UInt8 arp_dst_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
-  UInt32 arp_dst_ipv4_addr;
+  uint8_t arp_dst_hwaddr[ARP_Packet::ARP_HW_ADDR_SIZE_ETH];
+  uint32_t arp_dst_ipv4_addr;
 
   //The sending interface (for hasBeenSent(...))
   Interface* interface; //initialize to 0 (-> startup code)

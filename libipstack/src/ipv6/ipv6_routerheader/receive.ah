@@ -34,8 +34,8 @@ aspect IPv6_RoutingHeader_Receive {
 		if (nextHeader == 43) {
 			struct destOption {
 				char type;
-				UInt8 len_in_octets;
-				UInt8 data[];
+				uint8_t len_in_octets;
+				uint8_t data[];
 			} __attribute__((packed));
 			destOption* option = (destOption*)payload;
 			

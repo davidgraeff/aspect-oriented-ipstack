@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -30,7 +30,7 @@ using namespace ipstack;
 slice class NDPCacheEntry_Expire_Slice
 {
 	public:
-	UInt8 expire_value; // the purpose of this byte is defined by the strategy that is used to expire values
+	uint8_t expire_value; // the purpose of this byte is defined by the strategy that is used to expire values
 	// importance
 	enum NDPCacheEntryImportance { IMPORTANCE_not_important = 0, IMPORTANCE_good_to_know = 50, IMPORTANCE_solicitation_renew = 70, IMPORTANCE_router = 100, IMPORTANCE_important = 128, IMPORTANCE_always_keep = 255 };
 };

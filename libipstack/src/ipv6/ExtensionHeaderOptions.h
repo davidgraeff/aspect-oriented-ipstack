@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "util/types.h"
+#include <inttypes.h>
 namespace ipstack
 {
 
@@ -26,9 +26,9 @@ namespace ipstack
   * The structure of an IPv6 extension
   */
 struct IPv6HeaderExtension {
-	UInt8 nextheader;		// Identifies the type of the header that will follow this extension header
-	UInt8 len_in_8octets; 	// example: 1 means a size of 64 bits
-	UInt8 options[];
+	uint8_t nextheader;		// Identifies the type of the header that will follow this extension header
+	uint8_t len_in_8octets; 	// example: 1 means a size of 64 bits
+	uint8_t options[];
 } __attribute__((packed));
 
 /**
@@ -41,9 +41,9 @@ public:
 	 * Return false if a parsing error occured or if one of the options
 	 * told us, that if we do not understand it, we should drop the packet.
 	 */
-	static bool parseOptions(UInt8* data, unsigned remaining_length, Interface* interface) {
+	static bool parseOptions(uint8_t* data, unsigned remaining_length, Interface* interface) {
 		while (remaining_length) {
-			UInt8 option_len = data[1];
+			uint8_t option_len = data[1];
 			if (!parseOption(data[0], option_len, &data[2], interface))
 				return false;
 			
@@ -58,7 +58,7 @@ public:
 	/**
 	 * This can be intercepted by aspects to react on received IPv6 options.
 	 */
-	static bool parseOption(UInt8 type, UInt8 data_len, UInt8* data, Interface* interface) {
+	static bool parseOption(uint8_t type, uint8_t data_len, uint8_t* data, Interface* interface) {
 		// We didn't recognice this option and the option want us to drop the packet
 		if ((type & 0xC0) != 00)
 			return false;
@@ -70,7 +70,7 @@ public:
 	  * not used space after a too-short option. There exists either the one byte
 	  * padding (value=0) or the multple bytes padding (first byte=1, second byte=len-2)
 	  */
-	static void writePaddingOption(UInt8* data, UInt8 remainingBytes) {
+	static void writePaddingOption(uint8_t* data, uint8_t remainingBytes) {
 		if (remainingBytes==1) {
 			data[0] = 0;
 		} else {

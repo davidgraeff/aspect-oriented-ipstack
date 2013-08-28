@@ -2,7 +2,7 @@
 
 namespace ipstack {
 namespace IPV6AddressScope {
-UInt8 getIPv6AddressScopePrefixLength(ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE s)
+uint8_t getIPv6AddressScopePrefixLength(ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE s)
 {
 	switch (s) {
 		case IPV6_SCOPE_LINKLOCAL:
@@ -99,7 +99,7 @@ void get_unspecified_ipv6_address(ipv6addr& dest)
 bool is_not_unspecified_ipv6_address(const ipv6addr& dest)
 {
 	char u = 0;
-	for (UInt8 i = 0; i < 16; ++i)
+	for (uint8_t i = 0; i < 16; ++i)
 		u |= dest.ipaddrB8[i];
 	return (bool)u;
 }
@@ -123,7 +123,7 @@ void solicitedNode_multicast_addr(const ipstack::ipv6addr& src_ip_addr, ipv6addr
 	solicitedNode.ipaddrB8[15] = src_ip_addr.ipaddrB8[15];
 }
 
-UInt8 numberFromAscii(char c)
+uint8_t numberFromAscii(char c)
 {
 	switch (c) {
 		case '0':
@@ -175,7 +175,7 @@ UInt8 numberFromAscii(char c)
 	};
 }
 
-UInt8 numberToAscii(UInt8 digit)
+uint8_t numberToAscii(uint8_t digit)
 {
 	switch (digit) {
 		case 0:
@@ -215,9 +215,9 @@ UInt8 numberToAscii(UInt8 digit)
 	};
 }
 
-bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addrprefix, UInt8 prefixlen)
+bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addrprefix, uint8_t prefixlen)
 {
-	for (UInt8 block = 0; block < 16; ++block) {
+	for (uint8_t block = 0; block < 16; ++block) {
 		// entire char has to be the same
 		if (prefixlen >= 8) {
 			if (addr.ipaddrB8[block] != addrprefix.ipaddrB8[block]) {
@@ -233,7 +233,7 @@ bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addrprefix, UInt8 p
 			 * 2.) Because we want the 1's starting on the LSB, because we compare from "left to right"
 			 *     we use 7-prefixlen (exmpl: 00000111) and invert the result (exmpl: 11111000)
 			 */
-			UInt8 mask = ~((2 ^(7 - prefixlen)) - 1);
+			uint8_t mask = ~((2 ^(7 - prefixlen)) - 1);
 			if ((addr.ipaddrB8[block] & mask) != (addrprefix.ipaddrB8[block] & mask)) {
 				return false;
 			}
@@ -250,10 +250,10 @@ bool compare_ipv6_addr(const ipv6addr& addr, const ipv6addr& addr2)
 
 bool parse_ipv6_addr(const char* addrstr, ipv6addr& ipaddr)
 {
-	UInt8 blockIndex = 0;
+	uint8_t blockIndex = 0;
 	char* currentCharPtr = (char*)addrstr;
 	while (blockIndex < 8) { // we have 8 blocks
-		UInt8 blockLength = 0;
+		uint8_t blockLength = 0;
 
 		// Determine block length
 		while (*currentCharPtr != ':' && *currentCharPtr != 0) {
@@ -263,7 +263,7 @@ bool parse_ipv6_addr(const char* addrstr, ipv6addr& ipaddr)
 		currentCharPtr -= blockLength; // reset the char pointer
 		
 		// put digits of the block "132f" into 'blockdata'
-		UInt8 blockdata[4] = {0};
+		uint8_t blockdata[4] = {0};
 		while (blockLength) {
 			--blockLength;
 			blockdata[blockLength] = numberFromAscii(*currentCharPtr);
@@ -290,8 +290,8 @@ bool parse_ipv6_addr(const char* addrstr, ipv6addr& ipaddr)
 void ipv6_addr_toString(const ipv6addr& ipaddr, char* addrstr)
 {
 	// A block consists of 4 digits and a ":". An IPv6 address has 8 blocks.
-	UInt8 addstrPosOffset = 0;
-	for (UInt8 block = 0; block < 8; ++block) {
+	uint8_t addstrPosOffset = 0;
+	for (uint8_t block = 0; block < 8; ++block) {
 		// first digit of "2001:"
 		addrstr[addstrPosOffset + 0] = numberToAscii(ipaddr.ipaddrB8[block * 2 + 0] >> 4); // higher 4 bits
 		// second digit of "2001:"

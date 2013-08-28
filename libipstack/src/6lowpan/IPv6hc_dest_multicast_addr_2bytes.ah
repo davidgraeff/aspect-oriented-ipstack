@@ -20,7 +20,7 @@
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -30,7 +30,7 @@ aspect IPv6hc_mulricast_dest_addr_2 {
 		*(tjp->result()) = 2;
 	}
 	advice execution("void ipstack::IPv6hc_Packet::write_compressed_dst_ipaddr(...)") && that(ipv6hc) && args(addr, writePtr, flagbyte):
-		around(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte, IPv6hc_Packet& ipv6hc) {
+		around(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte, IPv6hc_Packet& ipv6hc) {
 			writePtr[0] = addr.ipaddrB8[14];
 			writePtr[1] = addr.ipaddrB8[15];
 			flagbyte |= 0x02;

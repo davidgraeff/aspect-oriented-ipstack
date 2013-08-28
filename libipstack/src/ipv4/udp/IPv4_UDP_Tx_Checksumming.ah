@@ -36,7 +36,7 @@ aspect IPv4_UDP_Tx_Checksumming {
 		UDP_Packet* udp = (UDP_Packet*) dataToSend->memstart_transport;
 
 		Interface* interface = dataToSend->getInterface();
-		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
 		udp->set_checksum(0);
 		udp->set_checksum(udp->calc_checksum(InternetChecksumV4::computePseudoHeader(packet, payloadsize, UDP_Packet::IP_TYPE_UDP), payloadsize, interface));
 

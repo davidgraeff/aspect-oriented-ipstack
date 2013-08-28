@@ -19,22 +19,22 @@
 #ifndef __TCP_RTT_ESTIMATION_SLICE__
 #define __TCP_RTT_ESTIMATION_SLICE__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "operating_system_integration/Clock.h"
 
 slice class TCP_RTT_Estimation_Slice {
   private:
   enum { LOWER_RTO_BOUND = 200U }; //Linux uses 200ms min RTO (rfc 2988: min 1sec)
   
-  UInt32 rtt_seqnum; //the sequence number for current measuring
-  UInt64 rrt_time; //when was 'rtt_seqnum' send
+  uint32_t rtt_seqnum; //the sequence number for current measuring
+  uint64_t rrt_time; //when was 'rtt_seqnum' send
   bool rrt_active; //there is maesure going on
   
-  Int32 srtt; //the smoothed RTT (scaled X 8)
-  Int32 rtt_var; // variation (mean deviation) of RTT (scaled X 4)
-  UInt32 rto; //retransmission timeout
+  int32_t srtt; //the smoothed RTT (scaled X 8)
+  int32_t rtt_var; // variation (mean deviation) of RTT (scaled X 4)
+  uint32_t rto; //retransmission timeout
   
-  void update_SRTT(Int32 meassured_rtt){
+  void update_SRTT(int32_t meassured_rtt){
     //see "Internetworking with TCP/IP Volume II, page 278"
     //for further explainations
     if(srtt == 0){
@@ -45,7 +45,7 @@ slice class TCP_RTT_Estimation_Slice {
       return;
     }
     
-    Int32 error = meassured_rtt - (srtt >> 3);
+    int32_t error = meassured_rtt - (srtt >> 3);
     srtt += error; // srtt = srtt + error/8
     
     if(error < 0){
@@ -75,14 +75,14 @@ slice class TCP_RTT_Estimation_Slice {
     rrt_active = false;
   }
   
-  void update_RTT_Estimation(UInt32 acknum){
+  void update_RTT_Estimation(uint32_t acknum){
     if(rrt_active == true){
       if(TCP_Segment::SEQ_LT(rtt_seqnum, acknum)){
         //rtt_seqnum is ack'ed now
-        UInt32 meassured_rtt = Clock::ticks_to_ms(Clock::now() - rrt_time); //in milliseconds
+        uint32_t meassured_rtt = Clock::ticks_to_ms(Clock::now() - rrt_time); //in milliseconds
         
         //crazy cast :-)
-        Int32 msec = (Int32) (((UInt32) meassured_rtt) & 0x7FFFFFFFUL);
+        int32_t msec = (int32_t) (((uint32_t) meassured_rtt) & 0x7FFFFFFFUL);
         update_SRTT(msec);
         if(rto < LOWER_RTO_BOUND){
           rto = LOWER_RTO_BOUND;

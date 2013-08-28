@@ -22,7 +22,7 @@
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -32,7 +32,7 @@ using namespace ipstack;
 aspect NDPLookupDebug {
 	bool lookup;
 
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		lookup = 0;
 	}
 	

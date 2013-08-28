@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"
@@ -36,10 +36,10 @@ aspect IPv4_ARP_CacheIncoming {
   advice execution("void ipstack::ARP_Cache::ipv4_reply(%, %, ipstack::Interface*)") &&
          args(src_hwaddr, src_ipv4_addr, interface) &&
          that(cache) :
-         after(const UInt8* src_hwaddr, const UInt32* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
+         after(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
  		  //Update ARP Cache entries
-		  cache.ipv4_update((UInt32*) src_ipv4_addr, src_hw_addr);
+		  cache.ipv4_update((uint32_t*) src_ipv4_addr, src_hw_addr);
   }
   
 };

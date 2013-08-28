@@ -21,7 +21,7 @@
  * should be optimized out if not used by the compiler and do not need seperate aspects.
  */
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h>
 
 #define IP_STR_VALUE(arg)      #arg
@@ -34,8 +34,8 @@ namespace ipstack {
 union ipv6addr {
 	// byte[0] is the most "left", byte[15] the most "right"
 	// Example: "2001:0db8:0000:08d3:0000:8a2e:0070:7344" -> byte[0]==0x20, byte[15]==0x44
-	UInt8 ipaddrB8[16]; // representation: byte array
-// 	UInt16 ipaddrB16[8]; // representation: byte array
+	uint8_t ipaddrB8[16]; // representation: byte array
+// 	uint16_t ipaddrB16[8]; // representation: byte array
 };
 
 namespace IPV6AddressState {
@@ -54,7 +54,7 @@ enum IPv6_ADDRESS_SCOPE {
 	IPV6_SCOPE_GLOBAL_UNICAST, // 0:0:0:0:0:ffff::/96 IPv4 mapped; 2000::/3 global unqiue addresses; there are more prefixes for this scope but not fully defined so far
 	IPV6_SCOPE_NOT_RECOGNICED
 };
-UInt8 getIPv6AddressScopePrefixLength(IPv6_ADDRESS_SCOPE s);
+uint8_t getIPv6AddressScopePrefixLength(IPv6_ADDRESS_SCOPE s);
 IPv6_ADDRESS_SCOPE getIPv6AddressScope(const ipstack::ipv6addr& addr);
 }
 
@@ -79,7 +79,7 @@ bool is_not_unspecified_ipv6_address(const ipstack::ipv6addr& dest);
 /**
  * If addr matches the addrprefix with prefixlen return true
  */
-bool compare_ipv6_addr(const ipstack::ipv6addr& addr, const ipstack::ipv6addr& addrprefix, UInt8 prefixlen);
+bool compare_ipv6_addr(const ipstack::ipv6addr& addr, const ipstack::ipv6addr& addrprefix, uint8_t prefixlen);
 /**
  * A fast way to compare, if all bytes have to be compared.
  */

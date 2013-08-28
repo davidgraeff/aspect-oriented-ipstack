@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ipv6/ndpcache/NDPCacheConfig.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
@@ -38,7 +38,7 @@ slice class NDPCache_Interface_Slice
 		 * while waiting.
 		 */
 		void block_until_neighbor_advertisement(NDPCacheEntry* entry) {
-			UInt64 timeout = Clock::now() + Clock::ms_to_ticks(NDPCACHE_WAIT_FOR_RESPONSE); //1 sec
+			uint64_t timeout = Clock::now() + Clock::ms_to_ticks(NDPCACHE_WAIT_FOR_RESPONSE); //1 sec
 			while ((Clock::now() < timeout) && !is_NDPCacheEntry_reachable(entry)) {}
 		}
 
@@ -47,7 +47,7 @@ slice class NDPCache_Interface_Slice
 		}
 		
 		NDPCacheEntry* ndpcache_findRouter() {
-			UInt8 nextEntry = 0;
+			uint8_t nextEntry = 0;
 			while (NDPCacheEntry* entry = addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
 				if (entry->isRouting) {
 					return entry;
@@ -63,7 +63,7 @@ slice class NDPCache_Interface_Slice
 		 * @return Return a pointer to the entry or 0 if not found.
 		 */
 		NDPCacheEntry* ndpcache_find(ipv6addr addr) {
-			UInt8 nextEntry = 0;
+			uint8_t nextEntry = 0;
 			while (NDPCacheEntry* entry = addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
 				if (compare_ipv6_addr(addr, entry->ipv6)) {
 					return entry;
@@ -73,12 +73,12 @@ slice class NDPCache_Interface_Slice
 		}
 
 		void freeNDPCacheEntry(NDPCacheEntry* entry) {
-			UInt8 pos = addressmemory.getPosition(entry);
+			uint8_t pos = addressmemory.getPosition(entry);
 			if (pos == AddressMemory::EntryUndefined)
 				return;
 			if (entry->isRouter) {
 				// Free all address prefixes that belong to this router
-				UInt8 nextEntry = 0;
+				uint8_t nextEntry = 0;
 				while (AddressEntry* addressentry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 					if (addressentry->routerEntryPosition == pos)
 						addressmemory.freeEntry(addressentry);
@@ -113,7 +113,7 @@ slice class NDPCache_Interface_Slice
 		 * @param state Set the state of the entry, If the entry already exist the state will be updated
 		 * to the given value.
 		 */
-		NDPCacheEntry* addNDPCacheEntry(ipv6addr addr, UInt8* hwaddr, NDPCacheEntry::StateEnum state) {
+		NDPCacheEntry* addNDPCacheEntry(ipv6addr addr, uint8_t* hwaddr, NDPCacheEntry::StateEnum state) {
 			// Look for a duplicate and return this instead. Update the entry state.
 			NDPCacheEntry* entry = ndpcache_find(addr);
 			if (entry) {

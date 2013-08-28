@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "TCP_Socket.h"
 
 using namespace ipstack;
@@ -25,12 +25,12 @@ using namespace ipstack;
 slice class Demux_TCP_Slice
 {
 	private:
-		UInt16 tcp_last_default_port;
+		uint16_t tcp_last_default_port;
 		TCP_Socket* tcp_head_socket;
 
 	public:
 		bool bind(TCP_Socket* socket) {
-			UInt16 sport = socket->get_sport();
+			uint16_t sport = socket->get_sport();
 			if (sport == TCP_Segment::UNUSED_PORT) {
 				//choose 'random' source port number
 				socket->set_sport(tcp_get_free_port());
@@ -70,7 +70,7 @@ slice class Demux_TCP_Slice
 			}
 		}
 
-		UInt16 tcp_get_free_port() {
+		uint16_t tcp_get_free_port() {
 			//TODO: die TCP Variante unterscheidet sich von dem UDP-Code
 			//Eine Verbindung ist ein 4er Tupel ... sport muss nicht
 			//exklusiv sein!

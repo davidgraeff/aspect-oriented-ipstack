@@ -4,7 +4,7 @@ namespace ipstack
 {
 Management_TCP_Socket Management_TCP_Socket::m_instance;
 
-void Management_TCP_Socket::prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, UInt16Opt payload_len)
+void Management_TCP_Socket::prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, uint_fast16_t payload_len)
 {
 	TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 	segment->set_dport(incoming_segment->get_sport());

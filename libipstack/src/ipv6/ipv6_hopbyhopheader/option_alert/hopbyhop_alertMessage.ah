@@ -21,6 +21,7 @@
 #include "../../../demux/Demux.h"
 #include "../../../router/Interface.h"
 #include "hopbyhop_alertMessage_IPv6_Slice.ah"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -40,7 +41,7 @@ advice "ipstack::IPV6" : slice hopbyhop_alertMessage_IPv6_Slice;
 	}
 
 	advice execution("unsigned ipstack::IPv6HopByHop::writeOptions(ipstack::IPV6&, %)") &&
-	args(ipv6, data) : after(IPV6& ipv6, UInt8* data) {
+	args(ipv6, data) : after(IPV6& ipv6, uint8_t* data) {
 		if (!ipv6.use_alertoption)
 			return;
 		

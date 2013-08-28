@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 
 
 namespace ipstack {
@@ -32,13 +32,13 @@ namespace ipstack {
 		Interface* interface;
 		bool using_gateway;
 	private:
-		UInt32 dst_ipv4_addr;
+		uint32_t dst_ipv4_addr;
 		
 		
 		/**
 		* IP sequence number (fragmentation etc)
 		*/
-		UInt16 id;
+		uint16_t id;
 		
 		void resolveRoute();
 		
@@ -58,14 +58,14 @@ namespace ipstack {
 	public:
 		IPV4() ;
 		
-		void set_dst_addr(UInt32 dst);
-		void set_dst_addr(UInt8 a, UInt8 b, UInt8 c, UInt8 d);
+		void set_dst_addr(uint32_t dst);
+		void set_dst_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 		
-		UInt32 get_dst_addr() const;
+		uint32_t get_dst_addr() const;
 		
-		UInt32 get_src_addr() const;
+		uint32_t get_src_addr() const;
 		
-		UInt32 get_nexthop_ipaddr();
+		uint32_t get_nexthop_ipaddr();
 		
 		bool hasValidSrcDestAddresses() const;
 	}; // end IPV4 class

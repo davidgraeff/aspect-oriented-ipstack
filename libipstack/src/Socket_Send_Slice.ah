@@ -19,7 +19,7 @@
 /**
  * Purspose: 
  */
-#include "util/types.h"
+#include <inttypes.h>
 #include "router/Interface.h"
 #include "SendBuffer.h"
 
@@ -46,11 +46,11 @@ public:
 	 * Socket s;
 	 * SendBuffer* b = s.requestSendBuffer(size);
 	 * if (!b) ABORT();
-	 * memcpy(b->getDataPointer(), "test", 4); OR ((UInt32*)b->getDataPointer()) = 47248459;
+	 * memcpy(b->getDataPointer(), "test", 4); OR ((uint32_t*)b->getDataPointer()) = 47248459;
 	 * b->writtenToDataPointer(4)
 	 * s.send(b);
 	 * 
-	 * or use the write(const char* data, UInt16 length) method.
+	 * or use the write(const char* data, uint16_t length) method.
 	 * 
 	 * Always check if you got a null pointer as a result. This indicates your
 	 * requested size is to big or there is no memory chunk of this size
@@ -62,10 +62,10 @@ public:
 	 * Always free a SendBuffer after using it. Call SendBuffer::free(b);
 	 * 
 	 */
-	SendBuffer* requestSendBuffer(UInt16Opt requestSize) {
+	SendBuffer* requestSendBuffer(uint_fast16_t requestSize) {
 		return requestSendBuffer(getUsedInterface(), requestSize);
 	}
-	SendBuffer* requestSendBuffer(Interface* interface, UInt16Opt requestSize)
+	SendBuffer* requestSendBuffer(Interface* interface, uint_fast16_t requestSize)
 	{
 		SendBuffer* b = SendBuffer::createInstance(mempool, estimateSendBufferMinSize() + requestSize, interface);
 		if (!b) return 0;
@@ -124,7 +124,7 @@ public:
 	/**
 	 * A convenience method to get the maximum transmission unit for the used interface.
 	 */
-	UInt16Opt getMTU() {
+	uint_fast16_t getMTU() {
 		Interface* i = getUsedInterface();
 		if (!i) return 0;
 		return i->getMTU();
@@ -134,10 +134,10 @@ public:
 	 * The minium of the remaining MTU and the available memory.
 	 * Use this before creating a UDP SendBuffer where you want a maximum of available space for example.
 	 */
-	UInt16Opt getMaxPayloadLength() {
-		const UInt16Opt headersize = getUsedInterface() ? estimateSendBufferMinSize() : 0;
-		const UInt16Opt memsize = mempool->getMaxFreeBlockSize();
-		const UInt16Opt mtusize = getMTU();
+	uint_fast16_t getMaxPayloadLength() {
+		const uint_fast16_t headersize = getUsedInterface() ? estimateSendBufferMinSize() : 0;
+		const uint_fast16_t memsize = mempool->getMaxFreeBlockSize();
+		const uint_fast16_t mtusize = getMTU();
 			
 		if (memsize<mtusize) return memsize-headersize;
 		return mtusize-headersize;

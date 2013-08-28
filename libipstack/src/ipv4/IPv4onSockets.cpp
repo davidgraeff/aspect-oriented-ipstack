@@ -47,7 +47,7 @@ bool IPV4::hasValidSrcDestAddresses() const
 	return (interface != 0) && (interface->getIPv4Addr() != 0) && (dst_ipv4_addr != 0);
 }
 
-UInt32 IPV4::get_src_addr() const
+uint32_t IPV4::get_src_addr() const
 {
 	if (interface != 0) {
 		return interface->getIPv4Addr();
@@ -55,20 +55,20 @@ UInt32 IPV4::get_src_addr() const
 	return 0;
 }
 
-void IPV4::set_dst_addr(UInt32 dst)
+void IPV4::set_dst_addr(uint32_t dst)
 {
 	dst_ipv4_addr = dst;
 	resolveRoute();
 }
 
-void IPV4::set_dst_addr(UInt8 a, UInt8 b, UInt8 c, UInt8 d)
+void IPV4::set_dst_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
 {
 	set_dst_addr(IPv4_Packet::convert_ipv4_addr(a, b, c, d));
 }
 
-UInt32 IPV4::get_dst_addr() const { return dst_ipv4_addr; }
+uint32_t IPV4::get_dst_addr() const { return dst_ipv4_addr; }
 
-UInt32 IPV4::get_nexthop_ipaddr() {
+uint32_t IPV4::get_nexthop_ipaddr() {
 	if (using_gateway == false) {
 		return dst_ipv4_addr; //local
 	} else {

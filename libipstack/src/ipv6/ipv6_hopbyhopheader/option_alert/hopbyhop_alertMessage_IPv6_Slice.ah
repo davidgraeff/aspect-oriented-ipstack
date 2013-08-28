@@ -16,15 +16,15 @@
 // Copyright (C) 2012 David Gräff
 
 #pragma once
-#include "util/types.h"
+#include <inttypes.h>
 
 slice class hopbyhop_alertMessage_IPv6_Slice
 {
 	public:
-		UInt8 alertoptiontype;
+		uint8_t alertoptiontype;
 		bool use_alertoption;
 		enum { MLPMessageAlert = 0 };
-		void addAlertHopByHopOption(UInt8 alerttype) {
+		void addAlertHopByHopOption(uint8_t alerttype) {
 			alertoptiontype = alerttype;
 			use_alertoption = true;
 		}

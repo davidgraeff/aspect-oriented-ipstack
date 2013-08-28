@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_SEND_SLICE__
 #define __ARP_CACHE_IPV4_SEND_SLICE__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"
@@ -39,8 +39,8 @@ slice class ARP_Cache_IPv4_Send_Slice {
   private:
   
   struct cache_entry {
-    UInt32 ipv4_addr;
-    UInt8 hw_addr[6];
+    uint32_t ipv4_addr;
+    uint8_t hw_addr[6];
   } entries[MAX_CACHE_ENTRIES];
   
   void ipv4_clear(){
@@ -49,17 +49,17 @@ slice class ARP_Cache_IPv4_Send_Slice {
     }
   }
   
-  UInt8* ipv4_find(UInt32 ipv4_addr);
+  uint8_t* ipv4_find(uint32_t ipv4_addr);
   
-  void ipv4_wait(UInt32 ipv4_addr){
-    UInt64 timeout = Clock::now() + Clock::ms_to_ticks(1000U); //1 sec
+  void ipv4_wait(uint32_t ipv4_addr){
+    uint64_t timeout = Clock::now() + Clock::ms_to_ticks(1000U); //1 sec
     while( (Clock::now() < timeout) && (ipv4_find(ipv4_addr)==0) );
   }
   
   public:
   
   //Send a new ARP-Request packet
-  void ipv4_request(UInt32 ipv4_addr, Interface* interface){
+  void ipv4_request(uint32_t ipv4_addr, Interface* interface){
     Eth_ARP_IPv4_Packet* packet = getNextFreePacket();
     if(packet != 0){
        packet->interface = interface;
@@ -75,7 +75,7 @@ slice class ARP_Cache_IPv4_Send_Slice {
        packet->get_ARP_Packet()->set_opcode(ARP_Packet::ARP_REQUEST);
        
        //Source HW-Addr for this ARP reply packet:
-       const UInt8* i_hw_addr = interface->getAddress();
+       const uint8_t* i_hw_addr = interface->getAddress();
        memcpy(packet->arp_src_hwaddr, i_hw_addr, 6);
        packet->get_Eth_Frame()->set_src_hwaddr(i_hw_addr);
        
@@ -96,7 +96,7 @@ slice class ARP_Cache_IPv4_Send_Slice {
 
 };
 
-slice UInt8* ARP_Cache_IPv4_Send_Slice::ipv4_find(UInt32 ipv4_addr){
+slice uint8_t* ARP_Cache_IPv4_Send_Slice::ipv4_find(uint32_t ipv4_addr){
   for(unsigned i=0; i<MAX_CACHE_ENTRIES; i++){      
     cache_entry& entry = entries[i];
     if(entry.ipv4_addr == ipv4_addr){

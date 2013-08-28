@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "IPv6.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
@@ -47,7 +47,7 @@ public:
 	 * The first matched address is returned by the first parameter "addr".
 	 */
 	bool getInterfaceIPv6AddressByScope(ipstack::ipv6addr& addr, ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE scope) {
-		UInt8 nextEntry = 0;
+		uint8_t nextEntry = 0;
 		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 			if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == scope) {
 				copy_ipv6_addr(entry->ipv6, addr);
@@ -65,9 +65,9 @@ public:
 	 *
 	 * If this entry belongs to a router, set the pointerToRouterEntry to the ndp_cache position.
 	 */
-	AddressEntry* makeIPv6AddressByPrefix(const ipstack::ipv6addr& prefix, UInt8 prefixlen,
-								 UInt8 ipstate = AddressEntry::AddressEntryStateTemporary,
-								 UInt8 routerEntryPosition = AddressMemory::EntryUndefined) {
+	AddressEntry* makeIPv6AddressByPrefix(const ipstack::ipv6addr& prefix, uint8_t prefixlen,
+								 uint8_t ipstate = AddressEntry::AddressEntryStateTemporary,
+								 uint8_t routerEntryPosition = AddressMemory::EntryUndefined) {
 		AddressEntry* entry = (AddressEntry*)addressmemory.findEntry<FreeEntryType>();
 		if (!entry)
 			return 0;
@@ -96,13 +96,13 @@ public:
 	 * Aspect: If duplicate address detection is configured and the address state is set to AddressEntry::AddressEntryStateTemporary
 	 * do an duplicate address detection.
 	 */
-	void setIPv6AddressState(AddressEntry* entry, UInt8 ipstate) {
+	void setIPv6AddressState(AddressEntry* entry, uint8_t ipstate) {
 		// If not intercepted make this ip valid
 		entry->state = AddressEntry::AddressEntryStateValid;
 	}
 
 	bool hasIPv6Address(const ipstack::ipv6addr& addr) {
-		UInt8 nextEntry = 0;
+		uint8_t nextEntry = 0;
 
 		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 			if (compare_ipv6_addr(addr, entry->ipv6, entry->prefixlen)) {

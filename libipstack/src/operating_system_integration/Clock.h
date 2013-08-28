@@ -19,16 +19,16 @@
 #ifndef __IPSTACK_CLOCK__
 #define __IPSTACK_CLOCK__
 
-#include "util/types.h"
+#include <inttypes.h>
 
 namespace ipstack {
 
 class Clock {
 public:
 	// Return a "tick" value, that can be used to measure time.
-  static inline UInt64 now() {}
-  static inline UInt64 ms_to_ticks(UInt32 ms) {}
-  static inline UInt32 ticks_to_ms(UInt64 ticks) {}
+  static inline uint64_t now() {}
+  static inline uint64_t ms_to_ticks(uint32_t ms) {}
+  static inline uint32_t ticks_to_ms(uint64_t ticks) {}
 };
 
 } // ipstack

@@ -38,7 +38,7 @@
  * ReceiveBufferUDPipV6* r_ipv6 = ReceiveBufferUDPipV6::cast(r);
  */
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "util/Mempool.h"
 #include <string.h> //for memcpy
 
@@ -52,7 +52,7 @@ class ReceiveBuffer
 		 * Create a receive buffer and return it.
 		 * Changes the ReceiveBuffer list-head pointer if neccessary.
 		 */
-		static ReceiveBuffer* createReceiveBuffer(Mempool* mempool, void*  payload, UInt16 payloadsize) {
+		static ReceiveBuffer* createReceiveBuffer(Mempool* mempool, void*  payload, uint16_t payloadsize) {
 			ReceiveBuffer* r = (ReceiveBuffer*)mempool->alloc(payloadsize + sizeof(ReceiveBuffer));
 			if (!r)
 				return 0;
@@ -78,7 +78,7 @@ class ReceiveBuffer
 		/**
 		 * Return the size in bytes of the received data
 		 * */
-		UInt16 getSize() {
+		uint16_t getSize() {
 			return m_receivedSize;
 		}
 	private:
@@ -88,7 +88,7 @@ class ReceiveBuffer
 		ReceiveBuffer()  {};
 	protected:
 		Mempool* m_mempool;
-		UInt16 m_receivedSize;
+		uint16_t m_receivedSize;
 		char m_dataStart[]; // data block starts here
 
 };

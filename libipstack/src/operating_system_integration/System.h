@@ -4,38 +4,33 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Copyright (C) 2012-2013 David Gräff
+// 
+// Copyright (C) 2013 David Gräff
 
 #pragma once
 
-#include <inttypes.h>
+namespace ipstack {
 
-using namespace ipstack;
-
-/**
-  * Add member variables to the NDPCacheEntry struct.
-  * This allow the NDP Cache to be asynchronous.
-  */
-slice class NDPCacheEntry_Async_Slice
-{
-	public:
+class System {
+public:
 	/**
-	 * Asynchronous lookups:
-	 * A pointer to the Sendbuffers is set here and the frame will be send as
-	 * soon as the link layer address is known. The process flow is not
-	 * blocked during the lookup. If no response is received in time another lookup
-	 * will be done. If tries is >= 3 we drop the sendbuffer.
-	 */
-	uint8_t retry_time_seconds;
-	uint8_t tries;
-	SendBuffer* data_pointer;
+	  * The ipstack calls this method to halt the system on fatal errors
+	  * (should not happen in normal operation mode and only on memory
+	  * corruption).
+	  */
+	static inline void haltsystem() {}
+	/**
+	  * Call this for ipstack initalization.
+	  */
+	static void init() {}
 };
+
+}

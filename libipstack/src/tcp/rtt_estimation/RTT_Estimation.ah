@@ -19,7 +19,7 @@
 #ifndef __TCP_RTT_ESTIMATION_AH__
 #define __TCP_RTT_ESTIMATION_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "../TCP_Socket.h"
 #include "../TCP.h"
 #include "RTT_Estimation_Slice.ah"
@@ -44,7 +44,7 @@ aspect TCP_RTT_Estimation {
   advice execution("void ipstack::TCP_Socket::set_seqnum_unacked(%)") &&
          args(acknum) &&
          that(socket) :
-         after(UInt32 acknum, TCP_Socket& socket){
+         after(uint32_t acknum, TCP_Socket& socket){
 
     //check if this ACK has finished our rtt estimation
     socket.update_RTT_Estimation(acknum);

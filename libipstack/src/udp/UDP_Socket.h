@@ -19,7 +19,7 @@
 
 #include "util/Mempool.h"
 #include "util/Ringbuffer.h"
-#include "../demux/DemuxLinkedListContainer.h"
+#include "demux/DemuxLinkedListContainer.h"
 #include <string.h>
 
 namespace ipstack
@@ -37,18 +37,18 @@ class UDP_Socket : public DemuxLinkedList<UDP_Socket>
 		~UDP_Socket() {}
 		
 		/// Destination port
-		void set_dport(UInt16 d) {
+		void set_dport(uint16_t d) {
 			dport = d;
 		}
-		UInt16 get_dport() {
+		uint16_t get_dport() {
 			return dport;
 		}
 
 		/// Source port
-		void set_sport(UInt16 s) {
+		void set_sport(uint16_t s) {
 			sport = s;
 		}
-		UInt16 get_sport() {
+		uint16_t get_sport() {
 			return sport;
 		}
 
@@ -57,8 +57,8 @@ class UDP_Socket : public DemuxLinkedList<UDP_Socket>
 	private:
 		Packetbuffer* m_receivequeue;
 		Mempool* mempool; // set by API
-		UInt16 dport;
-		UInt16 sport;
+		uint16_t dport;
+		uint16_t sport;
 
 		void setupHeader(UDP_Packet* packet, unsigned datasize) ;
 

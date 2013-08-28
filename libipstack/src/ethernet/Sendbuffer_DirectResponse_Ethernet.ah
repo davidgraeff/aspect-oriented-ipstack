@@ -19,7 +19,7 @@
 
 #include "ethernet/Eth_Frame.h"
 #include "SendBuffer.h"
-#include "util/types.h"
+#include <inttypes.h>
 #include "router/Interface.h"
 
 using namespace ipstack;

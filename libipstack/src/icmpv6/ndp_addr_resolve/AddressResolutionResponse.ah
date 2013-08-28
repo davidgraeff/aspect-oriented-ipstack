@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "icmpv6/ndp/NDPNeighborMessages.h"
 #include "ipv6/IPv6.h"
 #include "router/Interface.h"
@@ -35,7 +35,7 @@ aspect AddressResolutionResponse {
 		ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
 		ipv6.set_src_addr(message->target_address);
 		
-		const UInt8 resSize = sizeof(NDPNeighborMessages::NeighborAdvertisementMessage)+NDPMessages::multiple_of_octets(interface->getAddressSize())*8;
+		const uint8_t resSize = sizeof(NDPNeighborMessages::NeighborAdvertisementMessage)+NDPMessages::multiple_of_octets(interface->getAddressSize())*8;
 		
 		demux.setDirectResponse(true);
 		SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, resSize);

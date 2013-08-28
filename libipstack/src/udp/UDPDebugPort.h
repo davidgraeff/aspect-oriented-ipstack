@@ -18,8 +18,7 @@
 #pragma once
 
 #include "cfAttribs.h"
-#include "../api/Setup.h"
-#include "../api/UDP_Socket.h"
+#include "../api/UDP_Socket.h" // not that good!
 #include "SendBuffer.h"
 
 namespace ipstack {
@@ -27,7 +26,7 @@ namespace ipstack {
 class UDPDebugPort {
 	public:
 		// You need an activated IPv4 interface!
-		static void debugstring(const char* msg, UInt8 len) {
+		static void debugstring(const char* msg, uint8_t len) {
 			static IP::UDP_Socket<280,1,0,0> socket;
 			socket.ipv4.set_dst_addr(cfIPSTACK_UDP_DEBUGPORT_DESTIP);
 			socket.set_dport(cfIPSTACK_UDP_DEBUGPORT_DESTPORT);

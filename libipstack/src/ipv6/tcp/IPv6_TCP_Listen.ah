@@ -42,7 +42,7 @@ aspect IPv6_TCP_Listen {
 
 			//only process SYN packets:
 			if (tcp_segment->has_SYN() == true) {
-				UInt16 tcp_segment_dport = tcp_segment->get_dport();
+				uint16_t tcp_segment_dport = tcp_segment->get_dport();
 
 				TCP_Socket* socket = demux.tcp_head_listen_socket;
 

@@ -29,7 +29,7 @@ class DelaySend
 		* send() calls until the packet has been processed and send all delayed packets in a burst.
 		* The mHoldBack variable will be set before processing a packet and will be reseted after that.
 		*/
-		static UInt8 mHoldBack;
+		static uint8_t mHoldBack;
 
 		static void sendDelayed(SendBuffer* buffer);
 };

@@ -35,7 +35,7 @@ aspect IPv4_ICMP_Port_Unreachable {
 		icmpv4instance.ipv4.set_dst_addr(packet->get_src_ipaddr());
 		
 		// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
-		const UInt8 echoErrornousPacketSize = packet->get_ihl() * 4 + 8;
+		const uint8_t echoErrornousPacketSize = packet->get_ihl() * 4 + 8;
 		demux.setDirectResponse(true);
 		SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, echoErrornousPacketSize + ICMP_Packet::ICMP_HEADER_SIZE);
 		if (sbi) {

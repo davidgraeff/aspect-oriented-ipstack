@@ -20,12 +20,12 @@ namespace ipstack {
 	#define DAM (data[1] & 0x03)
 	
 	// init to an arbitrary number
-	UInt16 IPv6hc_Packet::datagram_tag_counter = 1;
+	uint16_t IPv6hc_Packet::datagram_tag_counter = 1;
 	
-void IPv6hc_Packet::writeFragmentHeader(UInt16 size)
+void IPv6hc_Packet::writeFragmentHeader(uint16_t size)
 {
 	fragmentheader[0] = 0xC0 | (0x0700 & size); // 11000xxx | 5 bits of size are ignored and then 3 bits are in fragmentheader[0]
-	fragmentheader[1] = (UInt8) 0x00FF & size; // the remaining size is in fragmentheader[1]
+	fragmentheader[1] = (uint8_t) 0x00FF & size; // the remaining size is in fragmentheader[1]
 	datagram_tag = datagram_tag_counter++;
 }
 void IPv6hc_Packet::setUpHeader()
@@ -42,25 +42,25 @@ void IPv6hc_Packet::setUpHeader()
 #endif
 	data[1] = 0;
 }
-UInt16 IPv6hc_Packet::get_payload_len()
+uint16_t IPv6hc_Packet::get_payload_len()
 {
 	return (fragmentheader[0] & 0x07 << 8) | fragmentheader[1];
 }
-void IPv6hc_Packet::set_payload_len(UInt16 len)
+void IPv6hc_Packet::set_payload_len(uint16_t len)
 {
 	writeFragmentHeader(len);
 }
-UInt8* IPv6hc_Packet::get_payload()
+uint8_t* IPv6hc_Packet::get_payload()
 {
 	return data + calculateHeaderSize();
 }
-UInt8 IPv6hc_Packet::getWriteHeaderSize()   // excluding src+dest addr sizes
+uint8_t IPv6hc_Packet::getWriteHeaderSize()   // excluding src+dest addr sizes
 {
 	return 1 + HOPLIMIT_SIZE + IPv6hc_Packet::HC_HEADERSIZE_WITHOUT_FRAG_HEADER + IPv6hc_Packet::HC_FRAG_HEADER;
 }
-UInt8 IPv6hc_Packet::calculateHCHeaderSizeWithoutFragmentSize()
+uint8_t IPv6hc_Packet::calculateHCHeaderSizeWithoutFragmentSize()
 {
-	UInt8 offset = 2;
+	uint8_t offset = 2;
 	switch (CID) { // context identifier
 		case 1:
 			offset += 1;
@@ -70,9 +70,9 @@ UInt8 IPv6hc_Packet::calculateHCHeaderSizeWithoutFragmentSize()
 	};
 	return offset;
 }
-UInt8 IPv6hc_Packet::calculateHeaderSize()
+uint8_t IPv6hc_Packet::calculateHeaderSize()
 {
-	UInt8 offset = 4;
+	uint8_t offset = 4;
 	switch (TF) {
 		case 0:
 			offset += 4;
@@ -212,11 +212,11 @@ UInt8 IPv6hc_Packet::calculateHeaderSize()
 
 	return offset;
 }
-UInt8 IPv6hc_Packet::get_hoplimit()
+uint8_t IPv6hc_Packet::get_hoplimit()
 {
 	switch (HLIM) { // hop limit
 		case 0: { // carry in-line
-				UInt8 offset = calculateHCHeaderSizeWithoutFragmentSize();
+				uint8_t offset = calculateHCHeaderSizeWithoutFragmentSize();
 				switch (TF) {
 					case 0:
 						offset += 4;
@@ -250,21 +250,21 @@ UInt8 IPv6hc_Packet::get_hoplimit()
 			return 0;
 	};
 }
-void IPv6hc_Packet::set_hoplimit(UInt8 t)
+void IPv6hc_Packet::set_hoplimit(uint8_t t)
 {
 #ifdef ipstack_ipv6_hc_hopcount_uncompressed
-	UInt8 offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
+	uint8_t offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	// OFFSET FÜR NEXT HEADER: 1
 	offset += 1;
 	data[offset] = t;
 #endif
 }
-UInt8 IPv6hc_Packet::get_nextheader()
+uint8_t IPv6hc_Packet::get_nextheader()
 {
 	switch (NH) { // next header
 		case 0: { // carry in-line
-				UInt8 offset = calculateHCHeaderSizeWithoutFragmentSize();
+				uint8_t offset = calculateHCHeaderSizeWithoutFragmentSize();
 				switch (TF) {
 					case 0:
 						offset += 4;
@@ -285,9 +285,9 @@ UInt8 IPv6hc_Packet::get_nextheader()
 			return 0; // FAILURE
 	};
 }
-void IPv6hc_Packet::set_nextheader(UInt8 i)
+void IPv6hc_Packet::set_nextheader(uint8_t i)
 {
-	UInt8 offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
+	uint8_t offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	data[offset] = i;
 }
@@ -295,7 +295,7 @@ ipv6addr IPv6hc_Packet::get_src_ipaddr()
 {
 	static ipv6addr mem; // this has to be static,
 	// because the memory position will be used for the uncompressed src address
-	UInt8 offset = calculateHCHeaderSizeWithoutFragmentSize();
+	uint8_t offset = calculateHCHeaderSizeWithoutFragmentSize();
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	// OFFSET FÜR NEXT HEADER: 1
 	offset += 1;
@@ -306,7 +306,7 @@ ipv6addr IPv6hc_Packet::get_src_ipaddr()
 }
 void IPv6hc_Packet::set_src_ipaddr(const ipv6addr& addr)
 {
-	UInt8 offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
+	uint8_t offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	// OFFSET FÜR NEXT HEADER: 1
 	offset += 1;
@@ -318,7 +318,7 @@ ipv6addr IPv6hc_Packet::get_dst_ipaddr()
 {
 	static ipv6addr mem; // this has to be static,
 	// because the memory position will be used for the uncompressed dest address
-	UInt8 offset = calculateHCHeaderSizeWithoutFragmentSize();
+	uint8_t offset = calculateHCHeaderSizeWithoutFragmentSize();
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	// OFFSET FÜR NEXT HEADER: 1
 	offset += 1;
@@ -334,7 +334,7 @@ ipv6addr IPv6hc_Packet::get_dst_ipaddr()
 }
 void IPv6hc_Packet::set_dst_ipaddr(const ipv6addr& addr)
 {
-	UInt8 offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
+	uint8_t offset = HC_HEADERSIZE_WITHOUT_FRAG_HEADER;
 	// OFFSET FOR TRAFFIC CLASS AND FLOW LABEL: 0
 	// OFFSET FÜR NEXT HEADER: 1
 	offset += 1;
@@ -349,7 +349,7 @@ void IPv6hc_Packet::set_dst_ipaddr(const ipv6addr& addr)
 		write_compressed_dst_ipaddr(addr, &data[offset], data[1]);
 	}
 }
-ipv6addr IPv6hc_Packet::read_compressed_ipaddr(ipv6addr& mem, UInt8* readPtr, UInt8 flagbyte)
+ipv6addr IPv6hc_Packet::read_compressed_ipaddr(ipv6addr& mem, uint8_t* readPtr, uint8_t flagbyte)
 {
 	switch (flagbyte) {
 		case 00: { // full addr inline: everything super
@@ -391,7 +391,7 @@ ipv6addr IPv6hc_Packet::read_compressed_ipaddr(ipv6addr& mem, UInt8* readPtr, UI
 			}
 	};
 }
-ipv6addr IPv6hc_Packet::read_compressed_multicast_dest_ipaddr(ipv6addr& mem, UInt8* readPtr, UInt8 flagbyte)
+ipv6addr IPv6hc_Packet::read_compressed_multicast_dest_ipaddr(ipv6addr& mem, uint8_t* readPtr, uint8_t flagbyte)
 {
 	switch (flagbyte) {
 		case 00: { // full addr inline: everything super
@@ -432,17 +432,17 @@ ipv6addr IPv6hc_Packet::read_compressed_multicast_dest_ipaddr(ipv6addr& mem, UIn
 			}
 	};
 }
-void IPv6hc_Packet::write_compressed_src_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte)
+void IPv6hc_Packet::write_compressed_src_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte)
 {
 	// If no aspect intercepts, we do not compress the src addr
 	memcpy(writePtr, addr.ipaddrB8, 16);
 }
-void IPv6hc_Packet::write_compressed_dst_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte)
+void IPv6hc_Packet::write_compressed_dst_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte)
 {
 	// If no aspect intercepts, we do not compress the dest addr
 	memcpy(writePtr, addr.ipaddrB8, 16);
 }
-void IPv6hc_Packet::write_compressed_multicast_dst_ipaddr(const ipv6addr& addr, UInt8* writePtr, UInt8& flagbyte)
+void IPv6hc_Packet::write_compressed_multicast_dst_ipaddr(const ipv6addr& addr, uint8_t* writePtr, uint8_t& flagbyte)
 {
 	flagbyte |= 0x08; // is a multicast address
 	// If no aspect intercepts, we do not compress the multicast dest addr

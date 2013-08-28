@@ -29,8 +29,8 @@ void closewait(TCP_Segment* segment, unsigned len) {
     if(handleRST(segment)){ return; }
     if(handleSYN_final(segment)){ return; }
     
-    UInt32 seqnum = segment->get_seqnum();
-    UInt32 acknum = segment->get_acknum();
+    uint32_t seqnum = segment->get_seqnum();
+    uint32_t acknum = segment->get_acknum();
     
     if(segment->has_ACK()){
       handleACK(acknum);

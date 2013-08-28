@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ipv6/IPv6AddressUtilities.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 #include "cfAttribs.h"
 
@@ -32,7 +32,7 @@ namespace ipstack
  * The link layer address and address size have to be weaved in by an aspect.
  * If you develop a link layer you have to weave in the following two members:
  * - enum {LINK_LAYER_ADDRESS_SIZE = 6; } // for a 6 byte link layer address
- * - UInt8 hw[LINK_LAYER_ADDRESS_SIZE];
+ * - uint8_t hw[LINK_LAYER_ADDRESS_SIZE];
  * 
  * Synchronous: Without further influence by an aspect this implementation is synchronous:
  * The process flow is blocked while looking up a link layer address.
@@ -59,14 +59,14 @@ struct NDPCacheEntry {
 	enum StateEnum { NDPCacheEntryState_Incomplete, NDPCacheEntryState_Stale, NDPCacheEntryState_Delay,
 	NDPCacheEntryState_Probe, NDPCacheEntryState_Reachable
 	};
-	UInt8 state;
+	uint8_t state;
 	
 	// router state
 	union {
-		UInt8 router_state;
+		uint8_t router_state;
 		struct {
-		UInt8 isRouter:1;
-		UInt8 isRouting:1;
+		uint8_t isRouter:1;
+		uint8_t isRouting:1;
 		} __attribute__((packed));
 	};
 } __attribute__((packed));

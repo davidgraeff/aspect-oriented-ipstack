@@ -19,7 +19,7 @@
 #ifndef __IPv4_ARP_RECEIVE_AH__
 #define __IPv4_ARP_RECEIVE_AH__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"
@@ -35,7 +35,7 @@ aspect IPv4_ARP_Receive {
   advice execution("void ipstack::ARP_Cache::ipv4_reply(%, %, ipstack::Interface*)") &&
          args(src_hwaddr, src_ipv4_addr, interface) &&
          that(cache) :
-         after(const UInt8* src_hwaddr, const UInt32* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
+         after(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
     Eth_ARP_IPv4_Packet* packet = cache.getNextFreePacket();
     if(packet != 0){
@@ -52,7 +52,7 @@ aspect IPv4_ARP_Receive {
        packet->get_ARP_Packet()->set_opcode(ARP_Packet::ARP_REPLY);
        
        //Source HW-Addr for this ARP reply packet:
-       const UInt8* i_hw_addr = interface->getAddress();
+       const uint8_t* i_hw_addr = interface->getAddress();
        memcpy(packet->arp_src_hwaddr, i_hw_addr, 6);
        packet->get_Eth_Frame()->set_src_hwaddr(i_hw_addr);
        

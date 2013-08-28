@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "router/Interface.h"
 #include "SendBuffer.h"
 #include "ipv6/IPv6.h"
@@ -38,7 +38,7 @@ aspect Sendbuffer_ICMPv6_Checksum  {
 		ICMPv6_Packet* icmp = (ICMPv6_Packet*) dataToSend->memstart_transport;
 
 		Interface* interface = dataToSend->getInterface();
-		UInt16 payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
 		icmp->set_checksum(0);
 		icmp->set_checksum(icmp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, ICMPv6_Packet::IPV6_TYPE_ICMP), payloadsize, interface));
 	}

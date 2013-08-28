@@ -22,7 +22,7 @@
 #include "ICMPv6.h"
 #include "ipv6/IPv6.h"
 #include "ipv6/InternetChecksum.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 

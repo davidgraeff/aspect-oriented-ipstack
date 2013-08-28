@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ICMPv4_Socket.h"
 
 using namespace ipstack;
@@ -28,7 +28,7 @@ using namespace ipstack;
 aspect IPCMPv4  {
 	// Initialize this management socket -> we have to do this because the
 	// global constructor of this class is not called
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		new(&(ICMPv4_Socket::instance())) ICMPv4_Socket;
 	}
 };

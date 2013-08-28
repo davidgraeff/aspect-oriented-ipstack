@@ -22,7 +22,7 @@
 #include "SendBuffer.h"
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6onSockets.h"
-#include "util/types.h"
+#include <inttypes.h>
 
 using namespace ipstack;
 
@@ -66,7 +66,7 @@ aspect Sendbuffer_IPv6_Ethernet {
 		// If this is a multicast ip address, use the broadcast mac
 		if (IPV6AddressScope::getIPv6AddressScope(nexthopAddr) == ipstack::IPV6AddressScope::IPV6_SCOPE_MULTICAST) {
 			// multicast mac is 33-33-00-00-00-00 filled with the last 4 bytes of the ip address.
-			const UInt8 multicastmac[6] = {0x33, 0x33, nexthopAddr.ipaddrB8[12], nexthopAddr.ipaddrB8[13], nexthopAddr.ipaddrB8[14], nexthopAddr.ipaddrB8[15]};
+			const uint8_t multicastmac[6] = {0x33, 0x33, nexthopAddr.ipaddrB8[12], nexthopAddr.ipaddrB8[13], nexthopAddr.ipaddrB8[14], nexthopAddr.ipaddrB8[15]};
 			eth_frame->set_dst_hwaddr(multicastmac);
 		} else {
 			sendbuffer->setState(SendBuffer::WritingState | SendBuffer::ResolveLinkLayerStateOption);

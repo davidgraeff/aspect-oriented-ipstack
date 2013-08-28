@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "operating_system_integration/SystemHalt.h"
+#include "operating_system_integration/System.h"
 #include "stdio.h"
 
 using namespace ipstack;
@@ -29,7 +29,7 @@ using namespace ipstack;
 aspect ProtectRescheduleReceiving {
 	bool receiving;
 	
-	advice execution( "void os::init()" ) : after() {
+	advice execution( "void ipstack::System::init()" ) : after() {
 		receiving = false;
 	}
 	

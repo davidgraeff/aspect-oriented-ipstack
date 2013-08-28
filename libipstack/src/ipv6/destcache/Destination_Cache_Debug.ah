@@ -22,7 +22,7 @@
 
 #include "Router_Destination_Cache_Slice.ah"
 #include "IPV6_Destination_Cache_Slice.ah"
-#include "../IPv6onSockets.h"
+#include "ipv6/IPv6onSockets.h"
 #include "router/Router.h"
 #include "router/Interface.h"
 
@@ -33,7 +33,7 @@ aspect Router_Destination_Cache_aspect_debug {
 	/**
 	  * Return on-link destination ip instead of just the user-set dest ip
 	  */
-	advice execution("% ipstack::IPV6::get_nexthop_ipaddr()") && that(ipv6) : around() {
+	advice execution("% ipstack::IPV6::get_nexthop_ipaddr()") && that(ipv6) : around(IPV6& ipv6) {
 		NDPCacheEntry* entry =  ipv6.get_nexthop_ndpcache_entry();
 		if (!entry) {
 			printf("DestCache: No destcache entry. Link local dest ip?\n");

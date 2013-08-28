@@ -19,7 +19,7 @@
 #ifndef __ICMP__
 #define __ICMP__
 
-#include "util/types.h"
+#include <inttypes.h>
 #include "ip/InternetChecksum.h"
 
 namespace ipstack
@@ -43,31 +43,31 @@ class ICMP_Packet
 			 };
 
 	private:
-		UInt8 type;
-		UInt8 code;
-		UInt16 checksum;
-		UInt32 quench;
-		UInt8 data[];
+		uint8_t type;
+		uint8_t code;
+		uint16_t checksum;
+		uint32_t quench;
+		uint8_t data[];
 
 	public:
-		UInt8 get_type() {
+		uint8_t get_type() {
 			return type;
 		}
-		void set_type(UInt8 t) {
+		void set_type(uint8_t t) {
 			type = t;
 		}
 
-		UInt8 get_code() {
+		uint8_t get_code() {
 			return code;
 		}
-		void set_code(UInt8 c) {
+		void set_code(uint8_t c) {
 			code = c;
 		}
 
-		UInt16 get_checksum() {
+		uint16_t get_checksum() {
 			return checksum;
 		}
-		void set_checksum(UInt16 csum) {
+		void set_checksum(uint16_t csum) {
 			checksum = csum;
 		}
 		/**
@@ -77,22 +77,22 @@ class ICMP_Packet
 		  * @param The interface on which the packet will be send. Necessary for checksum offloading
 		  */
 
-		UInt16 calc_checksum(UInt32 csum, UInt16 payloadlen, Interface* interface) {
-			csum += InternetChecksum::computePayload((UInt8*)this, payloadlen);
+		uint16_t calc_checksum(uint32_t csum, uint16_t payloadlen, Interface* interface) {
+			csum += InternetChecksum::computePayload((uint8_t*)this, payloadlen);
 			return ~InternetChecksum::accumulateCarryBits(csum); // one's complement
 		}
-		bool checksum_valid(UInt32 csum, UInt16 payloadlen, Interface* interface) {
+		bool checksum_valid(uint32_t csum, uint16_t payloadlen, Interface* interface) {
 			return calc_checksum(csum, payloadlen, interface) == 0;
 		}
 	
-		UInt32 get_quench() {
+		uint32_t get_quench() {
 			return quench;
 		}
-		void set_quench(UInt32 q) {
+		void set_quench(uint32_t q) {
 			quench = q;
 		}
 
-		UInt8* get_data() {
+		uint8_t* get_data() {
 			return data;
 		}
 
