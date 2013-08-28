@@ -92,19 +92,19 @@ aspect sendbuffer_protect {
 		}
 		uint_fast16_t availsize = sendbuffer.getRemainingSize();
 		if (length>availsize) {
-			printf("SendBuffer::writtenToDataPointer: length too big. Requested: %u, Available: %u!\n", length, availsize);
+			printf("SendBuffer::writtenToDataPointer: length too big. Requested: %lu, Available: %lu!\n", length, availsize);
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
 		tjp->proceed();
 		uint8_t* cbyte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
 		if (*checkbyte != *cbyte) {
-			printf("SendBuffer::writtenToDataPointer: buffer overrun (%u)!=(%u)!\n", *checkbyte, *cbyte);
+			printf("SendBuffer::writtenToDataPointer: buffer overrun (%lu)!=(%lu)!\n", *checkbyte, *cbyte);
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
 		if (sendbuffer.getRemainingSize()!=availsize-length) {
-			printf("SendBuffer::writtenToDataPointer: before (%u)!=after (%u)!\n", sendbuffer.getRemainingSize(),availsize-length);
+			printf("SendBuffer::writtenToDataPointer: before (%lu)!=after (%lu)!\n", sendbuffer.getRemainingSize(),availsize-length);
 			System::haltsystem();
 		}
 	}
@@ -118,7 +118,7 @@ aspect sendbuffer_protect {
 		lastbuffer = 0;
 			
 		if (newdata==0) {
-			printf("SendBuffer::write: invalid source buffer %u!\n", length);
+			printf("SendBuffer::write: invalid source buffer %lu!\n", length);
 			System::haltsystem();
 		}
 		if (sendbuffer.getStateWithoutOptions()!=SendBuffer::WritingState) {
@@ -128,13 +128,13 @@ aspect sendbuffer_protect {
 		}
 		uint_fast16_t availsize = sendbuffer.getRemainingSize();
 		if (length>availsize) {
-			printf("SendBuffer::write: length too big. Requested: %u, Available: %u!\n", length, availsize);
+			printf("SendBuffer::write: length too big. Requested: %lu, Available: %lu!\n", length, availsize);
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
 		tjp->proceed();
 		if (sendbuffer.getRemainingSize()!=availsize-length) {
-			printf("SendBuffer::write: before (%u)!=after (%u)!\n", sendbuffer.getRemainingSize(),availsize-length);
+			printf("SendBuffer::write: before (%lu)!=after (%lu)!\n", sendbuffer.getRemainingSize(),availsize-length);
 			sendbuffer.printAdditionalInfo();
 			System::haltsystem();
 		}
@@ -202,7 +202,7 @@ aspect sendbuffer_protect {
 		//  if one size is 0 or has a strange value
 		// -> Pointcut of an aspect is wrong.
 		if (dataToSend->getRemainingSize()) {
-			printf("SendBuffer: send failed. Buffer not filled to the end. Unused: %u!\n", dataToSend->getRemainingSize());
+			printf("SendBuffer: send failed. Buffer not filled to the end. Unused: %lu!\n", dataToSend->getRemainingSize());
 			dataToSend->printAdditionalInfo();
 			System::haltsystem();
 		}

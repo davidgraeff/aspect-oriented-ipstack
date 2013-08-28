@@ -78,7 +78,7 @@ aspect IPv6_ICMP_Receive_Output {
 				printf("unknown");
 		};
 
-		printf("; Code %u; IPv6 Packetpointer %p\n", icmp_packet->get_code(), packet);
+		printf("; Code %lu; IPv6 Packetpointer %p\n", icmp_packet->get_code(), packet);
 		
 		tjp->proceed();
 	}

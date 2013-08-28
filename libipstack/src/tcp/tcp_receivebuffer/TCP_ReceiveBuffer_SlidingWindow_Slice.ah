@@ -147,7 +147,7 @@ slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
 			prev->setNext(element);
 		}
 		updateContinuous();
-		//printf("adding data to receive buffer: %u bytes\n", len);
+		//printf("adding data to receive buffer: %lu bytes\n", len);
 		if (segment->has_PSH()) { pushFlag = true; }
 		return true;
 	}

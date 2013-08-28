@@ -47,7 +47,7 @@ aspect IPv4_UDP_Rx_Checksumming {
 		if (udp->get_checksum() != 0) {
 			//this packet is protected by an internet checksum
 			if (!udp->checksum_valid(InternetChecksumV4::computePseudoHeader(packet, len, UDP_Packet::IP_TYPE_UDP), len, interface)) {
-//  				printf("checksum udp wrong; packet len %u\n", len);
+//  				printf("checksum udp wrong; packet len %lu\n", len);
 				// checksum wrong: drop entire packet
 				return;
 			}

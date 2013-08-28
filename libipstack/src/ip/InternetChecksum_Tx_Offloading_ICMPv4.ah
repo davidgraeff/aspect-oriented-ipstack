@@ -32,7 +32,7 @@ aspect InternetChecksum_Tx_Offloading_icmpv4 {
 // 
 // 		if (interface->hasTransmitterHardwareChecksumming()) {
 // 			unsigned ip_header_size = ((char*)dataToSend->memstart_transport - (char*)dataToSend->memstart_ip);
-// 			printf("icmp send with hardware checksum ip: %u, len: %u\n", ip_header_size, dataToSend->getSize());
+// 			printf("icmp send with hardware checksum ip: %lu, len: %lu\n", ip_header_size, dataToSend->getSize());
 // 			//call specialized send function for checksum offloading
 // 			dataToSend()->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize(), false, ip_header_size);
 // 			return; // we do not execute the usual send Method
@@ -44,7 +44,7 @@ aspect InternetChecksum_Tx_Offloading_icmpv4 {
 // 		around(uint32_t csum, uint16_t payloadlen, Interface* interface) {
 // 
 // 		if ((interface != 0) && (interface->hasTransmitterHardwareChecksumming())) {
-// 			printf("icmp prepare hardware checksum: %u, len: %u\n", InternetChecksum::accumulateCarryBits(csum), payloadlen);
+// 			printf("icmp prepare hardware checksum: %lu, len: %lu\n", InternetChecksum::accumulateCarryBits(csum), payloadlen);
 // 			*tjp->result() = InternetChecksum::accumulateCarryBits(csum); //computePayload is done by hardware
 // 		} else {
 // 			tjp->proceed();

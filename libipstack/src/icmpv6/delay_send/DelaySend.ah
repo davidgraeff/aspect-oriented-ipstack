@@ -66,12 +66,12 @@ aspect delay_icmpv6_send  {
 	
 	advice execution("% ipstack::Demux::icmpv6_demux(...)") : around() {
 		++DelaySend::mHoldBack;
-		//printf("------ Delay field ------ %u\n", DelaySend::mHoldBack);
+		//printf("------ Delay field ------ %lu\n", DelaySend::mHoldBack);
 		
 		tjp->proceed();
 		
 		--DelaySend::mHoldBack;
-		//printf("------ Delay end ------ %u\n", DelaySend::mHoldBack);
+		//printf("------ Delay end ------ %lu\n", DelaySend::mHoldBack);
 		
 		// We only send out data if holdBack == 0 (reantrance is possible)
 		if (DelaySend::mHoldBack>0)

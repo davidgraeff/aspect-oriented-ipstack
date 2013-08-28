@@ -62,7 +62,7 @@ aspect debug_management_memory {
 			// check double insert
 			for (int i=0;i<SharedMemory::SLOTS;++i) {
 				if (allocatedMemories[i]==data) {
-					printf("MM: Double insert B: %p @index %u!\n", data, i);
+					printf("MM: Double insert B: %p @index %lu!\n", data, i);
 					System::haltsystem();
 				}
 			}
@@ -90,7 +90,7 @@ aspect debug_management_memory {
 				}
 				++pos;
 			}
-			printf("MM: alloc; usage: %u/%u, B: %p @index %u\n", used, SharedMemory::SLOTS, data, pos);
+			printf("MM: alloc; usage: %lu/%lu, B: %p @index %lu\n", used, SharedMemory::SLOTS, data, pos);
 		}
 	}
 	
@@ -105,7 +105,7 @@ aspect debug_management_memory {
 		
 		buffer = tjp->that()->getNext(index);
 		if (buffer==0) {
-			printf("MM: Free 0 @index %u!\n", index);
+			printf("MM: Free 0 @index %lu!\n", index);
 			System::haltsystem();
 		}
 			
@@ -118,7 +118,7 @@ aspect debug_management_memory {
 		}
 		
 		if (!found) {
-			printf("MM: DOUBLE FREEING BUFFER: %p @index %u!\n", buffer, index);
+			printf("MM: DOUBLE FREEING BUFFER: %p @index %lu!\n", buffer, index);
 			System::haltsystem();
 		}
 	}
@@ -140,9 +140,9 @@ aspect debug_management_memory {
 					++used;
 				}
 			}
-			printf("MM: free; usage: %u/%u, B: %p @index %u\n", used, SharedMemory::SLOTS, buffer, index);
+			printf("MM: free; usage: %lu/%lu, B: %p @index %lu\n", used, SharedMemory::SLOTS, buffer, index);
 		} else {
-			printf("MM: not freeing, still transmitting @index %u\n", index);
+			printf("MM: not freeing, still transmitting @index %lu\n", index);
 		}
 	}
 	
@@ -153,7 +153,7 @@ aspect debug_management_memory {
 		// The allocation-buffer-queue should be empty on start
 		uint_fast16_t index = 0;
 		while (SendBuffer* buffer = (SendBuffer*)tjp->that()->getNext(index)) {
-			printf("MM: invalid buffer start content! @index %u: %p!\n", index, buffer);
+			printf("MM: invalid buffer start content! @index %lu: %p!\n", index, buffer);
 			System::haltsystem();
 		}
 	}

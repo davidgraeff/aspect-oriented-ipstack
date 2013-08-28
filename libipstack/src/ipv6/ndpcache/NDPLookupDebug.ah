@@ -57,7 +57,7 @@ aspect NDPLookupDebug {
 		after(NDPCacheEntry* entry, Interface& interface) {
 		
 		lookup = 0;
- 		printf("NDP Lookup: Lookup result %u\n", interface.is_NDPCacheEntry_reachable(entry));
+ 		printf("NDP Lookup: Lookup result %lu\n", interface.is_NDPCacheEntry_reachable(entry));
 	}
 	
 	/**

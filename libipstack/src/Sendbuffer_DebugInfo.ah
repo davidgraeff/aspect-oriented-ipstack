@@ -87,7 +87,7 @@ aspect sendbuffer_debuginfo {
 		printf("   Destination: %s\n", tempbuf);
 	
 		uint8_t* lastByte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
-		printf("   (In Bytes) Link layer: %u; IP: %u, Transport: %u\n", (uint8_t*)sendbuffer.memstart_ip-(uint8_t*)sendbuffer.memstart_ethernet,
+		printf("   (In Bytes) Link layer: %lu; IP: %lu, Transport: %lu\n", (uint8_t*)sendbuffer.memstart_ip-(uint8_t*)sendbuffer.memstart_ethernet,
 				(uint8_t*)sendbuffer.memstart_transport-(uint8_t*)sendbuffer.memstart_ip, lastByte-(uint8_t*)sendbuffer.memstart_transport);
 	}
 	

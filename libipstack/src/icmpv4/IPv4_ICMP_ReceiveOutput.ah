@@ -38,7 +38,7 @@ aspect IPv4_ICMP_ReceiveOutput {
 		around(IPv4_Packet* packet, unsigned payloadlen, Interface* interface, Demux& demux) {
 
 		ICMP_Packet* icmp = (ICMP_Packet*) packet->get_data();
-		printf("ICMPv4 received: Len %u, Type: %u, Code: %u\n", payloadlen, icmp->get_type(), icmp->get_code());
+		printf("ICMPv4 received: Len %lu, Type: %lu, Code: %lu\n", payloadlen, icmp->get_type(), icmp->get_code());
 		tjp->proceed();
 	}
 };

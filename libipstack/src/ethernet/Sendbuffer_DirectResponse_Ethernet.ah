@@ -51,6 +51,6 @@ aspect Sendbuffer_DirectResponse_Ethernet {
 		// Set destination addr := remote src addr
 		dest_eth_frame->set_dst_hwaddr(remote_eth_frame->get_src_hwaddr());
 
-		//printf("ethernet direct response: remote %u %u %u %u %u %u\n",dest_eth_frame->get_dst_hwaddr()[0],dest_eth_frame->get_dst_hwaddr()[1],dest_eth_frame->get_dst_hwaddr()[2],dest_eth_frame->get_dst_hwaddr()[3],dest_eth_frame->get_dst_hwaddr()[4],dest_eth_frame->get_dst_hwaddr()[5]);
+		//printf("ethernet direct response: remote %lu %lu %lu %lu %lu %lu\n",dest_eth_frame->get_dst_hwaddr()[0],dest_eth_frame->get_dst_hwaddr()[1],dest_eth_frame->get_dst_hwaddr()[2],dest_eth_frame->get_dst_hwaddr()[3],dest_eth_frame->get_dst_hwaddr()[4],dest_eth_frame->get_dst_hwaddr()[5]);
 	}
 };
