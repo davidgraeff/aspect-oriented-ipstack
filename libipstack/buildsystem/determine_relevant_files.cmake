@@ -7,7 +7,7 @@ SET(EXEC "${CMAKE_CURRENT_BINARY_DIR}/buildsystem/determine_relevant_files/deter
 SET(ARGUMENTS "${EXEC}" "-b" "${base_directory}" "-o" "${output_filename}"
 	"-d" "${output_definitions_filename}" "-f" "${featuresFilesRelationFile}" "-k" "${kconfigFile}")
 
-if (all_features) # select all files
+if (all_files) # select all files
 	LIST(APPEND ARGUMENTS "-a")
 endif()
 

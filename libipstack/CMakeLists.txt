@@ -27,6 +27,10 @@ if (BUILD_WITH_ASPECTLESS_INTERFACE)
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/os_integration.h")
 endif()
 
+############## BUILD_LIBIPSTACK_WITH_ALL_FILES ##############
+# Ony do this for continous integration!
+option (BUILD_LIBIPSTACK_WITH_ALL_FILES "Ony do this for continous integration!" OFF) 
+
 ############## BUILD_WITH_ASPECTLESS_INTERFACE and not BUILD_ONLY_ONE_TASK ##############
 # irq safeness for aspectless interface with multiple tasks
 if (BUILD_WITH_ASPECTLESS_INTERFACE AND NOT BUILD_ONLY_ONE_TASK)
@@ -92,7 +96,7 @@ else()
 		-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
 		-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
 		-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
-		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
+		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_files=${BUILD_LIBIPSTACK_WITH_ALL_FILES}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
 		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
 		DEPENDS determine_relevant_files COMMENT "Executing relevant_source_files" VERBATIM)
