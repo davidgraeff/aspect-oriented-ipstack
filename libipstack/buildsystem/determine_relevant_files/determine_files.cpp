@@ -78,6 +78,10 @@ bool FeatureToFiles::checkDepends(const std::string depends) {
 	bool min_one_depend = false;
 	std::istringstream iss(depends);
 	while (iss) {
+		// First dependeny of an AND not meet, break loop
+		if (all_depend && !ok)
+			break;
+		
 		std::string sub;
 		iss >> sub;
 		if (!sub.size())
@@ -95,15 +99,20 @@ bool FeatureToFiles::checkDepends(const std::string depends) {
 		} else if (sub.compare(0,1,"&")==0) {
 			sub.erase(0,1);
 			bool enabled = mEnabled.count(sub);
+			//std::cerr << "\t" << sub << " " << mEnabled.count(sub) << " " << (enabled?"ok ":"non ") << std::endl;
 			enabled = (enabled && !negate_depend) || (!enabled && negate_depend);
 			if (all_depend)
 				ok &= enabled;
 			else if (min_one_depend)
 				ok |= enabled;
+			else // only one or first one
+				ok &= enabled;
 		} else {
 			std::cerr << "Did not understand depends string: " << depends << "; " << sub << std::endl;
+			return false;
 		}
 	};
+// 	std::cerr << "Dependency meet? " << (ok?"ok ":"non ") << (negate_depend?"negate ":"") << (all_depend?"and ":"") << depends << std::endl;
 	return ok;
 }
 
@@ -119,7 +128,6 @@ bool FeatureToFiles::node(const picojson::value::object& obj) {
 // 	std::cerr << std::string(in*2, ' ') << "NODE " << vname << ";" << name << std::endl;
 	
 	if (!all_features && depends.size() && !checkDepends(depends)) {
-		std::cerr << "Dependency not meet! " << depends << std::endl;
 		return result;
 	}
 	
