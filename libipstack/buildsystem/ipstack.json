@@ -121,7 +121,7 @@
 			"subdir" : "/operating_system_integration",
 			"comp" : [
 			{
-				"file" : "SystemHalt.h"
+				"files" : ["System.h"]
 			},
 			{
 				"depends" : "&ipstack_clock",
