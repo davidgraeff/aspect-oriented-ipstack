@@ -30,7 +30,6 @@
 			"files" : [
 				"Interface.h",
 				"Interface.ah",
-				"Interface_Delegation.ah",
 				"Router.h",
 				"Router.cpp",
 				"Router.ah"

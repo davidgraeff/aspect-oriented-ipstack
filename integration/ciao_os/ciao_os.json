@@ -40,6 +40,13 @@
 			"depends" : "&ipstack_autosar_reschedule_sendbuffer_free",
 			"subdir" : "/autosar_task_support",
 			"file" : "Sendbuffer_free_Reschedule.ah"
+		},
+		{
+			"vname" : "Router",
+			"subdir" : "/send_receive",
+			"files" : [
+				"Interface_Delegation.ah"
+			]
 		}
 	]
 }
