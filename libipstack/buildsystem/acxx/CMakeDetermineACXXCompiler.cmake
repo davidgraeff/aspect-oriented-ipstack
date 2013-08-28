@@ -12,7 +12,7 @@ if(CMAKE_ACXX_COMPILER)
 endif(CMAKE_ACXX_COMPILER)
 
 # configure variables set in this file for fast reload later on
-SET(OUTPUTFILE "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeACXXCompiler.cmake")
+SET(OUTPUTFILE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeACXXCompiler.cmake")
 if(NOT(EXISTS(${OUTPUTFILE})))
     CONFIGURE_FILE(${CMAKE_CURRENT_LIST_DIR}/CMakeACXXCompiler.cmake.in ${OUTPUTFILE} @ONLY IMMEDIATE)
   message(STATUS "ACXX Compiler: ${CMAKE_ACXX_COMPILER} ${ACXX_VERSION}")
@@ -20,7 +20,7 @@ endif()
 
 # newer cmake version search in CMAKE_VERSION subfolder.
 # configure variables set in this file for fast reload later on
-SET(OUTPUTFILE "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_VERSION}/CMakeACXXCompiler.cmake")
+SET(OUTPUTFILE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_VERSION}/CMakeACXXCompiler.cmake")
 if(NOT(EXISTS(${OUTPUTFILE})))
   CONFIGURE_FILE(${CMAKE_CURRENT_LIST_DIR}/CMakeACXXCompiler.cmake.in ${OUTPUTFILE} @ONLY IMMEDIATE)
 endif()

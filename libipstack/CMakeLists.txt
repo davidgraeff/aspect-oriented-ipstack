@@ -35,9 +35,9 @@ if (BUILD_WITH_ASPECTLESS_INTERFACE AND NOT BUILD_ONLY_ONE_TASK)
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/lock_multitask_access.h")
 endif()
 
-############## KCONFIG ##############
-# * You do not have to use kconfig in that case the entire feature set is build.
-#   Selecting or deselecting features works by adding/removing files ;)
+############## KCONFIG and determine_relevant_files ##############
+# * You do not have to use kconfig in that case a predefined feature set is build.
+#   Selecting or deselecting features works by editing the buildsystem/kconfig_output_default file ;)
 # * The buildsystem tries to setup a working kconfig frontend for you. kconfig
 #   is recommended.
 
@@ -55,8 +55,15 @@ if (NOT DEFINED KCONFIG_PRESET_CONFIGURATION_FILE)
 	SET(KCONFIG_PRESET_CONFIGURATION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig_output_default")
 endif()
 
+SET(SRC_FILE "${CMAKE_BINARY_DIR}/relevant_source_files")
+SET(DEFINITIONS_FILE "${CMAKE_BINARY_DIR}/cfAttribs.h") # Get configuration variables from kconfig and store in cfAttribs.h
+add_subdirectory(buildsystem/determine_relevant_files)
+SET(CLEAN_FILES "${SRC_FILE}" "${SRC_FILE}.bak" "${DEFINITIONS_FILE}" "${KCONFIG_RESULT_FILE}")
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
+
 IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
-	############## KCONFIG Reconfigure ##############
+	############## KCONFIG Reconfigure and determine_relevant_files ##############
+	# Determine relevant files based on the features selected
 	add_custom_target(reconfigure
 		COMMAND ${CMAKE_COMMAND}
 		-DKCONFIG_EXECUTABLE=${KCONFIG_EXECUTABLE} -DKCONFIG_FEATUREMODEL=${KCONFIG_FEATUREMODEL}
@@ -64,60 +71,42 @@ IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 		-DKCONFIG_RESULT_FILE=${KCONFIG_RESULT_FILE}
 		-DKCONFIG_PRESET_CONFIGURATION_FILE=${KCONFIG_PRESET_CONFIGURATION_FILE}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig.cmake"
-		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig" VERBATIM)
-
-	add_custom_target(reconfigure_firsttime
 		COMMAND ${CMAKE_COMMAND}
-		-DKCONFIG_EXECUTABLE=${KCONFIG_EXECUTABLE} -DKCONFIG_FEATUREMODEL=${KCONFIG_FEATUREMODEL}
-		-DKCONFIG_RESULT_FILE_DIR=${KCONFIG_RESULT_FILE_DIR} -DSkip_if_existing=1
-		-DKCONFIG_RESULT_FILE=${KCONFIG_RESULT_FILE}
-		-DKCONFIG_PRESET_CONFIGURATION_FILE=${KCONFIG_PRESET_CONFIGURATION_FILE}
-		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/kconfig.cmake"
-		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig" VERBATIM)
+		-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
+		-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
+		-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
+		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
+		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig+determine_relevant_files"
+		DEPENDS determine_relevant_files VERBATIM)
 else()
-	# Add dummy target reconfigure_firsttime if kconfig is disabled
-	add_custom_target(reconfigure_firsttime)
-endif()
-
-############## Source FILES ##############
-# Determine relevant files based on the features selected
-# Get configuration variables from kconfig and store in cfAttribs.h
-if (${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}) # no kconfig -> use predefined cfAttribs.h
+	# no kconfig -> use predefined KCONFIG_RESULT_FILE
 	file(READ "${KCONFIG_PRESET_CONFIGURATION_FILE}" TEMP)
 	file(WRITE ${KCONFIG_RESULT_FILE} ${TEMP})
+	
+	############## determine_relevant_files ##############
+	# Determine relevant files based on the features selected
+	add_custom_target(reconfigure
+		COMMAND ${CMAKE_COMMAND}
+		-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
+		-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
+		-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
+		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
+		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
+		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		DEPENDS determine_relevant_files COMMENT "Executing relevant_source_files" VERBATIM)
 endif()
 
-add_subdirectory(buildsystem/determine_relevant_files)
-SET(SRC_FILE "${CMAKE_BINARY_DIR}/relevant_source_files")
-SET(DEFINITIONS_FILE "${CMAKE_BINARY_DIR}/cfAttribs.h")
-add_custom_command(OUTPUT "${SRC_FILE}"
-	COMMAND ${CMAKE_COMMAND}
-	-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
-	-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
-	-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
-	-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
-	-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
-	DEPENDS determine_relevant_files reconfigure_firsttime COMMENT "Executing relevant_source_files" VERBATIM)
+############## Build or rerun cmake ##############
+if (NOT EXISTS "${SRC_FILE}" OR NOT EXISTS "${DEFINITIONS_FILE}")
+	# File that lists the relevant source files is not present. We have to rerun cmake.
+	message(STATUS "In this cmake run, only configuration takes place. cmake will automatically rerun for building.")
+	add_custom_target(rerun ALL DEPENDS reconfigure COMMENT "Run again for building!")
+	#message(FATAL_ERROR "No SRC_FILE variable provided! The file contains the source files depending on the selected features")
+else()
+	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${DEFINITIONS_FILE}") 
+	add_subdirectory(src)
+endif()
 
-SET(CLEAN_FILES "${SRC_FILE}" "${SRC_FILE}.bak" "${DEFINITIONS_FILE}" "${KCONFIG_RESULT_FILE}")
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 
-############## Build ##############
-# Write all variables of cmake to a file that is read in by the buildlib.cmake script
-set(CacheForScript "${CMAKE_CURRENT_BINARY_DIR}/CMakeCacheForScript.cmake")
-file(WRITE ${CacheForScript} "")
-#message("write to ${CacheForScript}")
-
-get_cmake_property(Vars VARIABLES)
-foreach(Var ${Vars})
-  if(${Var})
-    string(REPLACE "\\" "\\\\" ${Var} ${${Var}})
-  endif()
-  file(APPEND ${CacheForScript} "set(${Var} \"${${Var}}\")\n")
-endforeach()
-
-add_custom_target(buildlib ALL
-	COMMAND ${CMAKE_COMMAND}
-	"${CMAKE_CURRENT_SOURCE_DIR}/src"
-	DEPENDS "${SRC_FILE}"
-	)

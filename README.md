@@ -79,14 +79,21 @@ the command line version.
 * Create a directory called "build" (or any other name).
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
-* A popup will appear and ask for your favoured project files to generate.
+* A popup will appear and ask for the target build system. We assume you are using __"make"__.
 ![Picture of cmake](doc/cmake.png)
 You will be presented with some build options that are discussed in the following sections. If you are done
 with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
 popup you have VisualStudio project files, make files or something else in your build directory.
+* Change to your build directory.
+* Execute __"make"__. This will download and build the kconfig-frontend and automatically open the configuration editor.
+* Configure the ipstack to your needs. Close the editor and save the changes.
+* Execute __"make"__ again to build the examples if selected and the libipstack library.
 
-The configuration editor will be started after the first build process start (e.g. type __"make"__ in your
-build directory in linux). If you want to reconfigure, execute __"make reconfigure"__ and __"make"__ again.
+If you want to reconfigure libipstack do this:
+* Change to your build directory.
+* Execute __"make reconfigure"__. This will open the configuration editor.
+* Configure the ipstack to your needs. Close the editor and save the changes.
+* Execute __"make"__ again to build the examples if selected and the libipstack library.
 
 About multitasking support
 --------------------------

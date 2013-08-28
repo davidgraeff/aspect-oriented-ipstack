@@ -1,0 +1,13 @@
+cmake_minimum_required (VERSION 2.8.8)
+
+function(filter_files out_var filter_extension)
+  set(result)
+  foreach(file ${ARGN})
+    get_filename_component (extension "${file}" EXT)
+    string(TOUPPER "${extension}" extension)
+    if ("${extension}" STREQUAL ".CPP" OR "${extension}" STREQUAL ".CC" OR "${extension}" STREQUAL ".CXX")
+		list(APPEND result ${file})
+	endif()
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()

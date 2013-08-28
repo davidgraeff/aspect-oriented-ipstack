@@ -43,5 +43,8 @@ ExternalProject_Add_Step(KCONFIG CONFIGURE2
 	COMMENT "Bootstrap"
 	WORKING_DIRECTORY ${BUILD_KCONFIG_DIR}/download
 	DEPENDERS configure DEPENDEES download)
-
+ExternalProject_Add_Step(KCONFIG INSTALL2
+	COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+	COMMENT "Prepare CMake for rerun to not rebuild kconfig"
+	DEPENDEES install)
 SET(KCONFIG_EXECUTABLE "${INSTALL_KCONFIG_DIR}/bin/kconfig-qconf" CACHE STRING ""  FORCE)
