@@ -16,7 +16,7 @@
 // Copyright (C) 2011 Christoph Borchert
 
 #pragma once
-#include "cfAttribs.h"
+#include "IPStack_Config.h"
 
 namespace ipstack {
 	//This is the maximum number of retransmissions for a TCP segment.

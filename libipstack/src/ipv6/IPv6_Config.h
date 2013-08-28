@@ -16,7 +16,7 @@
 // Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "cfAttribs.h"
+#include "IPStack_Config.h"
 
 namespace ipstack {
 	/**
