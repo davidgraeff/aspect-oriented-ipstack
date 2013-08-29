@@ -1,24 +1,27 @@
 Aspect oriented IPstack for embedded systems
 ============================================
-A highly configurable and easily extendable TCP/IP-Stack with IPv4, IPv6, UDP, TCP, ICMPv4, ICMPv6 support.
-This network stack is written in AspectC++ and because it is build and designed around the idea of aspects you
-may select your desired functionallity during build time in a very fine grained way.
-
-The aspect-IP-Stack is plattform agnostic and supports little and big endian systems and have been tested
-on x86 32/64bit as well as arm 32bit and msp430 16bit processors. We are going to test the ipstack on 8bit
-processors especially avr µC's in the near future.
-
-You may use this software in different ways.
-There are two examples of integrating the IP-Stack into operating systems for embedded systems (CiAO-OS and Chibi-OS)
-and another example of using it as a linux userspace application on a tun-device.
-
-If you already use the CMake buildsystem, integrating the IP-Stack is very easy. This is
-described in detail below. For a well commented example look at the linux userspace integration.
-If you do not use CMake as your buildsystem, you may just build a static library once
-and use the C++ API calls in libipstack/api.
-
 [![Build Status](https://travis-ci.org/davidgraeff/aspect-oriented-ipstack.png?branch=master)](https://travis-ci.org/davidgraeff/aspect-oriented-ipstack)
-Please use the ticket system of github for bugs and feature suggestions.
+> A **highly configurable** and easily extendable TCP/IP-Stack with IPv4, IPv6, UDP, TCP, ICMPv4, ICMPv6 support.
+This network stack is written in C++/AspectC++ and because it is build and designed around the idea of aspects,
+you may select your desired functionallity during build time in a very fine grained way and on the same time
+the code retains maintainability.
+
+The *Aspect-IP-Stack* is plattform agnostic and supports little and big endian systems and have been tested
+on x86 32/64bit as well as arm 32bit and msp430 16bit and avr 8bit processors.
+
+There are two examples of integrating the IP-Stack into operating systems for embedded systems (CiAO-OS and Chibi-OS)
+and another example of using it as a linux userspace application on a tun-device. The last one allows us to easily
+debug and measure the code and using test-driven development for an efficient and correct implementation.
+
+If you already use the CMake buildsystem, integrating the IP-Stack is very easy and explained
+[here](doc/include_in_cmake_based_project.md). Use application aspects for easily interfere and
+modify the ipstack to your needs without touching the core source code.
+
+If you do not use CMake nor AspectC++ in your project you still have the option of building a
+static library with a plain **C++** / **C** API.
+For well commented examples look at the linux userspace integrations.
+
+> Please use the ticket system of github for bugs and feature suggestions.
 
 Work in progress (August 2013):
 -------------------------------
