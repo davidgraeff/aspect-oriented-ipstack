@@ -76,26 +76,26 @@ the command line version.
 * Create a directory called "build" (or any other name).
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
-* A popup will appear and ask for the target build system. We assume you are using __"make"__.
+* A popup will appear and ask for the target build system. We assume you are using `make`.
 ![Picture of cmake](doc/cmake.png)
 You will be presented with some build options that are discussed in the following sections. If you are done
 with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
 popup you have VisualStudio project files, make files or something else in your build directory.
 * Change to your build directory.
-* Execute __"make"__. This will download and build the kconfig-frontend and automatically open the configuration editor.
+* Execute `make`. This will download and build the kconfig-frontend and automatically open the configuration editor.
 * Configure the ipstack to your needs. Close the editor and save the changes.
-* Execute __"make"__ again to build the examples if selected and the libipstack library.
+* Execute `make` again to build the examples if selected and the libipstack library.
 
 If you want to reconfigure libipstack do this:
 * Change to your build directory.
-* Execute __"make reconfigure"__. This will open the configuration editor.
+* Execute `make reconfigure`. This will open the configuration editor.
 * Configure the ipstack to your needs. Close the editor and save the changes.
-* Execute __"make"__ again to build the examples if selected and the libipstack library.
+* Execute `make` again to build the examples if selected and the libipstack library.
 
 About multitasking support
 --------------------------
 The ipstack is designed for multitasking systems. Usually there exists the system task
-where interaction with the hardware takes place and traffic is received and
+where interaction with the hardware takes place and traffic is received. The second 
 the user task where traffic is generated and consumed. Places where tasks are used:
 For example we do some busy-waiting while waiting for an arp or IPv6 neighbour response and for timing
 tcp traffic etc. Check out the CiAO-OS integration as an example: We reschedule before entering a busy
@@ -107,16 +107,7 @@ We therefore provide the __"BUILD_ONLY_ONE_TASK"__ cmake option. What it does is
 * Adding an _IP::periodic()_ method that has to be called periodically from your main loop.
 * You need to check reachability before sending with _IP::is_reachable(addr)_ because we no longer blocking the "application-task" while resolving link layer (e.g. ethernet) addresses.
 
-Example: Look at integration/linux_userspace_without_aspects_multitask
-
-About 8-bit µC
---------------
-The software is not optimized for running on 8bit systems because we are using 16bit-minimum integers.
-A comparison with other ipstacks on 8bit systems is a __TODO__.
-
-IRQ-Safeness, timing and fatal-errors
--------------------------------------
-Provide functions for the function pointers IP::disable_irq() and IP::enable_irq() for IRQ/Interrupt safeness.
+Example: Look at `integration/linux_userspace_without_aspects_multitask`.
 
 Aspect-oriented integration
 ---------------------------
@@ -126,7 +117,7 @@ Code-wise you have to provide aspects to cover this functionally:
 * Route received network traffic to IPStack::Router() __TODO__.
 * Outgoing traffic can be accessed by an aspect with a pointcut to IPStack::SendBuffer::Send(char* data, int len) __TODO__.
 
-Example: Look at integration/linux_userspace_with_aspects
+Example: Look at `integration/linux_userspace_with_aspects`.
 
 Static-library integration
 --------------------------
@@ -139,7 +130,7 @@ Code-wise you have to setup the following:
 * Route traffic received from your network card driver to _IP::receive_from_network(char* data, int len)_.
 * Implement a function for sending to your network card driver and set the function pointer of _IP::send_to_network(char* data, int len)_ accordingly. This is called by the ipstack for outgoing traffic.
 
-Example: Look at integration/linux_userspace_without_aspects
+Example: Look at `integration/linux_userspace_without_aspects`.
 
 Examples
 ========
@@ -148,39 +139,38 @@ The applications aren't executable on their own without an integration.
 
 Example applications
 --------------------
-__http_simple_server:__ Provides a very simple http server. Only one page
-is returned and the http headers and content are statically compiled in.
+> __http_simple_server:__ Provides a very simple http server. Only one page
+> is returned and the http headers and content are statically compiled in.
 
-__icmp_test:__ Only the ip management subsystem is enabled.
-This application is for testing ICMPv4/v6, udp send/receive, tcp reset.
-You can ping by using:
-* ping 10.0.3.2 (for icmp ping, substitue with your configured IP)
-* ping6 fe80::6655:44ff:fe33:2211%tap0 (for icmp ping with ipv6 on tap0 device)
-* echoping -u 10.0.3.2 (for udp ping; use ipv4 addresses, ipv6 is not supported by echoping for udp)
-* sendip -p ipv6 -p udp -us 5070 -ud 7 -d "Hello" -v fe80::6655:44ff:fe33:2211 (for ipv6 udp ping)
-* telnet 10.0.3.2 (for testing the tcp reset capability; use ipv4 or ipv6 address)
-* Send udp to port 88 to get it printed out
+> __icmp_test:__ Only the ip management subsystem is enabled.
+> This application is for testing ICMPv4/v6, udp send/receive, tcp reset.
+> You can ping by using:
+> * ping 10.0.3.2 (for icmp ping, substitue with your configured IP)
+> * ping6 fe80::6655:44ff:fe33:2211%tap0 (for icmp ping with ipv6 on tap0 device)
+> * echoping -u 10.0.3.2 (for udp ping; use ipv4 addresses, ipv6 is not supported by echoping for udp)
+> * sendip -p ipv6 -p udp -us 5070 -ud 7 -d "Hello" -v fe80::6655:44ff:fe33:2211 (for ipv6 udp ping)
+> * telnet 10.0.3.2 (for testing the tcp reset capability; use ipv4 or ipv6 address)
+> * Send udp to port 88 to get it printed out
+> 
+> For full network interaction
+> * activate ipv6 forwarding: sysctl -w net.ipv6.conf.all.forwarding=1
+> * have an ipv6 capable router (or the "radvd" software)
 
-For full network interaction
-* activate ipv6 forwarding: sysctl -w net.ipv6.conf.all.forwarding=1
-* have an ipv6 capable router (or the "radvd" software)
+> __tcp_speedtest:__ This application is for testing the TCP Speed. It is in one of three states:
+> * listening for a command 
+> * receiving a predetermined amount of data as fast as possible
+> * sending a predetermined amount of data as fast as possible
+> 
+> It opens a tcp listen socket on port 1234 and starts in the listen-for-a-command state. Commands:
+> * "LISTEN": The application sends back "OK"  and is ready to receive 1024*1024*100 Bytes (100 MByte)
+> 	of data without further interpretation.
+> * "SEND": The application begins immediatelly to send 1024*1024*100 Bytes (100 MByte) of random data.
+> 
+> In the directory "linux_host_program" is a linux host program located for measuring tcp performance.
+> Usage: _speedtest 10.0.3.2 1234 LISTEN_ or _speedtest 10.0.3.2 1234 SEND_.
 
-__tcp_speedtest:__ This application is for testing the TCP Speed. It is in one of three states:
-* listening for a command 
-* receiving a predetermined amount of data as fast as possible
-* sending a predetermined amount of data as fast as possible
-
-It opens a tcp listen socket on port 1234 and starts in the listen-for-a-command state. Commands:
-* "LISTEN": The application sends back "OK"  and is ready to receive 1024*1024*100 Bytes (100 MByte)
-	of data without further interpretation.
-* "SEND": The application begins immediatelly to send 1024*1024*100 Bytes (100 MByte) of random data.
-
-In the directory "linux_host_program" is a linux host program located for measuring tcp performance.
-Usage: _speedtest 10.0.3.2 1234 LISTEN_ or _speedtest 10.0.3.2 1234 SEND_.
-
-
-__telnet:__ Use the telnet application to test this example. An echo to every
-message is returned.
+> __telnet:__ Use the telnet application to test this example. An echo to every
+> message is returned.
 
 Example integrations
 --------------------
@@ -208,7 +198,7 @@ where traffic is received and the user task where traffic is generated and consu
 The integration features IRQ-safeness, reschedules instead of inefficent waits and
 task sleep if waiting for a packet.
 
-chibi_os: __TODO__
+**chibi_os**: __TODO__
 
 Further reading
 ===============
