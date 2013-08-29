@@ -22,15 +22,12 @@ Please use the ticket system of github for bugs and feature suggestions.
 
 Work in progress (August 2013):
 -------------------------------
-This software is currently **NOT USABLE** in its current state.
+This software is currently **NOT USABLE** in its current state. TODO:
 * Work on this documentation
-* Build system, CMake
-* Make ipstack independent from CiAO operating system.
 * Add linux userspace ipstack support via raw sockets or tun device.
 * Add API for non-multitasking support
 * Add build system parts for adding own aspects outside of the libipstack/src directory.
 * Add documentation papers to /doc (e.g. APIs, example step-by-step).
-* Continous integration (Travis CI)
 
 Features
 ========
