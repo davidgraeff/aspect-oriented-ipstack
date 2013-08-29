@@ -139,11 +139,11 @@ The applications aren't executable on their own without an integration.
 
 Example applications
 --------------------
-> __http_simple_server:__ Provides a very simple http server. Only one page
-> is returned and the http headers and content are statically compiled in.
+__http_simple_server:__ Provides a very simple http server. Only one page
+is returned and the http headers and content are statically compiled in.
 
-> __icmp_test:__ Only the ip management subsystem is enabled.
-> This application is for testing ICMPv4/v6, udp send/receive, tcp reset.
+__icmp_test:__ Only the ip management subsystem is enabled.
+This application is for testing ICMPv4/v6, udp send/receive, tcp reset.
 > You can ping by using:
 > * ping 10.0.3.2 (for icmp ping, substitue with your configured IP)
 > * ping6 fe80::6655:44ff:fe33:2211%tap0 (for icmp ping with ipv6 on tap0 device)
@@ -156,7 +156,8 @@ Example applications
 > * activate ipv6 forwarding: sysctl -w net.ipv6.conf.all.forwarding=1
 > * have an ipv6 capable router (or the "radvd" software)
 
-> __tcp_speedtest:__ This application is for testing the TCP Speed. It is in one of three states:
+__tcp_speedtest:__ This application is for testing the TCP Speed.
+> It is in one of three states:
 > * listening for a command 
 > * receiving a predetermined amount of data as fast as possible
 > * sending a predetermined amount of data as fast as possible
@@ -169,8 +170,8 @@ Example applications
 > In the directory "linux_host_program" is a linux host program located for measuring tcp performance.
 > Usage: _speedtest 10.0.3.2 1234 LISTEN_ or _speedtest 10.0.3.2 1234 SEND_.
 
-> __telnet:__ Use the telnet application to test this example. An echo to every
-> message is returned.
+__telnet:__ Use the telnet application to test this example. An echo to every
+message is returned.
 
 Example integrations
 --------------------
