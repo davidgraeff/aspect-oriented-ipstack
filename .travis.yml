@@ -4,6 +4,9 @@ before_install:
   - sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/purplekarrot-cmake-precise.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" -y
   - sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/ubuntu-toolchain-r-test-precise.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" -y
   - sudo apt-get install cmake aspectc++ gcc-4.7 -y
+  - wget http://www.aspectc.org/fileadmin/downloads/ac/1.1/ac-bin-linux-1.1.tar.gz
+  - tar xf ac-bin-linux-1.1.tar.gz
+  - sudo cp aspectc++/a* /usr/bin/
 before_script: ./travis-ci/configure.sh
 script: ./travis-ci/make.sh
 language: cpp
