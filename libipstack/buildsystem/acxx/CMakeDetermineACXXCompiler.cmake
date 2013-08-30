@@ -1,15 +1,17 @@
 # Search for the ag++ executable
 SET(CMAKE_ACXX_COMPILER_ENV_VAR "ACXX")
 find_program(CMAKE_ACXX_COMPILER ag++)
+find_program(CMAKE_REAL_ACXX_COMPILER ac++)
 mark_as_advanced(CMAKE_ACXX_COMPILER)
+mark_as_advanced(CMAKE_REAL_ACXX_COMPILER)
 
 # Determine the ag++ version
-if(CMAKE_ACXX_COMPILER)
-    execute_process(COMMAND ${CMAKE_ACXX_COMPILER} "--version" 
+if(CMAKE_REAL_ACXX_COMPILER)
+    execute_process(COMMAND ${CMAKE_REAL_ACXX_COMPILER} "--version" 
                     OUTPUT_VARIABLE ACXX_VERSION
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
-    string(REGEX REPLACE "^ag\\+\\+ ([0-9.]*) .*" "\\1" ACXX_VERSION "${ACXX_VERSION}")
-endif(CMAKE_ACXX_COMPILER)
+    string(REGEX REPLACE "^ac\\+\\+ ([0-9.]*) .*" "\\1" ACXX_VERSION "${ACXX_VERSION}")
+endif(CMAKE_REAL_ACXX_COMPILER)
 
 # configure variables set in this file for fast reload later on
 SET(OUTPUTFILE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeACXXCompiler.cmake")
