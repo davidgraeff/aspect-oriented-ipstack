@@ -62,8 +62,10 @@ endif()
 SET(SRC_FILE "${CMAKE_BINARY_DIR}/relevant_source_files")
 SET(DEFINITIONS_FILE "${CMAKE_BINARY_DIR}/cfAttribs.h") # Get configuration variables from kconfig and store in cfAttribs.h
 add_subdirectory(buildsystem/determine_relevant_files)
-SET(CLEAN_FILES "${SRC_FILE}" "${SRC_FILE}.bak" "${DEFINITIONS_FILE}" "${KCONFIG_RESULT_FILE}")
+SET(CLEAN_FILES "${SRC_FILE}" "${SRC_FILE}.bak" "${DEFINITIONS_FILE}")
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
+
+add_custom_target(clean-configuration COMMAND ${CMAKE_COMMAND} -E remove "${KCONFIG_RESULT_FILE}")
 
 IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 	############## KCONFIG Reconfigure and determine_relevant_files ##############
