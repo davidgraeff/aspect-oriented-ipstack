@@ -84,8 +84,8 @@ Features
 </tbody>
 </table>
 
-Configure for your needs
-========================
+Configure to your needs
+=======================
 The configuration of this software is done by the kconfig tool, developted and used by the linux-kernel community.
 We're using a slightly modified version, the __kconfig-frontends__ packet (http://ymorin.is-a-geek.org/projects/kconfig-frontends).
 
@@ -94,16 +94,12 @@ We're using a slightly modified version, the __kconfig-frontends__ packet (http:
 Building and execution of kconfig is integrated into the cmake buildsystem. It is even prepared for the case that
 you already using kconfig for your os or application.
 
-Build and Integrate
-===================
-If your buildsystem is CMake based, you may want to use aspects to integrate this IP-Stack into your system.
-This allows more complex integration like using network cards capability of calculating checksums etc
-and is described in the _Aspect-oriented integration_ section. In contrast if you just want to provide an interface for connecting the
-ipstack with your network hardware and use it as it is skip that section and read the _Static-library integration_ one.
-
-General procedure for building
-------------------------------
-You need CMake to build this software in either way. You may obtain it at http://www.cmake.org.
+Building: With/Without Aspect-oriented integration
+==================================================
+After building this software you have a static library that either has the integration with your
+app/os weaved in via aspects (see [_Aspect-oriented integration_](doc/aspect_integration_api.md))
+or provides a [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
+You may obtain CMake for building the library at http://www.cmake.org.
 Additionally you need the aspectc++ compiler from http://www.aspectc.org.
 We only explain the graphical way of configuring the build system (cmake-gui), but you may also use
 the command line version.
@@ -111,7 +107,9 @@ the command line version.
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
 * A popup will appear and ask for the target build system. We assume you are using `make`.
+
 ![Picture of cmake](doc/cmake.png)
+
 You will be presented with some build options that are discussed in the following sections. If you are done
 with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
 popup you have VisualStudio project files, make files or something else in your build directory.
@@ -143,28 +141,16 @@ We therefore provide the __"BUILD_ONLY_ONE_TASK"__ cmake option. What it does is
 
 Example: Look at `integration/linux_userspace_without_aspects_multitask`.
 
-Aspect-oriented integration
----------------------------
-You do not have to select any option in cmake as the Aspect-oriented integration way is the default way to build.
-Code-wise you have to provide aspects to cover this functionally:
-* Integrate _IP::init()_ into your initialize routines.
-* Route received network traffic to IPStack::Router() __TODO__.
-* Outgoing traffic can be accessed by an aspect with a pointcut to IPStack::SendBuffer::Send(char* data, int len) __TODO__.
+Integrate in your buildsystem
+=============================
+If your buildsystem is CMake based you just need to use `add_subdirectory(aspect-oriented-ipstack)` and make
+your target depends on `libipstack`. Futher information can be found [here](doc/include_in_cmake_based_project.md).
+This allows you to use aspects to weave in more complex integration like
+using network cards capability of calculating checksums etc.
+For other buildsystems you may prebuild the static library and just use it with the C/C++ APIs.
 
-Example: Look at `integration/linux_userspace_with_aspects`.
-
-Static-library integration
---------------------------
-In CMake:
-* Select the option __"BUILD_ONLY_LIB"__.
-* If you do not have a multitask system, you also need to check __"BUILD_ONLY_ONE_TASK"__.
-
-Code-wise you have to setup the following:
-* call _IP::init()_ before using any of the ipstack methods.
-* Route traffic received from your network card driver to _IP::receive_from_network(char* data, int len)_.
-* Implement a function for sending to your network card driver and set the function pointer of _IP::send_to_network(char* data, int len)_ accordingly. This is called by the ipstack for outgoing traffic.
-
-Example: Look at `integration/linux_userspace_without_aspects`.
+In contrast if you just want to provide an interface for connecting the
+ipstack with your network hardware and use it as it is skip that section and read the _Static-library integration_ one.
 
 Examples
 ========
