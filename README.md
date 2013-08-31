@@ -237,5 +237,5 @@ is usally build as static library, your code have to be GPL3 compatible code.
 
 Authors
 =======
-This software originated as a research project at the [University of Dortmund, Germany](www.tu-dortmund.de)
+This software originated as a research project at the [University of Dortmund, Germany](http://www.tu-dortmund.de)
 and has been created mainly by Christoph Borchert and David Gräff.
