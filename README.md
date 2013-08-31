@@ -155,9 +155,6 @@ using network cards capability of calculating checksums etc.
 For other buildsystems you may prebuild the static library and just use it with the
 aspectless [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
 
-Examples
-========
-
 Example applications
 ====================
 We provide some example applications and example integrations into projects/operating systems.
