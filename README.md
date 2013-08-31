@@ -19,7 +19,7 @@ If you already use the CMake buildsystem, integrating the IP-Stack is very easy 
 modify the ipstack without having explicit APIs to all and every function of this software.
 
 If you do not use CMake nor AspectC++ in your project you still have the option of building a
-static library with a plain **C++** / **C** API for using TCP and UDP sockets on IPv4/IPv6.
+static library with a plain [**C++** / **C**](doc/aspectless_socket_api.md) API for using TCP and UDP sockets on IPv4/IPv6.
 You find well documented examples in the linux userspace integration directory.
 
 > Please use the ticket system of github for bugs and feature suggestions.
