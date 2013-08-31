@@ -23,35 +23,65 @@ For well commented examples look at the linux userspace integrations.
 
 > Please use the ticket system of github for bugs and feature suggestions.
 
-Work in progress (August 2013):
+Work in progress (September 2013):
 -------------------------------
-This software is currently **NOT USABLE** in its current state. TODO:
-* Work on this documentation
-* Add linux userspace ipstack support via raw sockets or tun device.
-* Add API for non-multitasking support
-* Add build system parts for adding own aspects outside of the libipstack/src directory.
-* Add documentation papers to /doc (e.g. APIs, example step-by-step).
+This software is **NOT USABLE** in its current state. TODO:
+- Work on this documentation
+- Add linux userspace ipstack support via raw sockets or tun device.
+- Add API for non-multitasking support
+- Add API for management sockets in own task.
+- Add build system parts for adding own aspects outside of the libipstack/src directory.
+- Add documentation papers to /doc (e.g. APIs, example step-by-step).
 
 Features
 ========
 * Highly configurable at build time
-* BSD-like sockets API
+* BSD-like (event based) sockets API
 * Own memory management for ressource restricted systems. We not not use the heap in the default configuration.
-* Only thin interface to your OS/APP has to be provided, IRQ safe
+* Only thin interface to your OS/APP has to be provided, IRQ/Multitask safe
 
-Link-Layer:
-* Ethernet
-* ARP (IPv4 - Address resolution protocol)
+<table>
+<thead>
+  <tr><th>Link-Layer</th><th>IP-Layer</th><th>Transport-Layer</th></tr>
+</thead>
+<tbody>
+  <tr valign="top"><td>
+  <ul>
+    <li>Ethernet</li>
+    <li>IPv4 ARP<br>(Address resolution protocol)</li>
+  </ul>
+  </td>
+  <td>
+    <ul>
+    <li>Singlestack or Dualstack IPv4/IPv6</li>
+    <li>ICMPv4/v6 info/error messages<br>(ping, etc)</li>
+    <li>IPv6 NDP<ul>
+      <li>Address resolution</li>
+      <li>Address duplication check</li>
+      <li>Router discovery</li>
+      <li>Autoconfiguration</li>
+      </ul>
+    </li>
+    <li>MLD (Multicast Listener Discovery) v1/v2</li>
+    </ul>
 
-IP-Layer:
-* Dualstack IPv4/IPv6
-* ICMPv4/v6 info/error messages (ping, etc)
-* Neigbor discovery protocol (IPv6 - Address resolution, Duplication Check, Router discovery, Autoconfiguration)
-* MLD (Multicast Listener Discovery) v1/v2
-
-Transport-Layer:
-* UDP
-* TCP (Sliding Window, Avoid Silly Window Syndrome, Round-Trip Time Estimation, Congestion Control, MSS, ...)
+  </td>
+  <td>
+    <ul>
+    <li>UDP</li>
+    <li>TCP
+      <ul>
+      <li>Sliding Window</li>
+      <li>Avoid Silly Window Syndrome</li>
+      <li>Round-Trip Time Estimation</li>
+      <li>Congestion Control</li>
+      <li>MSS</li>
+      </ul>
+    </li>
+    </ul>
+  </td></tr>
+</tbody>
+</table>
 
 Configure for your needs
 ========================
