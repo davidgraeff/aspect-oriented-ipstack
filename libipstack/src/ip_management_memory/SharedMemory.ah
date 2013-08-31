@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "SharedMemory.h"
 
 using namespace ipstack;
@@ -26,11 +26,6 @@ using namespace ipstack;
  * Shared memory support
  */
 aspect SharedMemoryAspect  {
-	advice execution( "void ipstack::System::init()" ) : after() {
-		// Call constructor of global shared memory
-		new(&sharedmemory) SharedMemory;
-	}
-	
 	/**
 	  * If the creation of a sendbuffer has been successfull, add it to the
 	  * list of allocated management buffers. We have to keep track of all

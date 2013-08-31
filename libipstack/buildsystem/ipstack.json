@@ -37,7 +37,6 @@
 		},
 		{
 			"vname" : "IP Management Buffer",
-			"name" : "ipstack_router",
 			"depends" : "&ipstack_icmp_ipv4 or &ipstack_icmp_ipv6 or &ipstack_tcp_reset",
 			"subdir" : "/ip_management_memory",
 			"comp" : [
@@ -98,6 +97,7 @@
 			"comp" : [
 			{
 				"files" : [
+					"ipstack_inttypes.h",
 					"Mempool.h",
 					"MempoolBase.h",
 					"Ringbuffer.h",
@@ -707,7 +707,7 @@
 			"subdir" : "/icmpv4",
 			"comp" : [
 			{
-				"files" : ["Demux_IPv4_ICMP_Slice.ah", "ICMP.h", "ICMPv4_Socket.cpp", "ICMPv4_Socket.h", "ICMPv4_Socket.ah", "IPv4_ICMP_Receive.ah", "Sendbuffer_icmp.ah", "Sendbuffer_icmp_checksum.ah"]
+				"files" : ["Demux_IPv4_ICMP_Slice.ah", "ICMP.h", "ICMPv4_Socket.cpp", "ICMPv4_Socket.h", "IPv4_ICMP_Receive.ah", "Sendbuffer_icmp.ah", "Sendbuffer_icmp_checksum.ah"]
 			},
 			{
 				"vname" : "ICMP over IPv4 - Echo Reply",
@@ -773,7 +773,7 @@
 			"subdir" : "/icmpv6",
 			"comp" : [
 			{
-				"files" : ["Demux_IPv6_ICMP_Slice.ah", "ICMPv6.h", "ICMPv6_Socket.cpp", "ICMPv6_Socket.h", "ICMPv6_Socket.ah", "IPv6_ICMP_Receive.ah", "SendBuffer_icmpv6.ah", "Sendbuffer_icmpv6_checksum.ah"]
+				"files" : ["Demux_IPv6_ICMP_Slice.ah", "ICMPv6.h", "ICMPv6_Socket.cpp", "ICMPv6_Socket.h", "IPv6_ICMP_Receive.ah", "SendBuffer_icmpv6.ah", "Sendbuffer_icmpv6_checksum.ah"]
 			},
 			{
 				"depends" : "&ipstack_debug_delay_send",
@@ -972,7 +972,7 @@
 			},
 			{
 				"depends" : "&ipstack_udp_services",
-				"files" : ["Management_UDP_Socket.cpp", "Management_UDP_Socket.h", "Management_UDP_Socket.ah"]
+				"files" : ["Management_UDP_Socket.cpp", "Management_UDP_Socket.h"]
 			},
 			{
 				"depends" : "&ipstack_udp_services_v4",
@@ -999,7 +999,7 @@
 			},
 			{
 				"depends" : "&ipstack_tcp_reset",
-				"files" : ["Management_TCP_Socket.cpp", "Management_TCP_Socket.h", "Management_TCP_Socket.ah"]
+				"files" : ["Management_TCP_Socket.cpp", "Management_TCP_Socket.h"]
 			},
 			{
 				"subdir" : "/statemachine",
