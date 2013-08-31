@@ -19,7 +19,8 @@ If you already use the CMake buildsystem, integrating the IP-Stack is very easy 
 modify the ipstack without having explicit APIs to all and every function of this software.
 
 If you do not use CMake nor AspectC++ in your project you still have the option of building a
-static library with a plain [**C++** / **C**](doc/aspectless_socket_api.md) API for using TCP and UDP sockets on IPv4/IPv6.
+static library with a plain [**C++** / **C**](doc/aspectless_integration_api.md) Integration API
+for using TCP and UDP sockets on IPv4/IPv6.
 You find well documented examples in the linux userspace integration directory.
 
 > Please use the ticket system of github for bugs and feature suggestions.
@@ -27,7 +28,6 @@ You find well documented examples in the linux userspace integration directory.
 Work in progress (September 2013):
 -------------------------------
 This software is **NOT USABLE** in its current state. TODO:
-- Work on this documentation
 - Add linux userspace ipstack support via raw sockets or tun device.
 - Add API for non-multitasking support
 - Add API for management sockets in own task.
@@ -37,7 +37,7 @@ This software is **NOT USABLE** in its current state. TODO:
 Features
 ========
 * Highly configurable at build time
-* BSD-like (event based) sockets API
+* BSD-like (event based) [sockets API](doc/socket_api.md)
 * Own memory management for ressource restricted systems. We not not use the heap in the default configuration.
 * Only thin interface to your OS/APP has to be provided, IRQ/Multitask safe
 
@@ -99,19 +99,24 @@ Building: With/Without Aspect-oriented integration
 After building this software you have a static library that either has the integration with your
 app/os weaved in via aspects (see [_Aspect-oriented integration_](doc/aspect_integration_api.md))
 or provides a [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
-You may obtain CMake for building the library at http://www.cmake.org.
+You may obtain CMake for configuring the buildsystem at http://www.cmake.org.
 Additionally you need the aspectc++ compiler from http://www.aspectc.org.
-We only explain the graphical way of configuring the build system (cmake-gui), but you may also use
+We only explain the graphical way of configuring the build system (`cmake-gui`), but you may also use
 the command line version.
 * Create a directory called "build" (or any other name).
 * Start cmake-gui and select the top directory as source and the "build" directory as build directory.
 * Click __"configure"__.
-* A popup will appear and ask for the target build system. We assume you are using `make`.
+* A popup will appear and ask for the target build system.
+  We assume you are using `make` for buildsystem project files.
 
 ![Picture of cmake](doc/cmake.png)
 
-You will be presented with some build options that are discussed in the following sections. If you are done
-with configuring the buildsystem click on click __"generate"__. Depending on your selection in the first
+You will be presented with some build options.
+* __"BUILD_ONLY_ONE_TASK"__ will disable multitask support and is discussed in the section below.
+* __"BUILD_WITH_ASPECTLESS_INTERFACE"__ will provide the pure,
+aspectless [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
+
+If you are done with configuring the buildsystem click on __"generate"__. Depending on your selection in the first
 popup you have VisualStudio project files, make files or something else in your build directory.
 * Change to your build directory.
 * Execute `make`. This will download and build the kconfig-frontend and automatically open the configuration editor.
@@ -147,10 +152,8 @@ If your buildsystem is CMake based you just need to use `add_subdirectory(aspect
 your target depends on `libipstack`. Futher information can be found [here](doc/include_in_cmake_based_project.md).
 This allows you to use aspects to weave in more complex integration like
 using network cards capability of calculating checksums etc.
-For other buildsystems you may prebuild the static library and just use it with the C/C++ APIs.
-
-In contrast if you just want to provide an interface for connecting the
-ipstack with your network hardware and use it as it is skip that section and read the _Static-library integration_ one.
+For other buildsystems you may prebuild the static library and just use it with the
+aspectless [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
 
 Examples
 ========
@@ -231,3 +234,8 @@ License
 The buildsystem, example and integration code is licensed under the terms of the BSL 2-clause license.
 The ipstack source code is GPL3 licensed. Please be aware of the implication: Because this software
 is usally build as static library, your code have to be GPL3 compatible code.
+
+Authors
+=======
+This software originated as a research project at the [University of Dortmund, Germany](www.tu-dortmund.de)
+and has been created mainly by Christoph Borchert and David Gräff.
