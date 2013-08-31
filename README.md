@@ -6,8 +6,9 @@ This network stack is written in C++/AspectC++ and because it is build and desig
 you may select your desired functionallity during build time in a very fine grained way and on the same time
 the code retains maintainability.
 
-The *Aspect-IP-Stack* is plattform agnostic and supports little and big endian systems and have been tested
-on x86 32/64bit as well as arm 32bit and msp430 16bit and avr 8bit processors.
+The *Aspect-IP-Stack* is plattform agnostic and supports little and big endian systems. It has been tested
+on `x86 32-bit`/`x86 64-bit` as well as `arm 32-bit`, `msp430 16-bit` and `avr 8-bit` processors
+([Supported Platforms](doc/supported_platforms.md)).
 
 There are two examples of integrating the IP-Stack into operating systems for embedded systems (CiAO-OS and Chibi-OS)
 and another example of using it as a linux userspace application on a tun-device. The last one allows us to easily
@@ -15,11 +16,11 @@ debug and measure the code and using test-driven development for an efficient an
 
 If you already use the CMake buildsystem, integrating the IP-Stack is very easy and explained
 [here](doc/include_in_cmake_based_project.md). Use application aspects for easily interfere and
-modify the ipstack to your needs without touching the core source code.
+modify the ipstack without having explicit APIs to all and every function of this software.
 
 If you do not use CMake nor AspectC++ in your project you still have the option of building a
-static library with a plain **C++** / **C** API.
-For well commented examples look at the linux userspace integrations.
+static library with a plain **C++** / **C** API for using TCP and UDP sockets on IPv4/IPv6.
+You find well documented examples in the linux userspace integration directory.
 
 > Please use the ticket system of github for bugs and feature suggestions.
 
