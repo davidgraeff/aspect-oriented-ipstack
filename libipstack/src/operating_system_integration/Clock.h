@@ -19,7 +19,7 @@
 #ifndef __IPSTACK_CLOCK__
 #define __IPSTACK_CLOCK__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

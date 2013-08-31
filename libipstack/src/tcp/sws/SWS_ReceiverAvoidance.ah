@@ -19,7 +19,7 @@
 #ifndef __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
 #define __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "../TCP_Socket.h"
 
 using namespace ipstack;

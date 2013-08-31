@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "TCP_Socket.h"
 
 using namespace ipstack;

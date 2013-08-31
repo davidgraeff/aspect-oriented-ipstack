@@ -19,7 +19,7 @@
 #ifndef __INTERFACE_IPV4_SLICE__
 #define __INTERFACE_IPV4_SLICE__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "IPv4.h"
 
 using namespace ipstack;

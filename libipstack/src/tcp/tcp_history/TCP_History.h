@@ -19,7 +19,7 @@
 #ifndef __TCP_HISTORY_H__
 #define __TCP_HISTORY_H__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "tcp/TCP.h"
 #include "tcp/TCP_Config.h"
 #include "TCP_Record.h"

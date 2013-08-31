@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "util/Mempool.h"
 #include "ReceiveBuffer.h"
 #include <string.h> //for memcpy

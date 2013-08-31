@@ -24,7 +24,7 @@
  */
 
 #include "../ndpcache/NDPCacheEntry.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 using namespace ipstack;
 
 slice class IPv6_DEST_CACHE_Slice

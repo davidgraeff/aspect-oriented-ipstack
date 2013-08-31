@@ -24,7 +24,7 @@
 #include "router/Interface.h"
 #include "demux/Demux.h"
 #include "SendBuffer.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 /**
  * Purpose: Joins and leaves multicast scopes. This is Version 1 of the protocol. (Version 2 is current)

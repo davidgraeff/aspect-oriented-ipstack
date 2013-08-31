@@ -19,7 +19,7 @@
 #ifndef __TCP__
 #define __TCP__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "ip/InternetChecksum.h"
 
 namespace ipstack {

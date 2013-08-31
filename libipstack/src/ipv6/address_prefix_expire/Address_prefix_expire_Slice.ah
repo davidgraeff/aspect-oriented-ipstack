@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 /**

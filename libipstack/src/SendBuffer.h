@@ -20,7 +20,7 @@
 #include "util/Mempool.h"
 #include "router/Interface.h"
 #include <string.h> //for memcpy
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 namespace ipstack
 {
 

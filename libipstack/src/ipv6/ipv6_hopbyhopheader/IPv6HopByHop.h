@@ -20,7 +20,7 @@
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/IPv6.h"
 #include "ipv6/IPv6onSockets.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "../ExtensionHeaderOptions.h"
 namespace ipstack
 {

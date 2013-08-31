@@ -19,7 +19,7 @@
 
 #include "router/Interface.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 namespace ipstack
 {
 /**

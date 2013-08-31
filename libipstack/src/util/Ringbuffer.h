@@ -19,7 +19,7 @@
 #ifndef __IPSTACK_RINGBUFFER_H__
 #define __IPSTACK_RINGBUFFER_H__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 #include "RingbufferBase.h"
 #include "IPStack_Config.h"

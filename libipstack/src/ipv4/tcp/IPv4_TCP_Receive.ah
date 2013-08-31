@@ -23,7 +23,7 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "../InternetChecksum.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 

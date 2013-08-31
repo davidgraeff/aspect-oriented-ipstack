@@ -21,7 +21,7 @@
  * should be optimized out if not used by the compiler and do not need seperate aspects.
  */
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h>
 
 #define IP_STR_VALUE(arg)      #arg

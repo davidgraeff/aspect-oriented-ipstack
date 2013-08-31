@@ -16,7 +16,7 @@
 // Copyright (C) 2011-2012 Christoph Borchert, David Gräff
 
 #pragma once
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

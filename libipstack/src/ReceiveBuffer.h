@@ -38,7 +38,7 @@
  * ReceiveBufferUDPipV6* r_ipv6 = ReceiveBufferUDPipV6::cast(r);
  */
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "util/Mempool.h"
 #include <string.h> //for memcpy
 

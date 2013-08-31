@@ -22,7 +22,7 @@
 #include "util/Ringbuffer.h"
 
 #include <string.h>
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 namespace ipstack
 {
 class SendBuffer;

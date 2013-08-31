@@ -19,7 +19,7 @@
 #ifndef __ETH_FRAME__
 #define __ETH_FRAME__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 
 namespace ipstack {

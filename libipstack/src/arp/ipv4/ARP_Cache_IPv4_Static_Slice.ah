@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_STATIC_SLICE__
 #define __ARP_CACHE_IPV4_STATIC_SLICE__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 
 using namespace ipstack;

@@ -19,7 +19,7 @@
 #ifndef __TCP_RECVELEMENT_H__
 #define __TCP_RECVELEMENT_H__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "../TCP.h"
 
 namespace ipstack {

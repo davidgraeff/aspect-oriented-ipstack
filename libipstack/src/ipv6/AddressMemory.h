@@ -21,7 +21,7 @@
 #include "ndpcache/NDPCacheEntry.h"
 #include "IPv6_Config.h"
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack
 {

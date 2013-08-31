@@ -19,7 +19,7 @@
 #ifndef __ETH_ARP_IPV4_PACKET__
 #define __ETH_ARP_IPV4_PACKET__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "ethernet/Eth_Frame.h"
 #include "../ARP.h"
 #include "router/Interface.h"

@@ -21,7 +21,7 @@
  * will introduce a head pointer for a linked list for binded sockets.
  */
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "UDP_Socket.h"
 #include "UDP.h"
 

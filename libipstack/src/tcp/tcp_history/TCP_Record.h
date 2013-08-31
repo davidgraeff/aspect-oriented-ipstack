@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "../TCP.h"
 #include "SendBuffer.h"
 #include "operating_system_integration/Clock.h"

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "../router/Interface.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

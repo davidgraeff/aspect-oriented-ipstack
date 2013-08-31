@@ -21,7 +21,7 @@
 #include "../../../demux/Demux.h"
 #include "../../../router/Interface.h"
 #include "hopbyhop_alertMessage_IPv6_Slice.ah"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 

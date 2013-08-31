@@ -31,7 +31,7 @@
 #include "router/Interface.h"
 #include "router/Router.h"
 #include "demux/Demux.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 aspect NDP_Redirect {
 	// Redirect message

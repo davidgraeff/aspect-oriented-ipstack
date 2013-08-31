@@ -19,7 +19,7 @@
 #ifndef __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
 #define __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 //using namespace ipstack;
 

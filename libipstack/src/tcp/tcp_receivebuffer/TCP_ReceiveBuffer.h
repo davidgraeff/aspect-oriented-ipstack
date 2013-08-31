@@ -19,7 +19,7 @@
 #ifndef __TCP_RECEIVEBUFFER_H__
 #define __TCP_RECEIVEBUFFER_H__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "tcp/TCP.h"
 #include "tcp/TCP_Config.h"
 #include "TCP_RecvElement.h"

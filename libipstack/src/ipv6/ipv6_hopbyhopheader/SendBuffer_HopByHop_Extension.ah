@@ -22,7 +22,7 @@
 #include "../IPv6onSockets.h"
 #include "SendBuffer.h"
 #include "IPv6HopByHop.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 

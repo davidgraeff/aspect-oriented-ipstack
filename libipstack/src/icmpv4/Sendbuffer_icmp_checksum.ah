@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "router/Interface.h"
 #include "SendBuffer.h"
 #include "icmpv4/ICMP.h"

@@ -19,7 +19,7 @@
 #ifndef __ARP_H__
 #define __ARP_H__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

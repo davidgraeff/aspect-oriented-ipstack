@@ -25,7 +25,7 @@
 #include "../Socket_IPv4_Slice.ah"
 #include "ReceiveBufferUDPIPv4.h"
 #include "Demux_UDP_IPv4_Slice.ah"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 

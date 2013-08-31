@@ -23,7 +23,7 @@
 #include "SendBuffer.h"
 #include "ip_management_memory/ManagementMemory.h"
 #include <string.h>
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack
 {

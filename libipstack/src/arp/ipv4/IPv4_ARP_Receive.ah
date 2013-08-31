@@ -19,7 +19,7 @@
 #ifndef __IPv4_ARP_RECEIVE_AH__
 #define __IPv4_ARP_RECEIVE_AH__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"

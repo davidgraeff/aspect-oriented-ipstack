@@ -20,7 +20,7 @@
 #define __ROUTER_IPV4_SLICE__
 
 #include "../router/Interface.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 

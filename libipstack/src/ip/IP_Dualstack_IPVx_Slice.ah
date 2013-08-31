@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 slice class IP_Dualstack_IPVx_Slice {
 public:

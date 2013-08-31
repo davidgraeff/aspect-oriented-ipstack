@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_GLOBAL_TIMEOUT_AH__
 #define __ARP_CACHE_GLOBAL_TIMEOUT_AH__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "operating_system_integration/Clock.h"
 #include "ARP_Cache.h"
 

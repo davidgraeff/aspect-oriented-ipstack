@@ -21,7 +21,7 @@
  * should be optimized out if not used by the compiler and do not need a seperate aspects.
  */
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

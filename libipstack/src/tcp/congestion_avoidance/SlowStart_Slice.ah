@@ -19,7 +19,7 @@
 #ifndef __TCP_SLOWSTART_SLICE__
 #define __TCP_SLOWSTART_SLICE__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 
 slice class TCP_SlowStart_Slice {

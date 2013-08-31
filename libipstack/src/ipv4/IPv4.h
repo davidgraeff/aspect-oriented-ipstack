@@ -19,7 +19,7 @@
 #ifndef __IPV4__
 #define __IPV4__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

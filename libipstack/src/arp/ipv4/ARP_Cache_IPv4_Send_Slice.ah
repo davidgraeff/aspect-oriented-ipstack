@@ -19,7 +19,7 @@
 #ifndef __ARP_CACHE_IPV4_SEND_SLICE__
 #define __ARP_CACHE_IPV4_SEND_SLICE__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"

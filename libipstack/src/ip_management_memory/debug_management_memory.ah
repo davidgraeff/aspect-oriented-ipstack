@@ -16,7 +16,7 @@
 // Copyright (C) 2013 David Gräff
 #pragma once
 #include <string.h>
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "operating_system_integration/System.h"
 #include "operating_system_integration/Clock.h"
 #include "SendBuffer.h"

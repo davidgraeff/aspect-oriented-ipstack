@@ -20,7 +20,7 @@
 #define __INTERNET_CHECKSUM__
 
 #include "IPv4.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 

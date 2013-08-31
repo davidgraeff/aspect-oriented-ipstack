@@ -23,7 +23,7 @@
 #include "SendBuffer.h"
 #include "icmpv6/ICMPv6.h"
 #include "icmpv6/ICMPv6_Socket.h"
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "NDPMessages.h"
 namespace ipstack
 {

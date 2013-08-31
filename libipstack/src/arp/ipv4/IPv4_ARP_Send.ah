@@ -19,7 +19,7 @@
 #ifndef __IPV4_ARP_SEND_AH__
 #define __IPV4_ARP_SEND_AH__
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 #include "router/Interface.h"
 #include "../ARP.h"

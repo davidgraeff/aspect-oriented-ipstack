@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include <string.h>
 

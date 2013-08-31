@@ -17,7 +17,7 @@
 
 
 #pragma once
-#include <inttypes.h>
+#include "util/ipstack_inttypes.h"
 
 slice class MSS_TCP_Socket_Slice{
 public:
