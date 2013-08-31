@@ -215,19 +215,27 @@ routing incoming and outgoing traffic to and from the ipstack and at the same ti
 provide the application layer. We show how to use the IP::periodic() and
 IP::is_reachable(...) methods.
 
-__ciao_os:__ The ipstack origins at this operating system for embedded systems. Therefore
-support and maintainance are good for this integration. CiAO implements AutoSar
+__ciao_os:__ The ipstack originated as a research project and extension of the
+CiAO operating system for embedded systems. Therefore
+support and maintainance are best for this integration. CiAO implements AutoSar
 Events and Alarms and is multitasking capable. Usually there exists the system task
 where traffic is received and the user task where traffic is generated and consumed.
 The integration features IRQ-safeness, reschedules instead of inefficent waits and
 task sleep if waiting for a packet.
 
-**chibi_os**: __TODO__
+**chibi_os**: To showcase the ability of integrating this piece of software into
+another system, we decided to extend chibi os by another ip-stack.
+Efficient multitasking support is implemented and the provided network drivers are used
+for an [Arm 32Bit ENC28J60](doc/supported_platforms.md) based test board.
 
-Further reading
-===============
-* papers
-__TODO__
+Collaborate
+===========
+To understand the project structure we provide some documentation as markdown readme files
+within the code tree and in the `doc` directory. A good starting point is [here](doc/collaborate_index.md).
+We tried to organize source files in an intuitive manner, if you're looking for a detail of the IPv4
+implementation your first try should be the `ipv4` subdir. Design decisions are mainly explained in the
+research papers linked at the bottom of this text (in german). The best way to collaborate 
+is to use github via forks and the issue tracker.
 
 License
 =======
@@ -239,3 +247,6 @@ Authors
 =======
 This software originated as a research project at the [University of Dortmund, Germany](http://www.tu-dortmund.de)
 and has been created mainly by Christoph Borchert and David Gräff.
+* [Entwicklung eines aspektorientierten TCP/IP-Stacks für eingebettete Systeme](http://ess.cs.tu-dortmund.de/Teaching/Theses/2010/DA_Borchert_2010.pdf)
+* [IPv6: Aspektorientierte Erweiterung eines Netzwerkprotokoll-Stacks für eingebettete Systeme](http://ess.cs.tu-dortmund.de/Teaching/Theses/2012/BA_Graeff_2012.pdf)
+* [CiAO/IP: a highly configurable aspect-oriented IP stack](http://faculty.pucit.edu.pk/fawaz/cs533/lectures/smartphone/p435-borchert.pdf)
