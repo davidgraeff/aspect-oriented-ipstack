@@ -157,11 +157,12 @@ aspectless [**C++** / **C** Integration](doc/aspectless_integration_api.md) API.
 
 Examples
 ========
-We provide some example applications and example integrations.
-The applications aren't executable on their own without an integration.
 
 Example applications
---------------------
+====================
+We provide some example applications and example integrations into projects/operating systems.
+These applications listed below aren't executable on their own without an integration.
+
 __http_simple_server:__ Provides a very simple http server. Only one page
 is returned and the http headers and content are statically compiled in.
 
@@ -232,8 +233,8 @@ Collaborate
 ===========
 To understand the project structure we provide some documentation as markdown readme files
 within the code tree and in the `doc` directory. A good starting point is [here](doc/collaborate_index.md).
-We tried to organize source files in an intuitive manner, if you're looking for a detail of the IPv4
-implementation your first try should be the `ipv4` subdir. Design decisions are mainly explained in the
+We tried to organize source files in an intuitive manner, for example if you're looking for a detail of the IPv4
+implementation, your first try should be the `ipv4` subdir. Design decisions are mainly explained in the
 research papers linked at the bottom of this text (in german). The best way to collaborate 
 is to use github via forks and the issue tracker.
 
