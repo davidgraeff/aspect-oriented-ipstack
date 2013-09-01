@@ -18,7 +18,7 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "router/Interface.h"
 #include "NDPNeighborMessages.h"
 

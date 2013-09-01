@@ -19,10 +19,10 @@
 #ifndef __IPV4_FORWARD_AH__
 #define __IPV4_FORWARD_AH__
 
-#include "IPv4.h"
-#include "../router/Router.h"
-#include "../router/Interface.h"
-#include "../demux/Demux.h"
+#include "ipv4/IPv4_Packet.h"
+#include "router/Router.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
 
 using namespace ipstack;
 
@@ -41,14 +41,11 @@ aspect IPv4_Forward {
 		Interface* ir = router.ipv4_find_route(packet->get_dst_ipaddr());
 		if (ir == 0) {
 			//destination is NOT on a local link. use gateway
-			//printf("Using default gateway: \n");
 			ir = router.ipv4_find_route(router.ipv4_get_gateway_addr());
 		}
 		//std::cout << "Routing over: " << (const char*) ir->name << std::endl;
-		//printf("Routing over: TODO\n");
 		if ((ir != 0) && (ir != interface)) {
 			//TODO: route this paket -> copy it to userspace routing daemon?
-			//printf("TODO: implement routing of this packet ;-)\n");
 		}
 
 	}

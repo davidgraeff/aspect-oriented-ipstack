@@ -7,18 +7,6 @@ cmake_minimum_required (VERSION 2.8.8)
 if(NOT CMAKE_ACXX_COMPILER_WORKS)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../buildsystem/acxx")
 	enable_language(ACXX)
-
-	# Determine the ag++ version
-	if(CMAKE_REAL_ACXX_COMPILER)
-		execute_process(COMMAND ${CMAKE_REAL_ACXX_COMPILER} "--version" 
-						OUTPUT_VARIABLE ACXX_VERSION
-						OUTPUT_STRIP_TRAILING_WHITESPACE)
-		string(REGEX REPLACE "^ac\\+\\+ ([0-9.]*) .*" "\\1" ACXX_VERSION "${ACXX_VERSION}")
-	else()
-		SET(ACXX_VERSION "BLA ${CMAKE_REAL_ACXX_COMPILER}" )
-	endif()
-
-	MESSAGE(STATUS "ACXX Version: ${ACXX_VERSION}")
 endif()
 if(NOT CMAKE_ACXX_COMPILER_WORKS)
   message(FATAL_ERROR "Required working ACXX compiler not found.")

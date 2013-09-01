@@ -21,8 +21,8 @@
 
 #include "Eth_Frame.h"
 #include "Demux_Ethernet_Slice.ah"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

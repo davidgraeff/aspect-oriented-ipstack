@@ -21,11 +21,11 @@
 #include "ipv6/AddressMemory.h"
 #include "ipv6/RouteResult.h"
 #include "router/Router.h"
-#include "SendBuffer.h"
-#include "../IPv6onSockets.h"
+#include "sending/SendBuffer.h"
+#include "ipv6/IPv6onSockets.h"
 #include "Interface_Multicast_Slice.ah"
 
-// #include "../IPv6.h"
+// #include "ipv6/IPv6_Packet.h"
 // #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;

@@ -1,7 +1,7 @@
 #include "IPv4onSockets.h"
-#include "../router/Interface.h"
-#include "../router/Router.h"
-#include "IPv4.h"
+#include "router/Interface.h"
+#include "router/Router.h"
+#include "IPv4_Packet.h"
 
 namespace ipstack {
 	

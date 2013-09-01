@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include "util/Mempool.h"
-#include "util/Ringbuffer.h"
+#include "memory_management/SocketMemory.h"
 #include "demux/DemuxLinkedListContainer.h"
 #include <string.h>
 
@@ -27,50 +26,35 @@ namespace ipstack
 
 class UDP_Packet;
 /**
- * Do not use this UDP_Socket directly but use the API version in IP:UDP_Socket.
- * This class allows to set the ports on a udp socket. Aspect slices are inserted
- * from IPv4 and IPv6 to provide the send and receive functionality.
+ * UDP Socket. You will see only a few API methods here in the code. Sending/Receiving is added per
+ * aspect slice.
  */
-class UDP_Socket : public DemuxLinkedList<UDP_Socket>
+class UDP_Socket : public UDP_Socket_Private, public DemuxLinkedList<UDP_Socket>, public SocketMemory
 {
 	public:
-		~UDP_Socket() {}
+		// Construct with socket memory
+		UDP_Socket(const SocketMemory& memory);
+		~UDP_Socket();
 		
 		/// Destination port
-		void set_dport(uint16_t d) {
-			dport = d;
-		}
-		uint16_t get_dport() {
-			return dport;
-		}
+		void set_dport(uint16_t d);
+		uint16_t get_dport();
 
 		/// Source port
-		void set_sport(uint16_t s) {
-			sport = s;
-		}
-		uint16_t get_sport() {
-			return sport;
-		}
+		void set_sport(uint16_t s);
+		uint16_t get_sport();
 
-		bool bind() {return false;}
-		void unbind() {}
-	private:
-		Packetbuffer* m_receivequeue;
-		Mempool* mempool; // set by API
-		uint16_t dport;
-		uint16_t sport;
-
-		void setupHeader(UDP_Packet* packet, unsigned datasize) ;
-
-	protected:
-		//do not allow construction: only derived classes (API) may be instantiated
-		UDP_Socket() ;
-
-		void set_Mempool(Mempool* m) ;
-		Mempool* get_Mempool() ;
-
-		void set_ReceiveQueue(Packetbuffer* buf) ;
-
+		/**
+		 * Bind this socket to the source port you have set before.
+		 * You do not need to call unbind/bind to set a new source port.
+		 */
+		bool bind();
+		/**
+		 * Unbind this socket from the source port you have set before.
+		 * This is called automatically on destruction of the socket. 
+		 * You do not need to call unbind/bind to set a new source port.
+		 */
+		void unbind();
 };
 
 } //namespace ipstack

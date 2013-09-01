@@ -20,7 +20,7 @@
  * Purpose: Get mac addresses from ethernet and make ip addresses out of them
  */
 
-#include "../IPv6iphc.h"
+#include "ipv6/IPv6iphc.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "ethernet/Eth_Frame.h"

@@ -20,10 +20,10 @@
 #define __TCP_HISTORY_H__
 
 #include "util/ipstack_inttypes.h"
-#include "tcp/TCP.h"
+#include "tcp/TCP_Segment.h"
 #include "tcp/TCP_Config.h"
 #include "TCP_Record.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 
 namespace ipstack {
 

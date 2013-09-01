@@ -16,14 +16,14 @@
 // Copyright (C) 2012 David Gräff
 #pragma once
 #include "util/ipstack_inttypes.h"
-#include "stdio.h"
+#include <iostream>
 
 using namespace ipstack;
 
 aspect internetchecksum_debug {
 	advice execution("bool ipstack::%::checksum_valid(%, %, ipstack::Interface*)") : after() {
 		if (*tjp->result() == false) {
-			printf("Checksum calculation failed: %s!\n", tjp->signature());
+			std::cout<< "Checksum calculation failed: " << tjp->signature() << std::endl;
 		}
 	}
 };

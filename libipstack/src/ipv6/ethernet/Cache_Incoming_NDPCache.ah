@@ -21,8 +21,8 @@
 #include "ethernet/Eth_Frame.h"
 #include "router/Router.h"
 #include "demux/Demux.h"
-#include "SendBuffer.h"
-#include "ipv6/IPv6.h"
+#include "sending/SendBuffer.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/AddressMemory.h"
 
@@ -43,7 +43,6 @@ aspect IPv6_Ethernet_NDPCache_Incoming_Aspect {
 		if (memcmp(eth_frame->get_dst_hwaddr(), interface->getAddress(), 6) == 0) {
 			// This frame is not a broadcast but directed to us
 			IPv6_Packet* ipv6_packet = (IPv6_Packet*)eth_frame->get_data();
-// 			printf("Precaching ehernet ndp cache\n");
 			NDPCacheEntry* entry = interface->addNDPCacheEntry(ipv6_packet->get_src_ipaddr(), eth_frame->get_src_hwaddr(), NDPCacheEntry::NDPCacheEntryState_Reachable);
 			if (entry)
 				interface->update_NDPCacheEntry_importance(entry, NDPCacheEntry::IMPORTANCE_good_to_know);

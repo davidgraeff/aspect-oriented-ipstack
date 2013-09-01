@@ -1,0 +1,85 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/IPv6/InternetChecksum.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "ICMPv6_Packet.h"
+#include <iostream>
+
+using namespace ipstack;
+
+/**
+ * This aspect just outputs all ICMPv6 messages on the screen
+ */
+aspect IPv6_ICMP_Receive_Output {
+	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") : 
+	order( "IPv6_ICMP_Receive_Output","%" && !"IPv6_ICMP_Receive_Output" );
+	
+	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
+		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+		std::cout << "ICMPv6: ";
+
+		switch (icmp_packet->get_type()) {
+			case 1: std::cout << "Destination Unreachable"; break;
+			case 2: std::cout << "Packet Too Big"; break;
+			case 3: std::cout << "Time Exceeded"; break;
+			case 4: std::cout << "Parameter Problem"; break;
+			case 128: std::cout << "Echo Request"; break;
+			case 129: std::cout << "Echo Reply"; break;
+			case 130: std::cout << "Multicast Listener Query"; break;
+			case 131: std::cout << "Multicast Listener Report"; break;
+			case 132: std::cout << "Multicast Listener Done"; break;
+			case 133: std::cout << "Router Solicitation"; break;
+			case 134: std::cout << "Router Advertisement"; break;
+			case 135: std::cout << "Neighbor Solicitation"; break;
+			case 136: std::cout << "Neighbor Advertisement"; break;
+			case 137: std::cout << "Redirect Message"; break;
+			case 138: std::cout << "Router Renumbering"; break;
+			case 139: std::cout << "ICMP Node Information Query"; break;
+			case 140: std::cout << "ICMP Node Information Response"; break;
+			case 141: std::cout << "Inverse Neighbor Discovery Solicitation Message"; break;
+			case 142: std::cout << "Inverse Neighbor Discovery Advertisement Message"; break;
+			case 143: std::cout << "Version 2 Multicast Listener Report"; break;
+			case 144: std::cout << "Home Agent Address Discovery Request Message"; break;
+			case 145: std::cout << "Home Agent Address Discovery Reply Message"; break;
+			case 146: std::cout << "Mobile Prefix Solicitation"; break;
+			case 147: std::cout << "Mobile Prefix Advertisement"; break;
+			case 148: std::cout << "Certification Path Solicitation Message"; break;
+			case 149: std::cout << "Certification Path Advertisement Message"; break;
+			case 150: std::cout << "ICMP messages utilized by experimental mobility protocols such as Seamoby"; break;
+			case 151: std::cout << "Multicast Router Advertisement"; break;
+			case 152: std::cout << "Multicast Router Solicitation"; break;
+			case 153: std::cout << "Multicast Router Termination"; break;
+			case 154: std::cout << "FMIPv6 Messages"; break;
+			case 155: std::cout << "RPL Control Message"; break;
+			case 156: std::cout << "ILNPv6 Locator Update Message"; break;
+			case 157: std::cout << "Duplicate Address Request"; break;
+			case 158: std::cout << "Duplicate Address Confirmation"; break;
+			default:
+				std::cout << "unknown";
+		};
+
+		std::cout << "; Code "<<icmp_packet->get_code()<<"; IPv6 Packetpointer " << packet << std::endl;
+		
+		tjp->proceed();
+	}
+};

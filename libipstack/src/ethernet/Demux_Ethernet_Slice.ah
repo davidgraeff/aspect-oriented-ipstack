@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../router/Interface.h"
+#include "router/Interface.h"
 #include "Eth_Frame.h"
 
 using namespace ipstack;

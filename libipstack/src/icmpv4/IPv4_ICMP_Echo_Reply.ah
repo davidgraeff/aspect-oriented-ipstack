@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "../ipv4/IPv4.h"
-#include "../ipv4/InternetChecksum.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
-#include "ICMP.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv4/InternetChecksum.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "icmpv4/ICMPv4_Packet.h"
 #include "ICMPv4_Socket.h"
 
 using namespace ipstack;
@@ -34,8 +34,8 @@ aspect IPv4_ICMP_Echo_Reply {
 	args(packet, payloadlen, interface) && that(demux) :
 		around(IPv4_Packet* packet, unsigned payloadlen, Interface* interface, Demux& demux) {
 
-		ICMP_Packet* icmp_packet = (ICMP_Packet*) packet->get_data();
-		if ((icmp_packet->get_type() == ICMP_Packet::ICMP_TYPE_ECHO_REQUEST) && (icmp_packet->get_code() == ICMP_Packet::ICMP_CODE_ECHO)) {
+		ICMPv4_Packet* icmp_packet = (ICMPv4_Packet*) packet->get_data();
+		if ((icmp_packet->get_type() == ICMPv4_Packet::ICMP_TYPE_ECHO_REQUEST) && (icmp_packet->get_code() == ICMPv4_Packet::ICMP_CODE_ECHO)) {
 			
 			ICMPv4_Socket &icmpv4instance = ICMPv4_Socket::instance();
 			
@@ -51,14 +51,14 @@ aspect IPv4_ICMP_Echo_Reply {
 			SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, payloadlen);
 			//we have an echo request packet for IPv4
 			if (sbi) {
-				ICMP_Packet* reply_icmp = (ICMP_Packet*)sbi->getDataPointer();
+				ICMPv4_Packet* reply_icmp = (ICMPv4_Packet*)sbi->getDataPointer();
 
-				reply_icmp->set_type(ICMP_Packet::ICMP_TYPE_ECHO_REPLY);
+				reply_icmp->set_type(ICMPv4_Packet::ICMP_TYPE_ECHO_REPLY);
 				reply_icmp->set_code(0);
 				reply_icmp->set_quench(icmp_packet->get_quench());
-				sbi->writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
+				sbi->writtenToDataPointer(ICMPv4_Packet::ICMP_HEADER_SIZE);
 				// append original payload of the source icmp packet
-				sbi->write(icmp_packet->get_data(), payloadlen-ICMP_Packet::ICMP_HEADER_SIZE);
+				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv4_Packet::ICMP_HEADER_SIZE);
 
 				icmpv4instance.send(sbi);
 			}

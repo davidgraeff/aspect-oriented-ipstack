@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "udp/UDP.h"
+#include "udp/UDP_Packet.h"
 #include "udp/UDP_Socket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "../IPv4.h"
+#include "ipv4.h"
 #include "../Socket_IPv4_Slice.ah"
 #include "ReceiveBufferUDPIPv4.h"
 #include "Demux_UDP_IPv4_Slice.ah"

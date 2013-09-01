@@ -1,0 +1,89 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "ipv6/IPv6_Packet.h"
+#include "router/Interface.h"
+
+using namespace ipstack;
+
+slice class Demux_IPv6_Slice {
+private:
+    void ipv6_demux ( IPv6_Packet* packet, unsigned len, Interface* interface ) {
+        // Go through all linked next headers
+        unsigned remainingLength = packet->get_payload_len();
+		unsigned remainingLengthFailSafe = remainingLength;
+		void* payload = (void*)packet->get_payload();
+        unsigned char nextHeader = packet->get_nextheader();
+		
+		while ( !ipv6_payload_demux ( interface, packet, payload, remainingLength, nextHeader ) ) {
+			if (!remainingLength) // all bytes consumed: return
+				return;
+			// With every iteration the remainingLength should shrink: if not -> no aspect registered
+			if (remainingLength==remainingLengthFailSafe) {
+				error_no_protocol_handler_v6(packet, interface);
+				break;
+			}
+			remainingLengthFailSafe = remainingLength;
+        }
+    }
+
+    /**
+     * An IPv6 Header may have several extension headers and upper layer protocols (udp, tcp)
+     * structured by a "Linked" list: Every extension header start with a next-header byte and
+     * a length byte, that indicates the size of the current extension header in a 8-byte-unit (excluding the first
+     * eight bytes)
+     */
+    bool ipv6_payload_demux ( Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader ) {
+		return (nextHeader==59); // 59: no next protocol
+    }
+    
+    /**
+	 * Call this method if the ipv6 ttl is 0
+	 */
+	void error_ttl_v6(IPv6_Packet* ip_packet, Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+	/**
+	 * Call this method if there is no protocol handler for the given protocol
+	 */
+	void error_no_protocol_handler_v6(IPv6_Packet* ip_packet, Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+	/**
+	 * Call this method if there is an unknown option
+	 */
+	void error_option_unknown_v6(IPv6_Packet* ip_packet, Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+	/**
+	 * Call this if the receiving queue is full
+	 */
+	void error_receiving_queue_full_v6(IPv6_Packet* ip_packet, const Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	/**
+	 * Call this if the received packet does not fit into one of the available memory blocks
+	 */
+	void error_receiving_memory_too_small_v6(IPv6_Packet* ip_packet, const Interface* interface) {
+		//Aspects to be weaved here!
+	}
+};

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "../IPv4.h"
-#include "tcp/TCP.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv4/InternetChecksum.h"
+#include "tcp/TCP_Segment.h"
 #include "tcp/TCP_Socket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "../InternetChecksum.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -74,7 +74,7 @@ aspect IPv4_TCP_Receive {
 					if (socket->ipv4.get_dst_addr() == sip) {
 						if (socket->ipv4.get_src_addr() == dip) {
 							//fully qualified socket found.
-							if (socket->packetBufferFull()) {
+							if (socket->is_packetbuffer_full()) {
 								demux.error_receiving_queue_full(packet, interface);
 							}
 							else if (!socket->addToReceiveQueue(tcp_segment, len)) {

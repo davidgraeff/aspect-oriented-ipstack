@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "../../IPv6.h"
-#include "../../../demux/Demux.h"
-#include "../../../router/Interface.h"
+#include "ipv6/IPv6_Packet.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 #include "hopbyhop_alertMessage_IPv6_Slice.ah"
 #include "util/ipstack_inttypes.h"
 

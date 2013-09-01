@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "../IPv4.h"
+#include "ipv4.h"
 #include "../InternetChecksum.h"
-#include "tcp/TCP.h"
-#include "SendBuffer.h"
+#include "tcp/TCP_Segment.h"
+#include "sending/SendBuffer.h"
 
 using namespace ipstack;
 

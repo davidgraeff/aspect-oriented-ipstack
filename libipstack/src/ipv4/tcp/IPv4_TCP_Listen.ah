@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "../IPv4.h"
-#include "tcp/TCP.h"
+#include "ipv4/IPv4_Packet.h"
+#include "tcp/TCP_Segment.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 
@@ -50,12 +50,11 @@ aspect IPv4_TCP_Listen {
 				while (socket != 0) {
 					if (socket->get_sport() == tcp_segment_dport) {
 						//dport match found
-						if (socket->packetBufferFull()) {
+						if (socket->is_packetbuffer_full()) {
 							demux.error_receiving_queue_full(packet, interface);
 						} else if (!socket->addToReceiveQueue(tcp_segment, len)) {
 							demux.error_receiving_memory_too_small(packet, interface);
 						} else {
-// 							printf("IPv4_TCP_Listen LISTEN->Connected %p\n", socket);
 							demux.deaf(socket); //remove socket's 'listening' state
 							//add remote ipv4 addr
 							socket->ipv4.set_dst_addr(packet->get_src_ipaddr());

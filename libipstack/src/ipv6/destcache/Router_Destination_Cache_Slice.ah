@@ -24,7 +24,7 @@
  * If the entry expires, it is removed from all affected sockets with ipv6 enabled.
  */
 
-#include "../IPv6onSockets.h"
+#include "ipv6/IPv6onSockets.h"
 #include "../ndpcache/NDPCacheEntry.h"
 #include "util/ipstack_inttypes.h"
 using namespace ipstack;

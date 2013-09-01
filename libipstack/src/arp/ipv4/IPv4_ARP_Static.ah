@@ -19,7 +19,7 @@
 #ifndef __IPV4_ARP_STATIC_AH__
 #define __IPV4_ARP_STATIC_AH__
 
-#include "../../router/Interface.h"
+#include "router/Interface.h"
 #include "../ARP_Cache.h"
 #include "ARP_Cache_IPv4_Static_Slice.ah"
 

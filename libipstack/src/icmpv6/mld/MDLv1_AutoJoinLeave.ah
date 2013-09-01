@@ -16,14 +16,14 @@
 // Copyright (C) 2012 David Gräff
 
 #pragma once
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
-#include "../ICMPv6.h"
+#include "../ICMPv6_Packet.h"
 #include "../ICMPv6_Socket.h"
 #include "MLDMessages.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
 
 /**

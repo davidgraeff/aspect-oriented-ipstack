@@ -127,9 +127,7 @@ bool parse_ethernet_addr(const char *addrstr, uint8_t* eth_addr)
 	while (blockIndex < 6) {
 		uint8_t blockdata[2] = {0};
 		uint8_t position = 0;
-// 		printf("ebl ");
 		while(*currentCharPtr != ':') {
-// 			printf ("%c", *currentCharPtr);
 			blockdata[position] = numberFromAsciiE(*currentCharPtr);
 			++currentCharPtr;
 			if (++position > 1)

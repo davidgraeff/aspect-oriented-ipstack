@@ -19,7 +19,7 @@
 #ifndef __IPV4_RECEIVE_FRAGMENT_REASSEMBLY_AH__
 #define __IPV4_RECEIVE_FRAGMENT_REASSEMBLY_AH__
 
-#include "ipv4/IPv4.h"
+#include "ipv4/IPv4_Packet.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 
@@ -104,7 +104,7 @@ aspect IPv4_Receive_Fragment_Reassembly {
     else{
       //buffer is cold
       //if(header_len != 0){ //DEBUG ONLY
-      //  printf("IPv4 Fragment(s) discarded: Timeout!\n");
+      //  std::cout << "IPv4 Fragment(s) discarded: Timeout!" << std::endl;
       //}
       
       clear_bitmap();
@@ -125,7 +125,8 @@ aspect IPv4_Receive_Fragment_Reassembly {
       
       if(data_end > BUFFERSIZE){
         expired_time = 0; //buffer empty
-        //printf("IPv4 Fragment(s) discarded: Too big! (%lu bytes)\n", data_end);
+        //std::cout << "IPv4 Fragment(s) discarded: Too big! ("
+			//<<data_end<<" bytes)\n";
         return; //buffer too small!
       }
       

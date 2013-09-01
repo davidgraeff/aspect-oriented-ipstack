@@ -18,9 +18,9 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "../ICMPv6.h"
+#include "../ICMPv6_Packet.h"
 #include "NDPRouterMessages.h"
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/ndpcache/NDPCacheEntry.h"
 #include "ipv6/AddressMemory.h"
 #include "router/Interface.h"
@@ -73,7 +73,6 @@ aspect NDP_Router_Advertisement {
 				uint8_t nextEntry = 0;
 				while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
 					if (addressentry->routerEntryPosition == routerPosition) {
-// 						printf("NDP_Router_Advertisement flag remove %p\n", addressentry);
 						addressentry->toBeRemoved = 1;
 					}
 				}
@@ -95,7 +94,6 @@ aspect NDP_Router_Advertisement {
 							}
 
 							if (!addressentry) {
-// 								printf("NDP_Router_Advertisement add prefix %p\n", addressentry);
 								addressentry = interface->makeIPv6AddressByPrefix(routerprefix->prefix, routerprefix->prefix_length,
 											AddressEntry::AddressEntryStateTemporary,
 											routerPosition);

@@ -21,7 +21,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Socket.h"
-#include "../TCP.h"
+#include "../TCP_Segment.h"
 #include "MSS_TCP_Segment_Slice.ah"
 #include "MSS_TCP_Socket_Slice.ah"
 

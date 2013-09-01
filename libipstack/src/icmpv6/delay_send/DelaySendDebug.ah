@@ -18,8 +18,9 @@
 #pragma once
 
 #include "DelaySendMethod.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "ip_management_memory/SharedMemory.h"
+#include <iostream>
 
 using namespace ipstack;
 
@@ -34,7 +35,8 @@ aspect delay_icmpv6_send_debug {
 	  */
 	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
 		if (DelaySend::mHoldBack) {
- 			printf("delay_icmpv6_send::avoid %p, interface %p\n", dataToSend, dataToSend->getInterface());
+			std::cout << "delay_icmpv6_send::avoid "<<dataToSend <<", interface "
+				<< dataToSend->getInterface() << std::endl;
 		}
 		tjp->proceed();
 	}
@@ -45,15 +47,15 @@ aspect delay_icmpv6_send_debug {
 	
 	advice execution("% ipstack::DelaySend::sendDelayed(ipstack::SendBuffer*)") && args(buffer) : before(SendBuffer* buffer) {
 		if (buffer->getState()==SendBuffer::AboutToBeTransmittedState) {
-			printf("delay_icmpv6_send: send %p...\n", buffer);
+			std::cout << "delay_icmpv6_send: send " << buffer << std::endl;
 		} else {
-			printf("delay_icmpv6_send: already send %p\n", buffer);
+			std::cout << "delay_icmpv6_send: already send " << buffer << std::endl;
 		}
 	}
 
 	advice execution("% ipstack::Demux::icmpv6_demux(...)")  : after() {
 		if (DelaySend::mHoldBack==0) {
-			printf("delay_icmpv6_send::send now\n");
+			std::cout << "delay_icmpv6_send::send now" << std::endl;
 		}
 	}
 };

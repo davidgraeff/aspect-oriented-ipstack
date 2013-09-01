@@ -1,0 +1,76 @@
+// This file is part of Aspect-Oriented-IPv6-Extension.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IPv6-Extension.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+#include "router/Interface.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
+#include "RouteResult.h"
+
+using namespace ipstack;
+
+slice class Router_IPv6_Slice {
+public:
+	/**
+	 * Return true if this entry is useful for a route
+	 * May be influenced by other aspects to check validity (For example the Time_Expire aspect).
+	 */
+	static bool ipv6_find_route_is_matching(const ipv6addr& ipv6_dstaddr, AddressEntry* entry) {
+		return compare_ipv6_addr(ipv6_dstaddr, entry->ipv6, entry->prefixlen);
+	}
+
+	/**
+	 * Check each interface and all assigned ipv6 prefixes. If no fitting prefix was found
+	 * a default router entry is returned. If no default router is known, an invalid RouteResult
+	 * is returned.
+	 */
+	RouteResult ipv6_find_route(const ipv6addr& ipv6_dstaddr) {
+		/**
+		 * We will remember an entry for a default router
+		 */
+		RouteResult backup_default_router;
+		
+		//search for local interface. check assigned ip addresses
+		Interface* interface = head_interface;
+		while (interface != 0) {
+			if (interface->isIPv6Up()) {
+				uint8_t nextEntry = 0;
+				while (AddressEntry* entry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+					if (ipv6_find_route_is_matching(ipv6_dstaddr, entry)) {
+						return RouteResult(entry, interface);
+					}
+					if (!backup_default_router.interface && IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == IPV6AddressScope::IPV6_SCOPE_GLOBAL_UNICAST)
+						backup_default_router.proposed_src_addr = entry;
+				}
+				// Ok, we did not find a valid prefix entry. But may be there are default routers
+				if (!backup_default_router.interface) {
+					uint8_t nextEntry = 0;
+					while (NDPCacheEntry* entry = interface->addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
+						if (entry->isRouting) {
+							backup_default_router.interface = interface;
+							break;
+						}
+					}
+				}
+			}
+			interface = interface->getNext();
+		}
+		
+		backup_default_router.isDefaultRouter = true;
+		return backup_default_router;
+	}
+};

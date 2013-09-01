@@ -22,7 +22,7 @@
 #include "ethernet/Eth_Frame.h"
 #include "ethernet/EthernetAddressUtilities.h"
 #include "router/Router.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 
 using namespace ipstack;
 

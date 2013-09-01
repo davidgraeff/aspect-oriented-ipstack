@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "../IPv6.h"
-#include "tcp/TCP.h"
+#include "ipv6/IPv6_Packet.h"
+#include "tcp/TCP_Segment.h"
 #include "tcp/Management_TCP_Socket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"

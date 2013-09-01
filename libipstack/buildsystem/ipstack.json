@@ -41,7 +41,7 @@
 			"subdir" : "/ip_management_memory",
 			"comp" : [
 				{
-					"files" : ["ManagementMemory.cpp", "ManagementMemory.h", "SharedMemory.h", "SharedMemory.cpp", "SharedMemory.ah"]
+					"files" : ["SharedMemory.h", "SharedMemory.cpp", "SharedMemory.ah"]
 				},
 				{
 					"depends" : "&ipstack_debug_management_memory",

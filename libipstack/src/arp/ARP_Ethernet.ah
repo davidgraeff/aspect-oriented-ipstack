@@ -19,9 +19,9 @@
 #ifndef __ARP_ETHERNET_AH__
 #define __ARP_ETHERNET_AH__
 
-#include "../ethernet/Eth_Frame.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
+#include "ethernet/Eth_Frame.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
 #include "ARP.h"
 #include "util/ipstack_inttypes.h"
 

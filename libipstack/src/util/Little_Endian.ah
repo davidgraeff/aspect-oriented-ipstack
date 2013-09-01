@@ -1,0 +1,105 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+
+#ifndef __LITTLE_ENDIAN_AH__
+#define __LITTLE_ENDIAN_AH__
+
+#include "util/ipstack_inttypes.h"
+
+//using namespace ipstack;
+
+
+aspect Little_Endian {
+
+	static uint16_t htons_(uint16_t n) {
+		return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
+	}
+
+	static inline uint16_t ntohs_(uint16_t n) {
+		return htons_(n);
+	}
+
+	static uint32_t htonl_(uint32_t n) {
+		return ((n & 0xff) << 24) |
+		((n & 0xff00) << 8) |
+		((n & 0xff0000UL) >> 8) |
+		((n & 0xff000000UL) >> 24);
+	}
+
+	static inline uint32_t ntohl_(uint32_t n) {
+		return htonl_(n);
+	}
+
+	pointcut Network_to_Host_Short() =
+	"% ipstack::IPv4_Packet::get_%()" ||
+	"% ipstack::IPv6_Packet::get_%()" ||
+	"% ipstack::IPv6hc_Packet::get_%()" ||
+	"% ipstack::ICMPv4_Packet::get_%()" ||
+	"% ipstack::ICMPv6_Packet::get_%()" ||
+	"% ipstack::UDP_Packet::get_%()" ||
+	"% ipstack::TCP_Segment::get_%()" ||
+	"% ipstack::Eth_Frame::get_%()" ||
+	"% ipstack::ARP_Packet::get_%()";
+
+	advice execution(Network_to_Host_Short()) &&
+	result(res) : // read only
+		after(uint16_t res) {
+		*tjp->result() = ntohs_(res);
+	}
+
+	pointcut Host_to_Network_Short() =
+	"void ipstack::IPv4_Packet::set_%(%)" ||
+	"void ipstack::IPv6_Packet::set_%(%)" ||
+	"void ipstack::IPv6hc_Packet::set_%(%)" ||
+	"void ipstack::ICMPv4_Packet::set_%(%)" ||
+	"void ipstack::ICMPv6_Packet::set_%(%)" ||
+	"void ipstack::UDP_Packet::set_%(%)" ||
+	"void ipstack::TCP_Segment::set_%(%)" ||
+	"void ipstack::Eth_Frame::set_%(%)" ||
+	"void ipstack::ARP_Packet::set_%(%)";
+
+	advice execution(Host_to_Network_Short()) &&
+	args(val) : // read only
+		before(uint16_t val) {
+		*(tjp->arg<0>()) = htons_(val);
+	}
+
+
+	pointcut Network_to_Host_Long() =
+	"% ipstack::TCP_Segment::get_%()" ||
+	"% ipstack::NDPMessages::OptionPrefixInformation::get_%()";
+
+	advice execution(Network_to_Host_Long()) &&
+	result(res) : // read only
+		after(uint32_t res) {
+		*tjp->result() = ntohl_(res);
+	}
+
+	pointcut Host_to_Network_Long() =
+	"void ipstack::TCP_Segment::set_%(%)";
+
+	advice execution(Host_to_Network_Long()) &&
+	args(val) : // read only
+		before(uint32_t val) {
+		*(tjp->arg<0>()) = htonl_(val);
+	}
+
+};
+
+#endif /*__LITTLE_ENDIAN_AH__ */
+

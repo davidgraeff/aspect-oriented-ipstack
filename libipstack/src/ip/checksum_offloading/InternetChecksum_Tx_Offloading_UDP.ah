@@ -1,0 +1,50 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+#include "router/Interface.h"
+#include "sending/SendBuffer.h"
+
+using namespace ipstack;
+
+/**
+* Hardware checksumming supported for UDP
+*/
+aspect InternetChecksum_Tx_Offloading_udp {
+	advice execution("% ipstack::%UDP_Socket::send(ipstack::SendBuffer*)")  &&
+		args(dataToSend):
+		around(SendBuffer* dataToSend) {
+
+		if (interface->hasTransmitterHardwareChecksumming()) {
+			unsigned ip_header_size = ((char*)dataToSend->memstart_transport - (char*)dataToSend->memstart_ip);
+			//call specialized send function for checksum offloading
+			dataToSend()->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize(), false, ip_header_size);
+			return; // we do not execute the usual send Method
+		}
+		tjp->proceed();
+	}
+	advice execution("% ipstack::UDP_Packet::calc_checksum(%, %, ipstack::Interface*)") &&
+	args(csum,payloadlen, interface) :
+		around(uint32_t csum, uint16_t payloadlen, Interface* interface) {
+
+		if ((interface != 0) && (interface->hasTransmitterHardwareChecksumming())) {
+			*tjp->result() = InternetChecksum::accumulateCarryBits(csum); //computePayload is done by hardware
+		} else {
+			tjp->proceed();
+		}
+	}
+};

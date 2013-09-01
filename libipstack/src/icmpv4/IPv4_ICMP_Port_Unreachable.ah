@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "../ipv4/IPv4.h"
-#include "../demux/Demux.h"
-#include "../router/Interface.h"
-#include "ICMP.h"
+#include "ipv4/IPv4_Packet.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "icmpv4/ICMPv4_Packet.h"
 #include "ICMPv4_Socket.h"
 
 using namespace ipstack;
@@ -37,15 +37,15 @@ aspect IPv4_ICMP_Port_Unreachable {
 		// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
 		const uint8_t echoErrornousPacketSize = packet->get_ihl() * 4 + 8;
 		demux.setDirectResponse(true);
-		SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, echoErrornousPacketSize + ICMP_Packet::ICMP_HEADER_SIZE);
+		SendBuffer* sbi = icmpv4instance.requestSendBuffer(interface, echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE);
 		if (sbi) {
-			ICMP_Packet* icmp_error_reply = (ICMP_Packet*)sbi->getDataPointer();
+			ICMPv4_Packet* icmp_error_reply = (ICMPv4_Packet*)sbi->getDataPointer();
 
-			icmp_error_reply->set_type(ICMP_Packet::ICMP_TYPE_DESTINATION_UNREACHABLE);
-			icmp_error_reply->set_code(ICMP_Packet::ICMP_CODE_PORT_UNREACHABLE);
+			icmp_error_reply->set_type(ICMPv4_Packet::ICMP_TYPE_DESTINATION_UNREACHABLE);
+			icmp_error_reply->set_code(ICMPv4_Packet::ICMP_CODE_PORT_UNREACHABLE);
 			icmp_error_reply->set_quench(0);
 
-			sbi->writtenToDataPointer(ICMP_Packet::ICMP_HEADER_SIZE);
+			sbi->writtenToDataPointer(ICMPv4_Packet::ICMP_HEADER_SIZE);
 
 			// ICMPv4 RFC: Append at least the errornous ipv4 packet + 8 byte payload to the responding icmp packet
 			sbi->write(packet, echoErrornousPacketSize);

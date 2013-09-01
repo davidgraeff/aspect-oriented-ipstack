@@ -1,0 +1,160 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2013 David Gräff
+
+// #pragma once
+// #include <string.h>
+// #include "util/ipstack_inttypes.h"
+// #include "operating_system_integration/System.h"
+// #include "sending/SendBuffer.h"
+// #include "router/Router.h"
+// #include <iostream>
+// using namespace ipstack;
+// 
+// /**
+//   * This advice adds messages for the management memory usage and some
+//   * additional protection to avoid double freeing.
+//   */
+// aspect debug_management_memory {
+// 	/**
+// 	  * We have a shadow "array for allocated buffers" here to check
+// 	  * if the implemented one work as expected
+// 	  */
+// 	void* allocatedMemories[SharedMemory::SLOTS];
+// 
+// 	advice execution( "% ipstack::SharedMemory::insert(ipstack::SendBuffer*)" ) && args(data) : after(SendBuffer* data) {
+// 
+// 		if (!data) {
+// 			printf("MM: insert without SendBuffer called!\n");
+// 			System::haltsystem();
+// 		} else {
+// 			// check if the interface pointer is valid
+// 			Interface* interface = data->getInterface();
+// 			Router& router = Router::Inst();
+// 			Interface* rInterface = router.get_interface(0);
+// 			bool found = false;
+// 			while (rInterface) {
+// 				if (interface == rInterface) {
+// 					found = true;
+// 					break;
+// 				}
+// 				rInterface = rInterface->getNext();
+// 			}
+// 			if (!found) {
+// 				printf("MM: Interface pointer invalid %p!\n", interface);
+// 				System::haltsystem();
+// 			}
+// 
+// 			// check double insert
+// 			for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 				if (allocatedMemories[i]==data) {
+// 					printf("MM: Double insert B: %p @index %u!\n", data, i);
+// 					System::haltsystem();
+// 				}
+// 			}
+// 
+// 			// add to internal list
+// 			for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 				if (allocatedMemories[i]==0) {
+// 					allocatedMemories[i] = data;
+// 					break;
+// 				}
+// 			}
+// 			
+// 			int used = 0;
+// 			for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 				if (allocatedMemories[i]!=0) {
+// 					++used;
+// 				}
+// 			}
+// 			
+// 			uint_fast16_t pos=0;
+// 			while (tjp->that()->getNext(pos)!=data) {
+// 				if (pos>SharedMemory::SLOTS) {
+// 					printf("MM: alloc failed; Did not found new data %p!\n", data);
+// 					System::haltsystem();
+// 				}
+// 				++pos;
+// 			}
+// 			printf("MM: alloc; usage: %u/%u, B: %p @index %u\n", used, SharedMemory::SLOTS, data, pos);
+// 		}
+// 	}
+// 	
+// 	/**
+// 	  * The to-be-removed buffer. We have to store it here, because in remote::after this
+// 	  * is no longer available.
+// 	  */
+// 	SendBuffer* buffer;
+// 	
+// 	advice execution("% ipstack::SharedMemory::remove(%)")
+// 		&& args(index): before(uint_fast16_t index) {
+// 		
+// 		buffer = tjp->that()->getNext(index);
+// 		if (buffer==0) {
+// 			printf("MM: Free 0 @index %u!\n", index);
+// 			System::haltsystem();
+// 		}
+// 			
+// 		bool found = false;
+// 		for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 			if (allocatedMemories[i]==buffer) {
+// 				found = true;
+// 				break;
+// 			}
+// 		}
+// 		
+// 		if (!found) {
+// 			printf("MM: DOUBLE FREEING BUFFER: %p @index %u!\n", buffer, index);
+// 			System::haltsystem();
+// 		}
+// 	}
+// 	
+// 	advice execution("% ipstack::SharedMemory::remove(%)")
+// 		&& args(index): after(uint_fast16_t index) {
+// 		
+// 		if (*tjp->result()) { // free ok
+// 			for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 				if (allocatedMemories[i]==buffer) {
+// 					allocatedMemories[i] = 0;
+// 					break;
+// 				}
+// 			}
+// 			
+// 			int used = 0;
+// 			for (int i=0;i<SharedMemory::SLOTS;++i) {
+// 				if (allocatedMemories[i]!=0) {
+// 					++used;
+// 				}
+// 			}
+// 			printf("MM: free; usage: %u/%u, B: %p @index %u\n", used, SharedMemory::SLOTS, buffer, index);
+// 		} else {
+// 			printf("MM: not freeing, still transmitting @index %u\n", index);
+// 		}
+// 	}
+// 	
+// 	advice construction("ipstack::SharedMemory"): after() {
+// 		printf("Managment Memory (MM) Check: On %p\n",&sharedmemory);
+// 		memset(allocatedMemories, 0, SharedMemory::SLOTS);
+// 		
+// 		// The allocation-buffer-queue should be empty on start
+// 		uint_fast16_t index = 0;
+// 		while (SendBuffer* buffer = (SendBuffer*)tjp->that()->getNext(index)) {
+// 			printf("MM: invalid buffer start content! @index %u: %p!\n", index, buffer);
+// 			System::haltsystem();
+// 		}
+// 	}
+// 	
+// };

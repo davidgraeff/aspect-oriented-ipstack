@@ -1,0 +1,49 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2013 David Gräff
+
+#pragma once
+
+#include "util/ipstack_inttypes.h"
+#include "router/Interface.h"
+#include "sending/SendBuffer.h"
+
+using namespace ipstack;
+/**
+ * Purspose: Add simple send(char* data, int len) API to UDP_Sockets.
+ */
+slice class Simple_Send_API_Slice {
+
+public:
+
+	/**
+	 * Internally creates a sendbuffer and copies all content of data to that one.
+	 * Send the data of that SendBuffer and returns the buffer. The packet is
+	 * invalid after sending it and may be freed by calling socket->free(sendbuffer).
+	 * 
+	 * Example: udp_socket->free(udp_socket->send("bla", 3));
+	 * This example is only valid if no DMA hardware is used and the buffer can be
+	 * freed immediatelly after use.
+	 */
+	SendBuffer* send(char* data, int len) {
+		SendBuffer* dataToSend = requestSendBuffer(len);
+		if (!dataToSend)
+			return 0;
+		dataToSend->write(data, len);
+		send(dataToSend);
+		return dataToSend;
+	}
+};

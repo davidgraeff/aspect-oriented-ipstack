@@ -20,7 +20,7 @@
 #define __ARP_CACHE_IPV4_SEND_RECEIVE_SLICE__
 
 #include "util/ipstack_inttypes.h"
-#include "../../router/Interface.h"
+#include "router/Interface.h"
 #include "Eth_ARP_IPv4_Packet.h"
 
 using namespace ipstack;

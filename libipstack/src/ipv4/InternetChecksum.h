@@ -19,7 +19,7 @@
 #ifndef __INTERNET_CHECKSUM__
 #define __INTERNET_CHECKSUM__
 
-#include "IPv4.h"
+#include "ipv4/IPv4_Packet.h"
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack {

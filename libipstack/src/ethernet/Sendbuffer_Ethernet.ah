@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "Eth_Frame.h"
-#include "../router/Interface.h"
+#include "router/Interface.h"
 #include "Sendbuffer_Ethernet_Slice.ah"
 
 using namespace ipstack;
@@ -38,7 +38,6 @@ aspect Sendbuffer_Ethernet {
 		after(unsigned v) {
 		if (tjp->that()->getUsedInterface()->getType() == Interface::ETHERNET) {
 			*tjp->result() = v + Eth_Frame::ETH_HEADER_SIZE;
-			//printf("Sendbuffer_Ethernet plus %i size\n", Eth_Frame::ETH_HEADER_SIZE);
 		}
 	}
 };

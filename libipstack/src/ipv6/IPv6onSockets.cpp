@@ -1,6 +1,6 @@
 #include "IPv6onSockets.h"
-#include "IPv6.h"
-#include "../router/Router.h"
+#include "ipv6/IPv6_Packet.h"
+#include "router/Router.h"
 #include "RouteResult.h"
 
 namespace ipstack {
@@ -29,7 +29,6 @@ namespace ipstack {
 		} else // Probably a multicast destination address. Just use the unspecified ip as src
 			get_unspecified_ipv6_address(src_ipv6_addr);
 		interface = route.interface;
-// 		printf("IPV6::resolveRoute %p\n", interface);
 		return route.proposed_src_addr;
 	}
 

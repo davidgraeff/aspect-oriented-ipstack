@@ -24,7 +24,7 @@ namespace ipstack {
 	class Interface;
 	class IPv4_Packet;
 	/**
-	 * Adds IPv4 functionality to a socket.
+	 * Adds IPv4 sending functionality to a socket.
 	 */
 	class IPV4 {
 	public:

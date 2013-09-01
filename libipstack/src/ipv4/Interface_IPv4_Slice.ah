@@ -20,7 +20,7 @@
 #define __INTERFACE_IPV4_SLICE__
 
 #include "util/ipstack_inttypes.h"
-#include "IPv4.h"
+#include "ipv4/IPv4_Packet.h"
 
 using namespace ipstack;
 

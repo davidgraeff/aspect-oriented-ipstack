@@ -1,0 +1,67 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+#include "ipv4/IPv4_Packet.h"
+#include "router/Interface.h"
+
+using namespace ipstack;
+
+
+slice class Demux_IPv4_Slice {
+private:
+	void ipv4_demux(IPv4_Packet* packet, unsigned len, Interface* interface){
+		//Aspects to be weaved here!
+		// If no protocol handler intercepted this method, call the error handler.
+		error_no_protocol_handler(packet, interface);
+	}
+    void ipv4_forward ( IPv4_Packet *packet, unsigned len, Interface *interface ) {
+        //Aspects to be weaved here!
+    }
+    bool ipv4_reassemble ( IPv4_Packet* &packet, unsigned &len, Interface *interface, uint16_t fragment_offset ) {
+        //Aspects to be weaved here!
+        return false; // Packet not completely reassembled, yet. This is not the last fragment!
+    }
+    
+    /**
+	 * Call this method if the ipv4 ttl is 0
+	 */
+	void error_ttl(IPv4_Packet* packet, Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+	/**
+	 * Call this method if there is no protocol handler for the given protocol
+	 */
+	void error_no_protocol_handler(IPv4_Packet* packet, Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+	/**
+	 * Call this if the receiving queue is full
+	 */
+	void error_receiving_queue_full(IPv4_Packet* ipv4_packet, const Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	/**
+	 * Call this if the received packet does not fit into one of the available memory blocks
+	 */
+	void error_receiving_memory_too_small(IPv4_Packet* ipv4_packet, const Interface* interface) {
+		//Aspects to be weaved here!
+	}
+	
+};

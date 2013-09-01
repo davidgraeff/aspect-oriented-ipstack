@@ -30,6 +30,6 @@ aspect IPv6 {
   /* Affect class: Router */
   advice "ipstack::Router" : slice Router_IPv6_Slice;
   
-  /* Affect class: _Socket */
+  /* Add ipv6 member to each socket object */
   advice "ipstack::%_Socket" : slice Socket_IPv6_Slice;
 };

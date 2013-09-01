@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "udp/UDP.h"
-#include "../IPv4.h"
+#include "udp/UDP_Packet.h"
+#include "ipv4.h"
 #include "../InternetChecksum.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "router/Interface.h"
 
 using namespace ipstack;

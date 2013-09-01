@@ -19,8 +19,8 @@
 #ifndef __TCP_RETRANSMISSION_TRACKER_AH__
 #define __TCP_RETRANSMISSION_TRACKER_AH__
 
-#include "../TCP.h"
-#include "SendBuffer.h"
+#include "../TCP_Segment.h"
+#include "sending/SendBuffer.h"
 #include "../tcp_history/TCP_Record.h"
 #include "../TCP_Socket.h"
 #include "TCP_RetransmissionTrackerSlice.ah"

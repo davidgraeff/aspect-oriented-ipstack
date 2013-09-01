@@ -46,9 +46,6 @@ aspect DirectResponse_aspect_ethernet {
 		demux.setDirectResponse(false);
 		demux.mDirectResponseInputData = (void*)ethernet_frame;
 		
-// 		Eth_Frame* dest_eth_frame = (Eth_Frame*)(demux.directResponseInputDate());
-// 		printf("DEMUX %lu: remote %lu %lu %lu %lu %lu %lu\n",framelen, dest_eth_frame->get_src_hwaddr()[0],dest_eth_frame->get_src_hwaddr()[1],dest_eth_frame->get_src_hwaddr()[2],dest_eth_frame->get_src_hwaddr()[3],dest_eth_frame->get_src_hwaddr()[4],dest_eth_frame->get_src_hwaddr()[5]);
-		
 		tjp->proceed();
 	}
 

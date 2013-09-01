@@ -18,8 +18,8 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "../TCP.h"
-#include "SendBuffer.h"
+#include "../TCP_Segment.h"
+#include "sending/SendBuffer.h"
 #include "operating_system_integration/Clock.h"
 
 namespace ipstack

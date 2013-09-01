@@ -21,7 +21,7 @@
 
 #include "TCP_History.h"
 #include "TCP_Record.h"
-#include "../TCP.h"
+#include "../TCP_Segment.h"
 
 #include "TCP_Record_SlidingWindow_Slice.ah"
 #include "TCP_History_SlidingWindow_Slice.ah"

@@ -21,7 +21,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Socket.h"
-#include "../TCP.h"
+#include "../TCP_Segment.h"
 #include "RTT_Estimation_Slice.ah"
 
 using namespace ipstack;

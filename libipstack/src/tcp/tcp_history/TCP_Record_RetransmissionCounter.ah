@@ -21,7 +21,7 @@
 
 #include "TCP_History.h"
 #include "TCP_Record.h"
-#include "../TCP.h"
+#include "../TCP_Segment.h"
 #include "../TCP_Socket.h"
 #include "../TCP_Config.h"
 

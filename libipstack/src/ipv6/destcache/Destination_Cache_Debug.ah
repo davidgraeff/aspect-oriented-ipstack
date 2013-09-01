@@ -36,9 +36,9 @@ aspect Router_Destination_Cache_aspect_debug {
 	advice execution("% ipstack::IPV6::get_nexthop_ipaddr()") && that(ipv6) : around(IPV6& ipv6) {
 		NDPCacheEntry* entry =  ipv6.get_nexthop_ndpcache_entry();
 		if (!entry) {
-			printf("DestCache: No destcache entry. Link local dest ip?\n");
+			std::cout << "DestCache: No destcache entry. Link local dest ip?" << std::endl;
 		} else {
-			printf("DestCache: Use dest cache entry as next-hop ip\n");
+			std::cout << "DestCache: Use dest cache entry as next-hop ip" << std::endl;
 		}
 		tjp->proceed();
 	}
@@ -61,18 +61,18 @@ aspect Router_Destination_Cache_aspect_debug {
 		
 		// if we have an on-link address: do nothing
 		if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == IPV6AddressScope::IPV6_SCOPE_LINKLOCAL) {
-			printf("DestCache: Link-local address as dest. Nothing to do.\n");
+			std::cout << "DestCache: Link-local address as dest. Nothing to do." << std::endl;
 			return;
 		}
 		
 		// We will now look at that entry, if there is a router connected to it.
 		if (entry->routerEntryPosition == AddressMemory::EntryUndefined) {
-			printf("DestCache: No router entry found for dest ip!\n");
+			std::cout << "DestCache: No router entry found for dest ip!" << std::endl;
 			return;
 		}
 
 		// Yes there is a router connected to this entry. Use the routers ip as next hop.
 		NDPCacheEntry* ndpentry = (NDPCacheEntry*)ipv6.interface->addressmemory.getEntryAtPosition(entry->routerEntryPosition);
-		printf("DestCache: Router entry as next-hop ip %p!\n", ndpentry);
+		std::cout << "DestCache: Router entry as next-hop ip %p!\n", ndpentry);
 	}
 };

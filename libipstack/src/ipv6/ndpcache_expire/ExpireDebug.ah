@@ -18,8 +18,8 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "SendBuffer.h"
-#include "ipv6/IPv6.h"
+#include "sending/SendBuffer.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
 #include "util/ipstack_inttypes.h"
@@ -33,21 +33,21 @@ aspect expire_debug {
 	
 	advice execution("% ipstack::Interface::ipv6_nonrouter_entry_refresh(...)") && args(entry) && that(interface) :
 		before(NDPCacheEntry* entry, Interface& interface) {
- 		printf("NDP Cache: Refresh Non-Router Entry %p, interface %p\n", entry, &interface);
+ 		std::cout << "NDP Cache: Refresh Non-Router Entry " << entry << ", interface " << &interface << std::endl;
 	}
 	
 	advice execution("% ipstack::Interface::ipv6_router_entry_refresh(...)") && args(entry) && that(interface) :
 		before(NDPCacheEntry* entry, Interface& interface) {
- 		printf("NDP Cache: Refresh Router Entry %p, interface %p\n", entry, &interface);
+ 		std::cout << "NDP Cache: Refresh Router Entry " << entry << ", interface " << &interface << std::endl;
 	}
 	
 	advice execution("% ipstack::Interface::ipv6_useentry(...)") && args(entry) && that(interface) :
 		before(NDPCacheEntry* entry, Interface& interface) {
- 		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
+ 		std::cout << "NDP Cache: Use Entry " << entry << ", interface " << &interface << std::endl;
 	}
 	
 	advice execution("% ipstack::Interface::releaseOldEntries()") && that(interface) :
 		after(Interface& interface) {
- 		printf("NDP Cache: Use Entry %p, interface %p\n", entry, &interface);
+ 		std::cout << "NDP Cache: Use Entry " << entry << ", interface " << &interface << std::endl;
 	}
 };

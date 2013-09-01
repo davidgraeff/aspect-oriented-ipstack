@@ -18,7 +18,7 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "util/Mempool.h"
+#include "util/MemoryInterface.h"
 #include "ReceiveBuffer.h"
 #include <string.h> //for memcpy
 
@@ -35,9 +35,9 @@ public:
 	 * Create a receive buffer and return it.
 	 * Changes the ReceiveBuffer list-head pointer if neccessary.
 	 */
-	static ReceiveBufferUDPIPv4* createReceiveBufferUDPIPv4(Mempool* mempool, void*  payload, uint16_t payloadsize, uint16_t remoteport, uint32_t ipv4) {
+	static ReceiveBufferUDPIPv4* createReceiveBufferUDPIPv4(MemoryInterface* mem, void*  payload, uint16_t payloadsize, uint16_t remoteport, uint32_t ipv4) {
 		uint8_t padding = (4 - ((payloadsize + sizeof(RemoteInfo)) % 4)) % 4;
-		ReceiveBufferUDPIPv4* r = (ReceiveBufferUDPIPv4*)ReceiveBuffer::createReceiveBuffer(mempool, payload, payloadsize + sizeof(RemoteInfo) + padding);
+		ReceiveBufferUDPIPv4* r = (ReceiveBufferUDPIPv4*)ReceiveBuffer::createReceiveBuffer(mem, payload, payloadsize + sizeof(RemoteInfo) + padding);
 		if (!r)
 			return 0;
 		

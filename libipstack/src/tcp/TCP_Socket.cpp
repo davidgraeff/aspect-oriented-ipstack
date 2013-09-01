@@ -18,23 +18,22 @@
 
 #include "TCP_Socket.h"
 #include "demux/Demux.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "ReceiveBuffer.h"
 #include "operating_system_integration/Clock.h"
 
 namespace ipstack
 {
 
-TCP_Socket::TCP_Socket() :
+TCP_Socket::TCP_Socket(const SocketMemory& memory) : SocketMemory(memory),
 	receiveBuffer(this),
-	mempool(0),
-	packetbuffer(0),
 	dport(TCP_Segment::UNUSED_PORT),
 	sport(TCP_Segment::UNUSED_PORT)
-	{
-		resetSocketState();
-	}
-	
+{
+	setMaxReceiveWindow(get_Mempool()->getMaxFreeBlockSize());
+	resetSocketState();
+}
+
 TCP_Socket::~TCP_Socket() {
 	unbind();
 }
@@ -49,10 +48,7 @@ void TCP_Socket::resetSocketState() {
 	mss = TCP_Segment::DEFAULT_MSS;
 	application_buflen = 0;
 	waiting = false;
-
-	// Ports are not reseted
-	// 	dport = TCP_Segment::UNUSED_PORT;
-	// 	sport = TCP_Segment::UNUSED_PORT;
+	// Do not reset ports here
 }
 
 void TCP_Socket::input(TCP_Segment* segment, unsigned len)
@@ -110,7 +106,7 @@ void TCP_Socket::updateSendWindow(TCP_Segment* segment, uint32_t seqnum, uint32_
 void TCP_Socket::clearHistory()
 {
 	while (TCP_Record* record = history.get()) {
-		mempool->free(record->getSendBuffer());
+		get_Mempool()->free(record->getSendBuffer());
 		history.remove(record);
 	}
 }
@@ -136,7 +132,7 @@ void TCP_Socket::updateHistory(bool do_retransmit)
 			// 1) Segment is ack'ed (sequence number) OR
 			// 2) Segment has no retransmission timeout and has left the network interface
 			TCP_Record* next = record->getNext();
-			mempool->free(buffer);
+			get_Mempool()->free(buffer);
 			history.remove(record);
 			record = next;
 		} else {
@@ -486,6 +482,11 @@ uint16_t TCP_Socket::get_sport()
 {
 	return sport;
 }
+
+void TCP_Socket::setMaxReceiveWindow(unsigned max) {
+	maxReceiveWindow_MSS = max;
+}
+
 bool TCP_Socket::listen()
 {
 	if (state == CLOSED) {
@@ -521,7 +522,7 @@ int TCP_Socket::poll(unsigned int msec)
 		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
 		if (receiveB == 0) {
 			//no gratuitous packets received, yet
-			bool timeout_reached = block((uint32_t)msec); //wait for max. msec
+			bool timeout_reached = (msec==0) ? false : block((uint32_t)msec); //wait for max. msec
 			if (timeout_reached == false) {
 				receiveB = (ReceiveBuffer*)packetbuffer->get(); //check for new packet, since timeout was not reached
 			}
@@ -598,7 +599,7 @@ bool TCP_Socket::addToReceiveQueue(TCP_Segment* segment, unsigned int segment_le
 	// We have to use the ReceiveBuffer wrapper here instead of copying the
 	// segment and putting the new pointer into the packetbuffer because
 	// we need the length.
-	ReceiveBuffer* receiveB = ReceiveBuffer::createReceiveBuffer(mempool, segment, segment_len);
+	ReceiveBuffer* receiveB = ReceiveBuffer::createReceiveBuffer(get_Mempool(), segment, segment_len);
 	if (receiveB != 0) {
 		packetbuffer->put(receiveB);
 		return true;

@@ -1,0 +1,63 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+
+#pragma once
+
+#include "ICMPv6_Packet.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/InternetChecksum.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "Demux_IPv6_ICMP_Slice.ah"
+#include "icmpv6/ICMPv6_Socket.h"
+
+using namespace ipstack;
+
+/**
+  * Receive ICMPv6 payload out of an IPv6 packet. Send payload to
+  * the icmpv6_demux method.
+  */
+aspect IPv6_ICMP_Receive {
+	// *** Affect class: Demux
+advice "ipstack::Demux" :
+	slice Demux_IPv6_ICMP_Slice;
+	
+	advice execution("% ipstack::Demux::ipv6_payload_demux(ipstack::Interface*, ipstack::IPv6_Packet*, void*&, unsigned&, unsigned char& )") &&
+	args(interface, packet, payload, payload_length, nextHeader) && that(demux) :
+		around(Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader, Demux& demux) {
+
+		if (nextHeader != ICMPv6_Packet::IPV6_TYPE_ICMP) {
+			tjp->proceed();
+			return;
+		}
+
+		*(tjp->result()) = true; // end of ipv6 packet parsing
+		
+		//we have an icmp packet
+		if (payload_length < ICMPv6_Packet::ICMP_HEADER_SIZE) {
+			return; //len too small! Drop packet
+		}
+
+		ICMPv6_Packet* icmpv6 = (ICMPv6_Packet*)payload;
+
+		if (!icmpv6->checksum_valid(InternetChecksumV6::computePseudoHeader(packet, payload_length, ICMPv6_Packet::IPV6_TYPE_ICMP), payload_length, interface)) {
+			return;
+		}
+
+		demux.icmpv6_demux(packet, icmpv6, payload_length, interface);
+	}
+};

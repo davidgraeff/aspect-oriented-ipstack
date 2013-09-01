@@ -19,8 +19,8 @@
 #ifndef __IPV4_TCP_RESET_AH__
 #define __IPV4_TCP_RESET_AH__
 
-#include "../IPv4.h"
-#include "tcp/TCP.h"
+#include "ipv4.h"
+#include "tcp/TCP_Segment.h"
 #include "tcp/Management_TCP_Socket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"

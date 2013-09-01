@@ -17,7 +17,7 @@
 
 #pragma once
 #include "router/Interface.h"
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
 
 using namespace ipstack;
@@ -29,12 +29,12 @@ aspect IPv6NDPCache_aspect_debug {
 
 	advice execution("void ipstack::Interface::freeNDPCacheEntry(%)") && that(interface) :
 		after(Interface& interface) {
-			printf("NDP Cache: Free I: %p\n", &interface);
+			std::cout << "NDP Cache: Free I: " << &interface << std::endl;
 	}
 	advice execution("void ipstack::Interface::reserveNDPCacheEntry(ipstack::NDPCacheEntry*)") && args(entry) && that(interface) :
 		after(NDPCacheEntry* entry, Interface& interface) {
 			char tempbuf[50] = {0};
 			ipstack::ipv6_addr_toString(entry->ipv6, tempbuf);
-			printf("NDP Cache: Add I: %p\n   IP %s\n", &interface, tempbuf);
+			std::cout << "NDP Cache: Add I: "<<  &interface <<"\n   IP " << tempbuf << std::endl;
 	}
 };

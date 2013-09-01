@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "udp/UDP.h"
-#include "../IPv6.h"
+#include "udp/UDP_Packet.h"
+#include "ipv6/IPv6_Packet.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
 #include "../InternetChecksum.h"
@@ -44,7 +44,6 @@ aspect IPv6_UDP_Rx_Checksumming {
 		if (udp->get_checksum() != 0) {
 			//this packet is protected by an internet checksum
 			if (!udp->checksum_valid(InternetChecksumV6::computePseudoHeader(packet, payload_length, UDP_Packet::IP_TYPE_UDP), payload_length, interface)) {
-//  				printf("checksum udp wrong; packet len %lu\n", payload_length);
 				// checksum wrong: drop entire packet
 				*(tjp->result()) = true; 
 				return;

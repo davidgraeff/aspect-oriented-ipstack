@@ -18,10 +18,10 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "icmpv6/ICMPv6.h"
+#include "icmpv6/ICMPv6_Packet.h"
 #include "icmpv6/ndp/NDPNeighborMessages.h"
 #include "icmpv6/ICMPv6_Socket.h"
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/ndpcache/NDPCacheEntry.h"
 #include "ipv6/AddressMemory.h"
 #include "ipv6/IPv6onSockets.h"

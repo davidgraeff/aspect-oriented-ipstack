@@ -20,7 +20,7 @@
 #define __DEMUX_ARP_SLICE__
 
 #include "ARP.h"
-#include "../router/Interface.h"
+#include "router/Interface.h"
 
 using namespace ipstack;
 

@@ -18,8 +18,8 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "SendBuffer.h"
-#include "ipv6/IPv6.h"
+#include "sending/SendBuffer.h"
+#include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
 #include "util/ipstack_inttypes.h"
@@ -48,7 +48,7 @@ aspect NDPLookupDebug {
 			lookup = 1;
 			char tempbuf[50] = {0};
 			ipstack::ipv6_addr_toString(ip->get_dst_ipaddr(), tempbuf);
-			printf("NDP Lookup: For IP %s. Wait...\n", tempbuf);
+			std::cout << "NDP Lookup: For IP "<<tempbuf<<". Wait..." << std::endl;
 		}
 		tjp->proceed();
 	}
@@ -57,7 +57,7 @@ aspect NDPLookupDebug {
 		after(NDPCacheEntry* entry, Interface& interface) {
 		
 		lookup = 0;
- 		printf("NDP Lookup: Lookup result %lu\n", interface.is_NDPCacheEntry_reachable(entry));
+ 		std::cout << "NDP Lookup: Lookup result " << interface.is_NDPCacheEntry_reachable(entry) << std::endl;
 	}
 	
 	/**
@@ -73,12 +73,12 @@ aspect NDPLookupDebug {
 		
 		NDPCacheEntry* entry = *tjp->result();
 		if (!entry) {
-			printf("NDP Lookup: Received address, but entry not found!\n");
+			std::cout << "NDP Lookup: Received address, but entry not found" << std::endl;
 			return;
 		}
 		
 		char tempbuf[50] = {0};
 		ipstack::ipv6_addr_toString(entry->ipv6, tempbuf);
-		printf("NDP Lookup: Received address. IPv6 is %s\n", tempbuf);
+		std::cout << "NDP Lookup: Received address. IPv6 is " << tempbuf << std::endl;
 	}
 };

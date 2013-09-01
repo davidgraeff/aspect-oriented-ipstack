@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ethernet/Eth_Frame.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
 #include "router/Interface.h"
 
@@ -50,7 +50,5 @@ aspect Sendbuffer_DirectResponse_Ethernet {
 		
 		// Set destination addr := remote src addr
 		dest_eth_frame->set_dst_hwaddr(remote_eth_frame->get_src_hwaddr());
-
-		//printf("ethernet direct response: remote %lu %lu %lu %lu %lu %lu\n",dest_eth_frame->get_dst_hwaddr()[0],dest_eth_frame->get_dst_hwaddr()[1],dest_eth_frame->get_dst_hwaddr()[2],dest_eth_frame->get_dst_hwaddr()[3],dest_eth_frame->get_dst_hwaddr()[4],dest_eth_frame->get_dst_hwaddr()[5]);
 	}
 };

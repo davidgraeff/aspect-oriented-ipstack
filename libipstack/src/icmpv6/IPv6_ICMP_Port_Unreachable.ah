@@ -19,8 +19,8 @@
 
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "ipv6/IPv6.h"
-#include "ICMPv6.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ICMPv6_Packet.h"
 #include "ICMPv6_Socket.h"
 
 using namespace ipstack;

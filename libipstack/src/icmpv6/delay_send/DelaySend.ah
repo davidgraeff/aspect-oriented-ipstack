@@ -19,7 +19,7 @@
 
 #include "DelaySendMethod.h"
 #include "demux/Demux.h"
-#include "SendBuffer.h"
+#include "sending/SendBuffer.h"
 #include "ip_management_memory/SharedMemory.h"
 
 using namespace ipstack;
@@ -46,7 +46,6 @@ aspect delay_icmpv6_send  {
 	advice execution("% ipstack::ICMPv6_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) : around(SendBuffer* dataToSend){
 		if (DelaySend::mHoldBack) {
 			dataToSend->setState(SendBuffer::AboutToBeTransmittedState);
-			//printf("-- Delay send\n");
 		}
 		
 		if (DelaySend::mHoldBack) {
@@ -66,12 +65,10 @@ aspect delay_icmpv6_send  {
 	
 	advice execution("% ipstack::Demux::icmpv6_demux(...)") : around() {
 		++DelaySend::mHoldBack;
-		//printf("------ Delay field ------ %lu\n", DelaySend::mHoldBack);
 		
 		tjp->proceed();
 		
 		--DelaySend::mHoldBack;
-		//printf("------ Delay end ------ %lu\n", DelaySend::mHoldBack);
 		
 		// We only send out data if holdBack == 0 (reantrance is possible)
 		if (DelaySend::mHoldBack>0)

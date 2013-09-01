@@ -5,8 +5,8 @@ menuconfig ipstack
 		depends on ipstack
 		bool "Allows to disable all clock depending functionally of the ipstack"
 		default y
-		
-	menu "Debugging messages"
+	
+	menu "Debugging messages, Protections"
 		depends on ipstack
 	
 		config ipstack_debug_incoming
@@ -880,86 +880,37 @@ menuconfig ipstack
 	menu "Memory Management"
 		depends on ipstack
 		
-		config cfIPSTACK_MEMORY_GENERIC
-			bool "Generic Memory Management"
-			
-			config cfIPSTACK_PACKET_LIMIT
-				depends on cfIPSTACK_MEMORY_GENERIC
-				int GLOBAL_PACKET_LIMIT_PER_CONNECTION
-				default 16
-				help
-					This specifies the maximum amount of packets that
-					can be buffered for each connection. This affects
-					TCP sending and receiving and UDP receiving.
-					A power of 2 is most efficient.
-					
-		config cfIPSTACK_BLOCKSIZE_BIG
-			depends on ipstack
-			int BLOCKSIZE_BIG
-			default 1516
-			help
-				Block size of big packet buffer.
-				Always use a multiple of 4 to prevent memory alignment errors on some architectures.
-
-		config cfIPSTACK_COUNT_BIG
-			depends on ipstack
-			int COUNT_BIG
-			default 4
-			help
-				Maximum number of big packets which can be buffered.
-
-		config cfIPSTACK_BLOCKSIZE_SMALL
-			depends on ipstack
-			int BLOCKSIZE_SMALL
-			default 64
-			help
-				Block size of small packet buffer.
-				Always use a multiple of 4 to prevent memory alignment errors on some architectures.
-
-		config cfIPSTACK_COUNT_SMALL
-			depends on ipstack
-			int COUNT_SMALL
-			default 4
-			help
-				Maximum number of small packets which can be buffered.
-
-		menu "Dedicated memory for management tasks"
-			depends on ipstack
-			
-			config cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG
-				depends on ipstack
-				int MANAGEMENT_BLOCKSIZE_BIG
-				default 120
-				help
-					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
-					memory blocks, some management packets cannot be received or send or answered.
-					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
-
-			config cfIPSTACK_MANAGEMENT_COUNT_BIG
-				depends on ipstack
-				int MANAGEMENT_COUNT_BIG
-				default 4
-				help
-					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
-					memory blocks, some management packets cannot be received or send or answered.
-
-			config cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL
-				depends on ipstack
-				int MANAGEMENT_BLOCKSIZE_SMALL
-				default 52
-				help
-					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
-					memory blocks, some management packets cannot be received or send or answered.
-					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
-
-			config cfIPSTACK_MANAGEMENT_COUNT_SMALL
-				depends on ipstack
-				int MANAGEMENT_COUNT_SMALL
-				default 2
-				help
-					Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
-					memory blocks, some management packets cannot be received or send or answered.
+		menu "Sendbuffers"
+		depends on ipstack
 		
+			choice
+				prompt "Sendbuffer freeing"
+
+				config ipstack_memory_sendbuffer_free_not
+					default y
+					bool "No automatic freeing"
+					help
+						You have to free your sendbuffers yourself. This is the best
+						solution if your hardware does not use DMA so you can delete
+						sendbuffers right after calling send() and if your hardware
+						uses DMA it tells you somehow when a buffer has been send so
+						you can react and delete the buffer.
+
+				config ipstack_memory_sendbuffer_free_garbagecollection
+					bool "Garbage collection before every alloc"
+					help
+						This will look through all active sendbuffers and free
+						those where hasbeensend() returns true. You have to use this
+						option if you do not want to care about freeing sendbuffers
+						or if your hardware uses DMA and does not tell via IRQ/Event
+						when sendbuffers are actually send and only polling is a
+						solution.
+						Performance is impacted! This option uses more memory,
+						because all active sendbuffers have to be linked together.
+			endchoice
+		endmenu
+		
+		menu "Limits"
 			config cfIPSTACK_MEMORY_MAX_RESET_SLOTS
 				depends on ipstack
 				int MAX_TCP_RESET_SLOTS
@@ -967,19 +918,149 @@ menuconfig ipstack
 				help
 					A message of this kind is responded if a remote host try to find
 					out which tcp port is open (port scan). This is for all interfaces!
+
+			config cfIPSTACK_PACKET_LIMIT
+				depends on ipstack_memory_heap
+				int GLOBAL_PACKET_LIMIT_PER_CONNECTION
+				default 16
+				help
+					This specifies the maximum amount of packets that
+					can be buffered for each connection. This affects
+					TCP sending and receiving and UDP receiving.
+					A power of 2 is most efficient. All later received
+					packets are dropped!
+		endmenu
+		
+		menu "Default memory in mempools for a socket"
+			depends on ipstack
+			help
+				Those are default values if you create for example a tcp or udp socket
+				and do not define any memory related attributes.
+		
+			config cfIPSTACK_BLOCKSIZE_BIG
+				depends on ipstack
+				int BLOCKSIZE_BIG
+				default 1516
+				help
+					Block size of big packet buffer.
+					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+			config cfIPSTACK_COUNT_BIG
+				depends on ipstack
+				int COUNT_BIG
+				default 4
+				help
+					Maximum number of big packets which can be buffered.
+
+			config cfIPSTACK_BLOCKSIZE_SMALL
+				depends on ipstack
+				int BLOCKSIZE_SMALL
+				default 64
+				help
+					Block size of small packet buffer.
+					Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+			config cfIPSTACK_COUNT_SMALL
+				depends on ipstack
+				int COUNT_SMALL
+				default 4
+				help
+					Maximum number of small packets which can be buffered.
+
+		endmenu
+		
+		menu "Management sockets"
+			depends on ipstack
+			
+			choice
+				prompt "Memory Allocation"
+				help
+					Because management sockets are created automatically, you
+					have to define the method for allocating memory.
+
+				config ipstack_memory_stack_bigsmall
+					bool "Predefined memory pool. Big/Small packets"
+					help
+						The memory pool contains two types of slots.
+
+				config ipstack_memory_stack_bigonly
+					bool "Predefined memory pool. Only big packets"
+					help
+						This was called GENERIC before. The memory pool only contains one
+						type of slots.
+
+				config ipstack_memory_heap
+					bool "Use malloc/free heap based memory"
+					help
+						Please set up the packet limit in Limits.
+			endchoice
+			
+			menuconfig ipstack_shared_memory_management_sockets
+				depends on ipstack
+				bool "Initialize management sockets with shared memory pool"
+				default y
+				help
+					Used for tcp reset packets, ICMPv4, ICMPv6.
+					All management sockets will be created with a shared memory pool to use.
+					If you not set this option, every management socket (ICMPv4, ICMPv6, UDP_ECHO, TCP_RESET)
+					will have its own memory pool and the default values from
+					"Default memory in mempools for a socket" are used!
+				
+				config cfIPSTACK_MANAGEMENT_BLOCKSIZE_BIG
+					depends on ipstack_shared_memory_management_sockets && ipstack_memory_stack
+					int MANAGEMENT_BLOCKSIZE_BIG
+					default 120
+					help
+						Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+						memory blocks, some management packets cannot be received or send or answered.
+						Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+				config cfIPSTACK_MANAGEMENT_COUNT_BIG
+					depends on ipstack_shared_memory_management_sockets && ipstack_memory_stack
+					int MANAGEMENT_COUNT_BIG
+					default 4
+					help
+						Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+						memory blocks, some management packets cannot be received or send or answered.
+
+				config cfIPSTACK_MANAGEMENT_BLOCKSIZE_SMALL
+					depends on ipstack_shared_memory_management_sockets && ipstack_memory_stack
+					int MANAGEMENT_BLOCKSIZE_SMALL
+					default 52
+					help
+						Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+						memory blocks, some management packets cannot be received or send or answered.
+						Always use a multiple of 4 to prevent memory alignment errors on some architectures.
+
+				config cfIPSTACK_MANAGEMENT_COUNT_SMALL
+					depends on ipstack_shared_memory_management_sockets && ipstack_memory_stack
+					int MANAGEMENT_COUNT_SMALL
+					default 2
+					help
+						Used for tcp reset packets, ICMPv4, ICMPv6. If you choose too small or too few
+						memory blocks, some management packets cannot be received or send or answered.
+						
 		endmenu
 	endmenu
 
 	menuconfig ipstack_udp_debugport
 		bool "DebugPort Support via UDP/IPv4"
-		depends on ipstack && ipstack_udp_send
+		depends on ipstack && ipstack_udp_send && (ipstack_ipv4 || ipstack_ipv6)
 		default n
+		help
+			This will intercept std::cout and std::cerr and
+			send these messages to another host via udp.
 
-		config cfIPSTACK_UDP_DEBUGPORT_DESTIP
-			depends on ipstack_udp_debugport
-			string "Log Host IP"
-			default "192.168.34.8"
-		
+		config cfIPSTACK_UDP_DEBUGPORT_DESTIPv4
+			depends on ipstack_udp_debugport && ipstack_ipv4
+			string "Log Host IPv4"
+			default "192.168.1.8"
+
+		config cfIPSTACK_UDP_DEBUGPORT_DESTIPv6
+			depends on ipstack_udp_debugport && ipstack_ipv6
+			string "Log Host IPv6"
+			default "fe80:0:0:0:1:2:3:4"
+
 		config cfIPSTACK_UDP_DEBUGPORT_DESTPORT
 			depends on ipstack_udp_debugport
 			int "Destination Port"

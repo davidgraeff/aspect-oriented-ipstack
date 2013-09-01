@@ -20,11 +20,11 @@
  * Purpose: Receive IPv6 IPHC (6LoWPAN IP Header Compression) frames from ethernet
  */
 
-#include "../IPv6iphc.h"
+#include "ipv6/IPv6iphc.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "ethernet/Eth_Frame.h"
-#include "ipv6/IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;

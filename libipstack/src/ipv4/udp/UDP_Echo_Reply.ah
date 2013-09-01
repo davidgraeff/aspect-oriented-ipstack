@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "udp/UDP.h"
+#include "udp/UDP_Packet.h"
 #include "udp/UDP_Socket.h"
 #include "udp/Management_UDP_Socket.h"
-#include "ipv4/IPv4.h"
+#include "ipv4/IPv4_Packet.h"
 #include "ipv4/InternetChecksum.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"

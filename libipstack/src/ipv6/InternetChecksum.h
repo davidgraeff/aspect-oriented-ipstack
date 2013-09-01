@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "IPv6.h"
+#include "ipv6/IPv6_Packet.h"
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack
