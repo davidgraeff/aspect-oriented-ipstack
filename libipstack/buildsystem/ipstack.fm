@@ -800,6 +800,7 @@ menuconfig ipstack
 			depends on ipstack_tcp
 
 			config ipstack_tcp_slidingwnd_send
+				depends on ipstack_tcp
 				bool "Send Window Support"
 				
 				config ipstack_tcp_congestionavoidance
@@ -816,6 +817,7 @@ menuconfig ipstack
 					endchoice
 
 			config ipstack_tcp_slidingwnd_recv
+				depends on ipstack_tcp
 				bool "Receive Window Support"
 
 		endmenu
@@ -824,9 +826,11 @@ menuconfig ipstack
 			depends on ipstack_tcp
 
 			config ipstack_tcp_sws_recv
+				depends on ipstack_tcp
 				bool "SWS Receiver Side Avoidance"
 
 			config ipstack_tcp_sws_send
+				depends on ipstack_tcp
 				bool "SWS Sender Side Avoidance"
 		endmenu
 		
@@ -850,6 +854,7 @@ menuconfig ipstack
 			depends on ipstack_tcp
 
 			config ipstack_tcp_mss
+				depends on ipstack_tcp
 				bool "Maximum Segment Size (MSS)"
 		endmenu
 
@@ -867,6 +872,7 @@ menuconfig ipstack
 
 		choice
 			prompt "Host Byte Order"
+			depends on ipstack
 
 			config ipstack_byteorder_little
 				bool "Little Endian"
@@ -885,6 +891,7 @@ menuconfig ipstack
 		
 			choice
 				prompt "Sendbuffer freeing"
+				depends on ipstack
 
 				config ipstack_memory_sendbuffer_free_not
 					default y
@@ -974,6 +981,8 @@ menuconfig ipstack
 			
 			choice
 				prompt "Memory Allocation"
+				depends on ipstack
+				default ipstack_memory_stack_bigsmall
 				help
 					Because management sockets are created automatically, you
 					have to define the method for allocating memory.
@@ -1043,25 +1052,41 @@ menuconfig ipstack
 		endmenu
 	endmenu
 
-	menuconfig ipstack_udp_debugport
-		bool "DebugPort Support via UDP/IPv4"
+	menuconfig ipstack_syslog
+		bool "Syslog support (UDP)"
 		depends on ipstack && ipstack_udp_send && (ipstack_ipv4 || ipstack_ipv6)
 		default n
 		help
-			This will intercept std::cout and std::cerr and
-			send these messages to another host via udp.
+			This will intercept std::cout, stdd::clog and std::cerr and
+			send these messages to another host via the syslog protocol (udp).
+			printf (stdout,stderr,stdlog) is not intercepted!
 
+			choice
+				prompt "Log priority"
+				depends on ipstack_syslog
+				default ipstack_syslog_error_level
+				
+				config ipstack_syslog_debug_level
+					bool "All (cerr,cout,clog) to syslog"
+
+				config ipstack_syslog_debug_level
+					bool "cout to syslog"
+					
+				config ipstack_syslog_error_level
+					bool "Only cerr to syslog"
+			endchoice
+			
 		config cfIPSTACK_UDP_DEBUGPORT_DESTIPv4
-			depends on ipstack_udp_debugport && ipstack_ipv4
-			string "Log Host IPv4"
+			depends on ipstack_syslog && ipstack_ipv4
+			string "Remote Host IPv4"
 			default "192.168.1.8"
 
 		config cfIPSTACK_UDP_DEBUGPORT_DESTIPv6
-			depends on ipstack_udp_debugport && ipstack_ipv6
-			string "Log Host IPv6"
+			depends on ipstack_syslog && ipstack_ipv6
+			string "Remote Host IPv6"
 			default "fe80:0:0:0:1:2:3:4"
 
 		config cfIPSTACK_UDP_DEBUGPORT_DESTPORT
-			depends on ipstack_udp_debugport
+			depends on ipstack_syslog
 			int "Destination Port"
-			default 10443
+			default 514
