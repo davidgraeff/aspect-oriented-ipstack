@@ -39,6 +39,19 @@ if (BUILD_WITH_ASPECTLESS_INTERFACE AND NOT BUILD_ONLY_ONE_TASK)
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/lock_multitask_access.h")
 endif()
 
+############## files_to_features Tool ##############
+add_subdirectory(buildsystem/files_to_features)
+if (FILES_TO_FEATURES_TOOL_FOUND)
+	# Add make target for directly execute the tool with the right files
+	add_custom_target(fix_files_to_features
+		COMMAND ${PROJECT_NAME}
+		-f "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json"
+		-k "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.fm"
+		-b "${CMAKE_SOURCE_DIR}/src"
+		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		DEPENDS ${PROJECT_NAME} COMMENT "Executing files_to_features" VERBATIM)
+endif()
+
 ############## KCONFIG and determine_relevant_files ##############
 # * You do not have to use kconfig in that case a predefined feature set is build.
 #   Selecting or deselecting features works by editing the buildsystem/kconfig_output_default file ;)
