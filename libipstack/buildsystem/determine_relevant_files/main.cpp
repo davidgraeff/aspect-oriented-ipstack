@@ -35,7 +35,7 @@
 * -o output_filename (may be omitted to output to stdout)
 * -d output_definitions_filename (may be set to "" to output to stdout)
 * -k kconfig_output_filename (usually .config)
-* -f feature_to_files_relation_filename (json format, may be omitted if -d is set)
+* -f files_to_features file (json format, may be omitted if -d is set)
 * -a (select all features, -k is not neccessary and ignored)
 */
 
@@ -56,12 +56,12 @@ void usage(char** argv) {
 	"	Definitions are written like this #define {definitions_prefix}{kconfig_key} {kconfig_value} without the brackets. "
 	"You may omit the prefix.\n"
 	"	The kconfig_output_filename is the output of the kconfig tool (usually .config).\n\n"
-	"Mode OUTPUT ALL FILES: -o output_file [-b base_directory] -f feature_to_files_relation_filename -a\n"
+	"Mode OUTPUT ALL FILES: -o output_file [-b base_directory] -f files_to_features file -a\n"
 	"	You may set output_file to \"\" to use the standard output.\n"
 	"	You may optionally set base_directory as a prefix for all files.\n"
-	"	The feature_to_files_relation_filename is a json file. The syntax is explained in readme_familymodel.md\n"
+	"	The files_to_features file is a json file. The syntax is explained in readme_familymodel.md\n"
 	"	The kconfig selection is ignored and all files are selected.\n\n"
-	"Mode OUTPUT FILES: -o output_file [-b base_directory] -f feature_to_files_relation_filename -k kconfig_output_filename\n"
+	"Mode OUTPUT FILES: -o output_file [-b base_directory] -f files_to_features file -k kconfig_output_filename\n"
 	"	The kconfig_output_filename is the output of the kconfig tool (usually .config).\n"
 	"	It is used to determine the files to ouput in contrast to OUTPUT ALL FILES mode.\n"
 	);
