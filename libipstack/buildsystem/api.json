@@ -1,0 +1,17 @@
+{
+	"subdir" : "api",
+	"depends" : "&ipstack",
+	"comp" : [
+	{
+		"depends" : "&ipstack_udp",
+		"file" : "UDP_Socket.h"
+	},
+	{
+		"depends" : "&ipstack_tcp",
+		"file" : "TCP_Socket.h"
+	},
+	{
+		"files" : ["Setup.h"]
+	}
+	]
+}

@@ -1,11 +1,21 @@
 {
-	"vname" : "IP Stack",
-	"name" : "ipstack",
-	"subdir" : "",
+	"vname" : "Aspect IP Stack",
 	"depends" : "&ipstack",
 	"comp" : [
 		{
-			"files" : ["IPStack_Config.h", "ip/InternetChecksum.h","Socket_Send.ah","Socket_Send_Slice.ah","SendBuffer.h","ip/SendBuffer_IP.ah","ip/SendBuffer_IP_Slice.ah"]
+			"vname" : "Config file",
+			"files" : ["IPStack_Config.h"]
+		},
+		{
+			"vname" : "Basic send support",
+			"files" : ["Socket_Send.ah","Socket_Send_Slice.ah","SendBuffer.h"],
+			"comp" : [
+			{
+				"vname" : "IP Related",
+				"subdir" : "/ip",
+				"files" : ["InternetChecksum.h","SendBuffer_IP.ah","SendBuffer_IP_Slice.ah"]
+			}
+			]
 		},
 		{
 			"depends" : "&ipstack_debug_failed_checksums",
@@ -25,7 +35,6 @@
 		},
 		{
 			"vname" : "Router",
-			"name" : "ipstack_router",
 			"subdir" : "/router",
 			"files" : [
 				"Interface.h",
@@ -71,7 +80,6 @@
 		},
 		{
 			"vname" : "Receive",
-			"name" : "ipstack_receive",
 			"depends" : "&ipstack_ipv4_recv or &ipstack_ipv6",
 			"comp" : [
 			{
@@ -92,7 +100,6 @@
 		},
 		{
 			"vname" : "Util",
-			"name" : "ipstack_util",
 			"subdir" : "/util",
 			"comp" : [
 			{
@@ -116,7 +123,6 @@
 		},
 		{
 			"vname" : "OS Integration",
-			"name" : "ipstack_os_integration",
 			"subdir" : "/operating_system_integration",
 			"comp" : [
 			{
@@ -141,7 +147,8 @@
 			"depends" : "&ipstack_linklayer_direct_response",
 			"comp" : [
 			{
-				"files" : ["demux/DirectResponse.ah","demux/DirectResponse_Slice.ah"]
+				"subdir" : "/demux",
+				"files" : ["DirectResponse.ah","DirectResponse_Slice.ah"]
 			},
 			{
 				"depends" : "&ipstack_linklayer_ethernet",
@@ -151,14 +158,11 @@
 			]
 		},
 		{
-			"vname" : "6lowpan IPv6 headercompression",
-			"name" : "ipstack_ipv6_headercompression",
+			"vname" : "IPv6 Header Compression (6lowpan)",
 			"depends" : "&ipstack_ipv6_headercompression",
 			"subdir" : "/6lowpan",
+			"files" : ["IPv6hc.ah","IPv6iphc.h","IPv6iphc.cpp"],
 			"comp" : [
-			{
-				"files" : ["IPv6hc.ah","IPv6iphc.h","IPv6iphc.cpp"]
-			},
 			{
 				"depends" : "&ipstack_linklayer_ethernet",
 				"subdir" : "/ethernet",
@@ -205,7 +209,6 @@
 		},
 		{
 			"vname" : "Dualstack IPv4 and IPv6",
-			"name" : "ipstack_ipv4_and_ipv6",
 			"depends" : "&ipstack_ipv4 and &ipstack_ipv6",
 			"subdir" : "/ip",
 			"comp" : [
@@ -216,7 +219,6 @@
 		},
 		{
 			"vname" : "Singlestack IPv4",
-			"name" : "ipstack_ipv4_single",
 			"depends" : "&ipstack_ipv4 and not &ipstack_ipv6",
 			"subdir" : "/ip",
 			"comp" : [
@@ -227,7 +229,6 @@
 		},
 		{
 			"vname" : "Singlestack IPv6",
-			"name" : "ipstack_ipv6_single",
 			"depends" : "&ipstack_ipv6 and not &ipstack_ipv4",
 			"subdir" : "/ip",
 			"comp" : [
@@ -238,7 +239,6 @@
 		},
 		{
 			"vname" : "IPv4",
-			"name" : "ipstack_ipv4",
 			"depends" : "&ipstack_ipv4",
 			"subdir" : "/ipv4",
 			"comp" : [
@@ -247,7 +247,6 @@
 			},
 			{
 				"vname" : "IPv4 Receiving",
-				"name" : "ipstack_ipv4_recv",
 				"depends" : "&ipstack_ipv4_recv",
 				"comp" : [
 				{
@@ -1176,24 +1175,6 @@
 					]
 				}
 				]
-			}
-			]
-		},
-		{
-			"vname" : "Template API",
-			"name" : "ipstack_api",
-			"subdir" : "../api",
-			"comp" : [
-			{
-				"depends" : "&ipstack_udp",
-				"file" : "UDP_Socket.h"
-			},
-			{
-				"depends" : "&ipstack_tcp",
-				"file" : "TCP_Socket.h"
-			},
-			{
-				"files" : ["Setup.h"]
 			}
 			]
 		}
