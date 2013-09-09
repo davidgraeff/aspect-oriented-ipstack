@@ -32,7 +32,6 @@ This software is **NOT USABLE** in its current state. TODO:
 - Add API for non-multitasking support
 - Add API for management sockets in own task.
 - Add build system parts for adding own aspects outside of the libipstack/src directory.
-- Add documentation papers to /doc (e.g. APIs, example step-by-step).
 
 Features
 ========
