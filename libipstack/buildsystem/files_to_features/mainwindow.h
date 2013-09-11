@@ -25,18 +25,17 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QSortFilterProxyModel>
-
+#include <QDir>
 namespace Ui {
 class MainWindow;
 }
 class FilterProxyModel;
 class Options;
 class FileModel;
-class ComponentModel;
-class ComponentModelBaseItem;
-class ComponentModelItem;
-class ComponentModelFileItem;
+class FamilyModel;
+class FamilyBaseItem;
+class FamilyComponent;
+class FamilyFile;
 
 class MainWindow : public QMainWindow
 {
@@ -54,7 +53,7 @@ private slots:
     void on_actionSynchronize_with_file_system_triggered();
     void on_actionAdd_component_triggered();
     void on_actionRemove_selected_components_triggered();
-    void on_treeComponents_clicked(const QModelIndex &index);
+    void familyModelSelectionChanged(const QModelIndex &index);
     void on_btnChangeSubdir_clicked();
     void on_btnChangeDepends_clicked();
     void on_actionExpand_all_missing_files_only_triggered();
@@ -65,12 +64,14 @@ private slots:
     void on_listProblems_activated(const QModelIndex &index);
     void on_actionClear_use_filesystem_based_structure_triggered();
     void on_actionBe_smart_triggered();
+    void rejected_files(const QDir &subdir, const QStringList& files);
+
 private:
     Ui::MainWindow *ui;
     Options* options;
     FileModel* filemodel;
     FilterProxyModel* filemodelProxy;
-    ComponentModel* componentModel;
+    FamilyModel* componentModel;
     FilterProxyModel* componentModelProxy;
-    void focusComponent(ComponentModelBaseItem *item);
+    void focusComponent(FamilyBaseItem *item);
 };

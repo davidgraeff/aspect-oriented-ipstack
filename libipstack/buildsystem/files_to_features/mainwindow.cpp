@@ -26,12 +26,12 @@
 #include "ui_mainwindow.h"
 #include "pickdependencies.h"
 #include "options.h"
-#include "models/fileModel.h"
-#include "models/filemodelitem.h"
-#include "models/componentModelItem.h"
-#include "models/componentModel.h"
-#include "models/componentmodelfileitem.h"
-#include "models/dependencyModel.h"
+#include "filemodel/fileModel.h"
+#include "filemodel/filemodelitem.h"
+#include "familymodel/familyModel.h"
+#include "familymodel/familyFile.h"
+#include "familymodel/familyComponent.h"
+#include "kconfigmodel/kconfigModel.h"
 #include "problem_list_item.h"
 #include "filterproxymodel.h"
 #include <QFileDialog>
@@ -72,7 +72,7 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     connect(filemodel,&FileModel::unused_files_update,ui->treeFiles,&QTreeView::expandAll);
 
     // component model
-    componentModel = new ComponentModel(QString::fromStdString(options->base_directory),
+    componentModel = new FamilyModel(QString::fromStdString(options->base_directory),
                                         QString::fromStdString(options->featureToFilesRelationfile), this);
     componentModelProxy = new FilterProxyModel(this);
     componentModelProxy->setSourceModel(componentModel);
@@ -84,11 +84,14 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     ui->treeComponents->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->treeComponents->setModel(componentModelProxy);
     ui->treeComponents->expand(componentModelProxy->index(0,0));
+    connect(ui->treeComponents->selectionModel(),&QItemSelectionModel::currentChanged,
+            this, &MainWindow::familyModelSelectionChanged);
 
-    connect(componentModel,&ComponentModel::removed_existing_files,filemodel,&FileModel::addFiles);
+    connect(componentModel,&FamilyModel::removed_existing_files,filemodel,&FileModel::addFiles);
+    connect(componentModel,&FamilyModel::rejected_existing_files,this,&MainWindow::rejected_files);
 
     on_actionSynchronize_with_file_system_triggered();
-    on_treeComponents_clicked(QModelIndex());
+    familyModelSelectionChanged(QModelIndex());
     update_problems();
 }
 
@@ -111,7 +114,7 @@ void MainWindow::update_problems()
 
     QModelIndexList list_of_missing_files = componentModel->get_missing_files();
     foreach (const QModelIndex& index, list_of_missing_files) {
-        auto* fileitem = static_cast<ComponentModelFileItem*>(index.internalPointer());
+        auto* fileitem = static_cast<FamilyFile*>(index.internalPointer());
 
         QList<FileModelItem*> paths = filemodel->get_file_path(fileitem->filename);
         // could be moved instead of removed
@@ -135,21 +138,21 @@ void MainWindow::update_problems()
     }
 
     // Detect components that only contains files and empty components
-    QList<ComponentModelBaseItem*> queue;
+    QList<FamilyBaseItem*> queue;
     queue << componentModel->getRootItem();
     while (queue.size()) {
-        ComponentModelBaseItem* source = queue.takeFirst();
-        if (source->parent && source->type == ComponentModelItem::TYPE) {
+        FamilyBaseItem* source = queue.takeFirst();
+        if (source->parent && source->type == FamilyComponent::TYPE) {
             if (source->childs.isEmpty()) {
                 auto* problem_item = new ProblemListItem(ProblemListItem::EMPTY_COMPONENT);
                 problem_item->setIcon(QIcon::fromTheme("dialog-warning"));
                 problem_item->setText(tr("Component empty: Parent %1").arg(source->parent->cache_component_name));
                 problem_item->problem_component_item = source;
                 ui->listProblems->addItem(problem_item);
-            } else if (source->parent && source->childs[0]->type==ComponentModelFileItem::TYPE &&
-                       static_cast<ComponentModelItem*>(source)->vname.isEmpty() &&
-                       static_cast<ComponentModelItem*>(source)->depends.isEmpty() &&
-                       static_cast<ComponentModelItem*>(source)->get_directory() == source->parent->get_directory()) {
+            } else if (source->parent && source->childs[0]->type==FamilyFile::TYPE &&
+                       static_cast<FamilyComponent*>(source)->vname.isEmpty() &&
+                       static_cast<FamilyComponent*>(source)->depends.isEmpty() &&
+                       static_cast<FamilyComponent*>(source)->get_directory() == source->parent->get_directory()) {
                 auto* problem_item = new ProblemListItem(ProblemListItem::COMPONENT_WITH_ONLY_FILES);
                 problem_item->setIcon(QIcon::fromTheme("dialog-warning"));
                 problem_item->setText(tr("Files-Only component unneccesary: Parent %1").arg(source->parent->cache_component_name));
@@ -158,7 +161,7 @@ void MainWindow::update_problems()
             }
         }
 
-        foreach(ComponentModelBaseItem* sourceChild, source->childs) {
+        foreach(FamilyBaseItem* sourceChild, source->childs) {
             // add to queue
             queue << sourceChild;
         }
@@ -203,11 +206,11 @@ void MainWindow::on_actionSynchronize_with_file_system_triggered()
 
 void MainWindow::on_actionAdd_component_triggered()
 {
-    ComponentModelItem* currentComponent;
+    FamilyComponent* currentComponent;
     if (!ui->treeComponents->currentIndex().isValid())
         currentComponent=componentModel->getRootItem();
     else
-        currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
+        currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
 
     focusComponent(componentModel->addComponent(currentComponent));
     add_log(tr("Added component to %1").arg(currentComponent->parent->cache_component_name));
@@ -225,7 +228,7 @@ void MainWindow::on_actionRemove_selected_components_triggered()
     update_problems();
 }
 
-void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
+void MainWindow::familyModelSelectionChanged(const QModelIndex &index)
 {
     if (!index.isValid()) {
         ui->btnChangeSubdir->setEnabled(false);
@@ -236,12 +239,12 @@ void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
 
     ui->actionRemove_selected_components->setEnabled(true);
 
-    ComponentModelBaseItem* b = static_cast<ComponentModelBaseItem*>(componentModelProxy->mapToSource(index).internalPointer());
-    if (b->type == ComponentModelItem::TYPE) {
-        ComponentModelItem* currentComponent = (ComponentModelItem*)b;
+    FamilyBaseItem* b = static_cast<FamilyBaseItem*>(componentModelProxy->mapToSource(index).internalPointer());
+    if (b->type == FamilyComponent::TYPE) {
+        FamilyComponent* currentComponent = (FamilyComponent*)b;
 
         ui->labelDepends->setText(currentComponent->depends);
-        ui->labelPath->setText(componentModel->relative_directory(currentComponent->get_directory()));
+        ui->labelPath->setText(componentModel->relative_directory(currentComponent->get_directory().absolutePath()));
         ui->lineName->blockSignals(true); // do not update the component by the value we set now
         ui->lineName->setText(currentComponent->vname);
         ui->lineName->blockSignals(false);
@@ -249,8 +252,8 @@ void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
         ui->btnChangeSubdir->setEnabled(true);
         ui->btnChangeDepends->setEnabled(true);
     } else {
-        ComponentModelFileItem* currentComponentFile = (ComponentModelFileItem*)b;
-        ComponentModelItem* currentComponent = currentComponentFile->parent;
+        FamilyFile* currentComponentFile = (FamilyFile*)b;
+        FamilyComponent* currentComponent = currentComponentFile->parent;
 
         ui->labelDepends->setText(currentComponent->depends);
         ui->labelPath->setText(componentModel->relative_directory(currentComponentFile->get_full_path()));
@@ -267,11 +270,11 @@ void MainWindow::on_btnChangeSubdir_clicked()
 {
     if (!ui->treeComponents->currentIndex().isValid())
         return;
-    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
-
+    FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
+    Q_ASSERT(currentComponent);
 
     QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                                currentComponent->get_directory(),
+                                                currentComponent->get_directory().absolutePath(),
                                                 QFileDialog::ShowDirsOnly
                                                 | QFileDialog::DontResolveSymlinks);
 
@@ -280,20 +283,25 @@ void MainWindow::on_btnChangeSubdir_clicked()
 
     /**
      * If we change the subdirectory, all files of this component (and child components)
-     * have to be removed from the component model and have to be added to the unused-file model again.
+     * should to be removed from the component model. We ask the user.
      */
-    QStringList unused_files = currentComponent->set_directory(dir);
-    filemodel->addFiles(unused_files);
+    bool removeFiles = false;
+    if (currentComponent->childs.size() && QMessageBox::question(this,tr("Change subdir?"),
+                                  tr("You are about to change a subdirectory of a component, where files are listed. The filepaths would be invalid after the change, should they be removed?"),
+                                  QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes) {
+        removeFiles = true;
+    }
+    currentComponent->set_directory(dir,removeFiles);
     componentModel->update(currentComponent);
-    ui->treeFiles->expandAll();
-    ui->labelPath->setText(currentComponent->get_directory());
+    ui->labelPath->setText(currentComponent->cache_relative_directory);
 }
 
 void MainWindow::on_btnChangeDepends_clicked()
 {
     if (!ui->treeComponents->currentIndex().isValid())
         return;
-    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
+    FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
+    Q_ASSERT(currentComponent);
 
     PickDependencies* p = new PickDependencies(QString::fromStdString(options->kconfigfile));
     p->set_initial_selection(currentComponent->depends);
@@ -310,7 +318,8 @@ void MainWindow::on_lineName_textChanged(const QString &arg1)
 {
     if (!ui->treeComponents->currentIndex().isValid())
         return;
-    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
+    FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
+    Q_ASSERT(currentComponent);
 
     currentComponent->vname = arg1;
     currentComponent->update_component_name();
@@ -339,15 +348,15 @@ void MainWindow::on_actionClear_and_propose_component_structure_triggered()
         componentModel->clear();
 
         DependencyModel* dmodel = new DependencyModel(QString::fromStdString(options->kconfigfile));
-        QList<QPair<DependencyModelItem*, ComponentModelItem* > > queue;
-        queue << QPair<DependencyModelItem*, ComponentModelItem* >(dmodel->getRootItem(), componentModel->getRootItem());
+        QList<QPair<DependencyModelItem*, FamilyComponent* > > queue;
+        queue << QPair<DependencyModelItem*, FamilyComponent* >(dmodel->getRootItem(), componentModel->getRootItem());
         while (queue.size()) {
-            QPair<DependencyModelItem*, ComponentModelItem* > p = queue.takeFirst();
+            QPair<DependencyModelItem*, FamilyComponent* > p = queue.takeFirst();
             DependencyModelItem* source = p.first;
-            ComponentModelItem* target = p.second;
+            FamilyComponent* target = p.second;
 
             foreach(DependencyModelItem* sourceChild, source->childs) {
-                ComponentModelItem* targetChild = ComponentModelItem::createComponent(QString::fromStdString(options->base_directory),target);
+                FamilyComponent* targetChild = FamilyComponent::createComponent(componentModel, QString::fromStdString(options->base_directory),target);
                 // name
                 targetChild->vname = sourceChild->name;
                 if (targetChild->vname.isEmpty())
@@ -357,7 +366,7 @@ void MainWindow::on_actionClear_and_propose_component_structure_triggered()
                 targetChild->update_component_name();
 
                 // add to queue
-                queue << QPair<DependencyModelItem*, ComponentModelItem* >
+                queue << QPair<DependencyModelItem*, FamilyComponent* >
                         (sourceChild, targetChild);
             }
         }
@@ -384,26 +393,26 @@ void MainWindow::on_actionClear_use_filesystem_based_structure_triggered()
         componentModel->clear();
         filemodel->createFileTree();
 
-        QList<QPair<FileModelItem*, ComponentModelItem* > > queue;
-        queue << QPair<FileModelItem*, ComponentModelItem* >(filemodel->getRootItem(), componentModel->getRootItem());
+        QList<QPair<FileModelItem*, FamilyComponent* > > queue;
+        queue << QPair<FileModelItem*, FamilyComponent* >(filemodel->getRootItem(), componentModel->getRootItem());
         while (queue.size()) {
-            QPair<FileModelItem*, ComponentModelItem* > p = queue.takeFirst();
+            QPair<FileModelItem*, FamilyComponent* > p = queue.takeFirst();
             FileModelItem* source = p.first;
-            ComponentModelItem* target = p.second;
+            FamilyComponent* target = p.second;
 
             foreach(FileModelItem* sourceChild, source->childs) {
                 if (sourceChild->isFile) {
-                    ComponentModelFileItem::createFile(sourceChild->name,target);
+                    FamilyFile::createFile(componentModel, sourceChild->name,target);
                     continue;
                 }
 
-                ComponentModelItem* targetChild = ComponentModelItem::createComponent(sourceChild->full_absolute_path(),target);
+                FamilyComponent* targetChild = FamilyComponent::createComponent(componentModel, sourceChild->full_absolute_path(),target);
                 // name
                 targetChild->vname = sourceChild->name;
                 targetChild->update_component_name();
 
                 // add to queue
-                queue << QPair<FileModelItem*, ComponentModelItem* >
+                queue << QPair<FileModelItem*, FamilyComponent* >
                         (sourceChild, targetChild);
             }
         }
@@ -458,14 +467,14 @@ void MainWindow::on_listProblems_activated(const QModelIndex &index)
     }
 }
 
-void MainWindow::focusComponent(ComponentModelBaseItem* item)
+void MainWindow::focusComponent(FamilyBaseItem* item)
 {
     Q_ASSERT(item);
     QModelIndex compModelIndex = componentModel->indexOf(item);
     compModelIndex = componentModelProxy->mapFromSource(compModelIndex);
     ui->treeComponents->scrollTo(compModelIndex);
     ui->treeComponents->selectionModel()->select(compModelIndex,QItemSelectionModel::ClearAndSelect);
-    on_treeComponents_clicked(compModelIndex);
+    //familyModelSelectionChanged(compModelIndex);
 }
 
 void MainWindow::on_actionBe_smart_triggered()
@@ -485,25 +494,25 @@ void MainWindow::on_actionBe_smart_triggered()
 
             switch (item->type) {
                 case ProblemListItem::COMPONENT_WITH_ONLY_FILES: {
-                    ComponentModelItem* i = (ComponentModelItem*)item->problem_component_item.data();
+                    FamilyComponent* i = (FamilyComponent*)item->problem_component_item.data();
                     // Add all files of the item to the parent item
-                    i->parent->addFiles(i->get_all_files(true), ComponentModelItem::AllowMultipleSubdirLevels);
+                    i->parent->addFiles(i->get_all_files(true), FamilyComponent::AllowMultipleSubdirLevels);
                     // Remove from parent and delete item
                     i->parent->childs.removeOne(i);
                     delete i;
                 break; }
                 case ProblemListItem::EMPTY_COMPONENT:
-                    componentModel->removeComponent((ComponentModelItem*)item->problem_component_item.data());
+                    componentModel->removeComponent((FamilyComponent*)item->problem_component_item.data());
                 break;
                 case ProblemListItem::MOVED_FILE: {
-                    ComponentModelFileItem* i = (ComponentModelFileItem*)item->problem_component_item.data();
-                    ComponentModelItem* parent = i->parent;
+                    FamilyFile* i = (FamilyFile*)item->problem_component_item.data();
+                    FamilyComponent* parent = i->parent;
                     componentModel->removeFile(i);
-                    parent->addFiles(QStringList() << item->maybe_moved, ComponentModelItem::AllowMultipleSubdirLevels);
+                    parent->addFiles(QStringList() << item->maybe_moved, FamilyComponent::AllowMultipleSubdirLevels);
 
                 break;}
                 case ProblemListItem::REMOVED_FILE:
-                    componentModel->removeFile((ComponentModelFileItem*)item->problem_component_item.data());
+                    componentModel->removeFile((FamilyFile*)item->problem_component_item.data());
                 break;
                 case ProblemListItem::UNUSED_FILES:
                 break;
@@ -515,5 +524,17 @@ void MainWindow::on_actionBe_smart_triggered()
 
         // update problems section by rescanning files
         on_actionSynchronize_with_file_system_triggered();
+    }
+}
+
+void MainWindow::rejected_files(const QDir& subdir, const QStringList &files)
+{
+    // Add files back to filemodel
+    filemodel->addFiles(files);
+
+    foreach(const QString& file, files) {
+        add_log(tr("File is not below the \"%1\" subdirectory: %2").
+                arg(componentModel->relative_directory(subdir.absolutePath())).
+                arg(componentModel->relative_directory(file)));
     }
 }

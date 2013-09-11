@@ -23,33 +23,25 @@
  */
 
 #pragma once
+#include <QString>
+#include <QList>
+#include <QObject>
 
-#include <QDir>
-
-class FileModelItem {
+class FamilyComponent;
+class FamilyModel;
+// We need to be a QObject, because we want to use
+// QPointers (outside of ComponentModel).
+class FamilyBaseItem : public QObject {
+    Q_OBJECT
+protected:
+    FamilyBaseItem(FamilyModel* componentModel);
+    FamilyModel* componentModel;
 public:
-    ~FileModelItem();
-
-    //// Attributes ////
-    QString name;
-    bool isFile;
-    QString full_absolute_path();
-
-    //// Model tree ////
     int getRow();
-    FileModelItem* parent;
-    QList<FileModelItem*> childs;
+    int type;
 
-    //// Creation ////
-    static FileModelItem* createFile(const QString& name, FileModelItem* parent);
-    static FileModelItem* createDir(const QString& name, FileModelItem* parent);
-
-    //// Add/remove child ////
-    void addChild(FileModelItem* item);
-    FileModelItem* removeChild(const QString& filename);
-
-    FileModelItem* getItemByName(const QString& filename);
-private:
-    FileModelItem() {}
-    inline int binary_search(const QString& filename, bool lower_bound_only=false);
+    // The parent item is always a component, never a file
+    FamilyComponent* parent;
+    QList<FamilyBaseItem*> childs;
+    ~FamilyBaseItem();
 };

@@ -172,12 +172,8 @@ Qt::ItemFlags FileModel::flags(const QModelIndex &index) const
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
     if (!index.isValid())
         return defaultFlags;
-
-    FileModelItem *item = static_cast<FileModelItem*>(index.internalPointer());
-    if (item->isFile)
-        return Qt::ItemIsDragEnabled | defaultFlags;
     else
-        return defaultFlags;
+        return Qt::ItemIsDragEnabled | defaultFlags;
 }
 
 Qt::DropActions FileModel::supportedDropActions() const
@@ -205,9 +201,16 @@ QMimeData *FileModel::mimeData(const QModelIndexList &indexes) const
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
 
     foreach (const QModelIndex &index, indexes) {
-        if (index.isValid()) {
+        if (index.isValid() && index.column()==0) {
             FileModelItem *item = static_cast<FileModelItem*>(index.internalPointer());
-            stream << item->full_absolute_path();
+            if (item->isFile)
+                stream << item->full_absolute_path();
+            else {
+                QStringList files = item->get_all_files();
+                foreach(const QString& file, files)
+                    stream << file;
+            }
+
         }
     }
 
@@ -217,8 +220,15 @@ QMimeData *FileModel::mimeData(const QModelIndexList &indexes) const
 
 bool FileModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    FileModelItem *item = static_cast<FileModelItem*>(parent.internalPointer());
-    qDebug() << "removeFile" << item->name << row;
+    // First determine the parent FileModel item
+    FileModelItem *item;
+    if (parent.isValid())
+        item = static_cast<FileModelItem*>(parent.internalPointer());
+    else
+        item = rootItem;
+    Q_ASSERT(item);
+
+    // Start removing from parent item
     beginRemoveRows(parent,row,row+count);
     for (int r=row+count-1;r>=row;--r) {
         removeFileAndEmptyDirs(item,item->childs[r]->name);

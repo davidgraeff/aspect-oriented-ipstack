@@ -23,21 +23,35 @@
  */
 
 #pragma once
-#include "componentmodelbaseitem.h"
+
 #include <QDir>
 
-class ComponentModelItem;
-class ComponentModelFileItem : public ComponentModelBaseItem {
+class FileModelItem {
 public:
-    QString filename;
-    bool not_exist;
-    /**
-     * @brief get_full_path
-     * @return absolute file path
-     */
-    QString get_full_path();
-    enum {TYPE=0};
-    static ComponentModelFileItem *createFile(const QString& filename, ComponentModelItem* parent);
+    ~FileModelItem();
+
+    //// Attributes ////
+    QString name;
+    bool isFile;
+    QString full_absolute_path() const;
+
+    //// Model tree ////
+    int getRow();
+    FileModelItem* parent;
+    QList<FileModelItem*> childs;
+
+    //// Creation ////
+    static FileModelItem* createFile(const QString& name, FileModelItem* parent);
+    static FileModelItem* createDir(const QString& name, FileModelItem* parent);
+
+    //// Add/remove child ////
+    void addChild(FileModelItem* item);
+    FileModelItem* removeChild(const QString& filename);
+
+    FileModelItem* getItemByName(const QString& filename);
+
+    QStringList get_all_files() const;
 private:
-    ComponentModelFileItem();
+    FileModelItem() {}
+    inline int binary_search(const QString& filename, bool lower_bound_only=false);
 };

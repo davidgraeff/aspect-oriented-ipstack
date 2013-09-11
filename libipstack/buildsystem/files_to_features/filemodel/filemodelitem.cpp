@@ -8,7 +8,7 @@ int FileModelItem::getRow() {
         return 0;
 }
 
-QString FileModelItem::full_absolute_path() {
+QString FileModelItem::full_absolute_path() const {
     if (parent)
         return parent->full_absolute_path() + "/" + name;
     else
@@ -58,6 +58,19 @@ FileModelItem *FileModelItem::removeChild(const QString &filename) {
 
 FileModelItem *FileModelItem::getItemByName(const QString &filename) {
     return childs.value(binary_search(filename), 0);
+}
+
+QStringList FileModelItem::get_all_files() const
+{
+    QStringList files;
+    if (isFile)
+        files << full_absolute_path();
+    else {
+        foreach (const FileModelItem* item, childs) {
+            files << item->get_all_files();
+        }
+    }
+    return files;
 }
 
 int FileModelItem::binary_search(const QString &filename, bool lower_bound_only) {

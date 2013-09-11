@@ -23,50 +23,21 @@
  */
 
 #pragma once
-
-#include "componentmodelbaseitem.h"
+#include "familyBaseItem.h"
 #include <QDir>
-#include <QVariant>
-#include <QJsonObject>
 
-class ComponentModel;
-class ComponentModelItem : public ComponentModelBaseItem {
-    friend class ComponentModelFileItem;
+class FamilyComponent;
+class FamilyFile : public FamilyBaseItem {
 public:
-    static ComponentModelItem* createComponent(const QDir& absolut_directory, ComponentModelItem* parent);
-
-    enum add_files_enum {AllowMultipleSubdirLevels,AllowOneSubdirCreateSubcomponents};
-    enum {TYPE=1};
-    QString depends;
-    QString vname;
-    void update_component_name();
-    void toJSon(QJsonObject &jsonObject, ComponentModel *componentModel);
-
-    // For model output
-    QString cache_component_name; // column 0
-    QString cache_relative_directory; // column 1
-
-    void addFiles(const QStringList& files, add_files_enum subdirFlag);
-    QStringList get_all_files(bool only_existing);
-
+    QString filename;
+    bool not_exist;
     /**
-     * @brief set_absolute_directory
-     * @param model
-     * @param dir
-     * @return List of no longer used files
+     * @brief get_full_path
+     * @return absolute file path
      */
-    QStringList set_directory(const QString& absolut_dir);
-    QString get_directory();
-
-    QString get_dependencies() {
-        return depends;
-    }
-
-    void set_dependencies(const QString& d) {
-        depends = d;
-    }
-
+    QString get_full_path();
+    enum {TYPE=0};
+    static FamilyFile *createFile(FamilyModel *componentModel, const QString& filename, FamilyComponent* parent);
 private:
-    QDir directory;
-    ComponentModelItem() {}
+    FamilyFile(FamilyModel* componentModel);
 };

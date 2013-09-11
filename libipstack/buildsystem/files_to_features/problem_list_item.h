@@ -27,7 +27,7 @@
 #include <QListWidgetItem>
 #include <QPointer>
 
-class ComponentModelBaseItem;
+class FamilyBaseItem;
 /**
  * We subclass the QListWidgetItem that is stored in the problems
  * list in the mainwindow, to add a pointer reference to the item.
@@ -40,7 +40,7 @@ class ProblemListItem : public QListWidgetItem
 public:
     enum type_enum {UNUSED_FILES,REMOVED_FILE,MOVED_FILE,EMPTY_COMPONENT,COMPONENT_WITH_ONLY_FILES} type;
     explicit ProblemListItem(type_enum);
-    QPointer<ComponentModelBaseItem> problem_component_item;
+    QPointer<FamilyBaseItem> problem_component_item;
     QString maybe_moved;
 signals:
 

@@ -31,7 +31,6 @@
 * -k kconfig_input_filename
 */
 
-#include "picojson.h"
 #include "mainwindow.h"
 #include "options.h"
 #include <QApplication>

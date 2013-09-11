@@ -14,30 +14,29 @@ QMAKE_CXXFLAGS += -std=c++11
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    models/fileModel.cpp \
-    pickdependencies.cpp \
-    models/dependencyModel.cpp \
-    models/componentModel.cpp \
-    models/componentmodelbaseitem.cpp \
-    models/componentmodelfileitem.cpp \
-    models/componentModelItem.cpp \
     problem_list_item.cpp \
-    models/filemodelitem.cpp \
-    filterproxymodel.cpp
+    filterproxymodel.cpp \
+    pickdependencies.cpp \
+    filemodel/fileModel.cpp \
+    filemodel/filemodelitem.cpp \
+    familymodel/familyModel.cpp \
+    kconfigmodel/kconfigModel.cpp \
+    familymodel/familyBaseItem.cpp \
+    familymodel/familyComponent.cpp \
+    familymodel/familyFile.cpp
 
 HEADERS  += mainwindow.h \
-    picojson.h \
     options.h \
-    models/fileModel.h \
     pickdependencies.h \
-    models/dependencyModel.h \
-    models/componentModel.h \
-    models/componentModelItem.h \
-    models/componentmodelbaseitem.h \
-    models/componentmodelfileitem.h \
     problem_list_item.h \
-    models/filemodelitem.h \
-    filterproxymodel.h
+    filterproxymodel.h \
+    filemodel/fileModel.h \
+    filemodel/filemodelitem.h \
+    familymodel/familyModel.h \
+    kconfigmodel/kconfigModel.h \
+    familymodel/familyBaseItem.h \
+    familymodel/familyFile.h \
+    familymodel/familyComponent.h
 
 FORMS    += mainwindow.ui \
     pickdependencies.ui

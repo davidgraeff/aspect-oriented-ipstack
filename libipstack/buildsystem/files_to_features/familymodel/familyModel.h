@@ -31,18 +31,20 @@
 #include <QDir>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "componentmodelbaseitem.h"
+#include <QIcon>
 
-class ComponentModelItem;
-class ComponentModelFileItem;
-class ComponentModel : public QAbstractItemModel
+class FamilyBaseItem;
+class FamilyComponent;
+class FamilyFile;
+class FamilyModel : public QAbstractItemModel
 {
     Q_OBJECT
-    friend class ComponentModelItem;
+    friend class FamilyComponent;
+    friend class FamilyFile;
 public:
-    ComponentModel(const QString& base_directory, const QString& featureToFilesRelationfile, QObject *parent = 0);
-    ~ComponentModel();
-    ComponentModelItem *getRootItem();
+    FamilyModel(const QString& base_directory, const QString& featureToFilesRelationfile, QObject *parent = 0);
+    ~FamilyModel();
+    FamilyComponent *getRootItem();
 
     /**
      * @brief Save the component and file structure to a file
@@ -56,8 +58,8 @@ public:
      * of item and want to have that reflected in views that use this model.
      * @param item Update the model at items positions.
      */
-    void update(ComponentModelBaseItem* item);
-    QModelIndex indexOf(ComponentModelBaseItem* item) const;
+    void update(FamilyBaseItem* item);
+    QModelIndex indexOf(FamilyBaseItem* item) const;
 
     /**
      * @brief get_used_files
@@ -80,10 +82,10 @@ public:
     QString relative_directory(const QString& absolute_path);
 
     ///////////////////// Add/Remove /////////////////////
-    void removeComponent(ComponentModelItem* item);
-    void removeFile(ComponentModelFileItem* item);
+    void removeComponent(FamilyComponent* item);
+    void removeFile(FamilyFile* item);
     // Return added component
-    ComponentModelItem *addComponent(ComponentModelItem* parent=0);
+    FamilyComponent *addComponent(FamilyComponent* parent=0);
     /// if removeEntries is true all content will be erased and the model gets
     /// a reset signal. if removeEntries is false only the reset signal will be
     /// emitted.
@@ -110,21 +112,31 @@ public:
 private:
     const QDir base_directory;
     QString featureToFilesRelationfile;
-    ComponentModelItem *rootItem;
+    FamilyComponent *rootItem;
+
+    QIcon icon_missing;
+    QIcon icon_file;
+    QIcon icon_component;
 
     /**
      * Parse a json object. The FeatureToFiles json objects are those with keys
      * like those: name, vname, file, files, subdir, comp.
      * Nodes are traversed recursively.
      */
-    bool node(ComponentModelItem* current_item, const QJsonObject &obj);
+    bool node(FamilyComponent* current_item, const QJsonObject &obj);
     /**
      * A "comp" element of a node is parsed via this method.
      * Usually a component contains several (sub-)nodes.
      */
-    bool componentArray(ComponentModelItem* current_item, const QJsonArray &arr);
+    bool componentArray(FamilyComponent* current_item, const QJsonArray &arr);
 
 Q_SIGNALS:
+    // This signal is emitted if files are removed from the family model
+    // that does exist in the filesystem.
     void removed_existing_files(const QStringList& files);
+    // This signal is emitted if files are rejected by the family model
+    // although it does exist in the filesystem.
+    void rejected_existing_files(const QDir &subdir, const QStringList& files);
+    // This signal is emitted if files are added to the family model
     void added_files(const QStringList& files);
 };

@@ -24,7 +24,7 @@
 
 #include "pickdependencies.h"
 #include "ui_pickdependencies.h"
-#include "dependencyModel.h"
+#include "kconfigmodel/kconfigModel.h"
 #include <QDebug>
 #include <QHBoxLayout>
 
@@ -60,6 +60,9 @@ QString PickDependencies::get_dependency_string()
 
 void PickDependencies::set_initial_selection(const QString &depends_pattern)
 {
+    if (depends_pattern.trimmed().isEmpty())
+        return;
+
     QStringList list_of_selected_features = depends_pattern.split(' ');
 
     if (list_of_selected_features.isEmpty() ||
