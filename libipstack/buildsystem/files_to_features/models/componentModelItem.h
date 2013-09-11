@@ -25,25 +25,29 @@
 #pragma once
 
 #include "componentmodelbaseitem.h"
-
 #include <QDir>
+#include <QVariant>
+#include <QJsonObject>
 
-
+class ComponentModel;
 class ComponentModelItem : public ComponentModelBaseItem {
     friend class ComponentModelFileItem;
 public:
     static ComponentModelItem* createComponent(const QDir& absolut_directory, ComponentModelItem* parent);
 
+    enum add_files_enum {AllowMultipleSubdirLevels,AllowOneSubdirCreateSubcomponents};
     enum {TYPE=1};
     QString depends;
     QString vname;
     void update_component_name();
+    void toJSon(QJsonObject &jsonObject, ComponentModel *componentModel);
 
     // For model output
     QString cache_component_name; // column 0
     QString cache_relative_directory; // column 1
 
-    QStringList get_all_files();
+    void addFiles(const QStringList& files, add_files_enum subdirFlag);
+    QStringList get_all_files(bool only_existing);
 
     /**
      * @brief set_absolute_directory

@@ -55,6 +55,8 @@ public:
 
     /// Return name of feature at position @index
     QString feature_name(const QModelIndex &current);
+    QModelIndex indexOf(const QString& name);
+    DependencyModelItem* getRootItem();
 
 	QVariant data(const QModelIndex &index, int role) const;
 	QVariant headerData(int section, Qt::Orientation orientation,

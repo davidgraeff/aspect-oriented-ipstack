@@ -160,6 +160,20 @@ QString DependencyModel::feature_name(const QModelIndex &current) {
     return item->name;
 }
 
+QModelIndex DependencyModel::indexOf(const QString &name)
+{
+    DependencyModelItem* d = getItemByName(name, rootItem);
+    if (d) {
+        return createIndex(d->row, 0, d);
+    } else
+        return QModelIndex();
+}
+
+DependencyModelItem *DependencyModel::getRootItem()
+{
+    return rootItem;
+}
+
 DependencyModelItem* DependencyModel::getItemByName(const QString& name, DependencyModelItem *current)
 {
     if( current->name == name ) {

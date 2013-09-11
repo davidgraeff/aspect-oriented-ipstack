@@ -23,13 +23,14 @@
  */
 
 #include "fileModel.h"
+#include "filemodelitem.h"
 #include <QDirIterator>
 #include <QDebug>
 #include <QColor>
 #include <QMimeData>
 
 FileModel::FileModel(const QString& base_directory, QObject *parent)
-    : QAbstractItemModel(parent), rootItem(0), base_directory(QDir(base_directory)),cached_unused_files(0)
+    : QAbstractItemModel(parent), rootItem(0), base_directory(QDir(base_directory))
 {
     createFileTree();
 }
@@ -41,7 +42,7 @@ FileModel::~FileModel()
 
 void FileModel::createFileTree()
 {
-    cached_unused_files = 0;
+    all_files.clear();
     delete rootItem;
     rootItem = FileModelItem::createDir(base_directory.absolutePath(), 0);
 
@@ -70,27 +71,23 @@ void FileModel::removeFiles(const QStringList &files)
 
         // Look for directory of current to-delete file
         FileModelItem* parent = rootItem;
-        FileModelItem* currentItem;
-        FileModelItem* temp = FileModelItem::createDir("", 0);
         while (subDirsReverse.size()) {
-            const QString dirname = subDirsReverse.takeLast();
-            temp->name = dirname;
-            parent = parent->getItemByName(temp);
+            parent = parent->getItemByName(subDirsReverse.takeLast());
             if (!parent) { // We did not find this directory in out tree, look at next file
                 break;
             }
         }
         if (parent) {
-            temp->name = d.fileName();
-            temp->isFile = true;
-            currentItem = temp;
+            FileModelItem* currentItem;
+            QString filename = d.fileName();
             for (;;) {
-                int i = parent->indexOf(currentItem);
-                if (i!=-1) {
-                    delete parent->childs.takeAt(i);
-                    --cached_unused_files;
+                if ((currentItem = parent->removeChild(filename))) {
+                    if (currentItem->isFile) {
+                        all_files.remove(filename, currentItem);
+                    }
+                    delete currentItem;
                     if (parent->childs.isEmpty() && parent->parent) {
-                        currentItem = parent;
+                        filename = parent->name;
                         parent = parent->parent;
                     } else
                         break;
@@ -98,10 +95,9 @@ void FileModel::removeFiles(const QStringList &files)
                     break;
             }
         }
-        delete temp;
     }
     endResetModel();
-    emit unused_files_update(cached_unused_files);
+    emit unused_files_update(all_files.size());
 }
 
 void FileModel::addFiles(const QStringList &files)
@@ -113,12 +109,22 @@ void FileModel::addFiles(const QStringList &files)
         addFile(get_relative_dirs_list(d.absoluteDir()), d.fileName());
     }
     endResetModel();
-    emit unused_files_update(cached_unused_files);
+    emit unused_files_update(all_files.size());
 }
 
 int FileModel::get_unused_files_size() const
 {
-    return cached_unused_files;
+    return all_files.size();
+}
+
+QList<FileModelItem*> FileModel::get_file_path(const QString &filename)
+{
+    return all_files.values(filename);
+}
+
+FileModelItem *FileModel::getRootItem()
+{
+    return rootItem;
 }
 
 void FileModel::addFile(QStringList subDirsReverse, const QString &file)
@@ -126,20 +132,16 @@ void FileModel::addFile(QStringList subDirsReverse, const QString &file)
     FileModelItem* parent = rootItem;
     while (subDirsReverse.size()) {
         const QString dirname = subDirsReverse.takeLast();
-        FileModelItem* temp = FileModelItem::createDir(dirname, 0);
-        FileModelItem* found = parent->getItemByName(temp);
+        FileModelItem* found = parent->getItemByName(dirname);
         if (!found) { // We did not find this directory in out tree, we create one
-            temp->addToParent(parent);
-            parent = temp;
+            parent = FileModelItem::createDir(dirname, parent);
         } else { // we found it and use it
-            delete temp;
             parent = found;
         }
     }
 
     // Add file
-    FileModelItem::createFile(file, parent);
-    ++cached_unused_files;
+    all_files.insertMulti(file, FileModelItem::createFile(file, parent));
 }
 
 QStringList FileModel::get_relative_dirs_list(QDir path)

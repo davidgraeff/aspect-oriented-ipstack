@@ -31,41 +31,29 @@
 #include <QMimeData>
 #include <QQueue>
 #include <QTreeWidgetItemIterator>
-#include <iostream>     // std::ios, std::istream, std::cout
-#include <fstream>      // std::filebuf
-#include <sstream>      // std::stringstream
+#include <QJsonDocument>
+#include <QJsonArray>
 
 ComponentModel::ComponentModel(const QString& base_directory, const QString &featureToFilesRelationfile, QObject *parent)
-    : QAbstractItemModel(parent), base_directory(QDir(base_directory))
+    : QAbstractItemModel(parent), base_directory(QDir(base_directory)), featureToFilesRelationfile(featureToFilesRelationfile)
 {
     rootItem = ComponentModelItem::createComponent(base_directory,0);
 
-    // read feature_to_files_relation file
-    std::filebuf fb;
-    if (!fb.open (featureToFilesRelationfile.toLatin1().constData(),std::ios::in)) {
-        std::cerr << "Failed to open featureToFilesRelation file!\n";
-        exit(EXIT_FAILURE);
+    QJsonParseError err;
+    QFile f(featureToFilesRelationfile);
+    if (!f.open(QFile::ReadOnly)) {
+        qWarning() << "Failed to open featureToFilesRelation file!";
+        return;
+    }
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(f.readAll(),&err);
+    f.close();
+
+    if (err.error != QJsonParseError::NoError) {
+        qWarning() << err.errorString();
+        return;
     }
 
-    std::istream featureToFilesRelation_FileStream(&fb);
-    picojson::value featureToFilesRelation;
-    featureToFilesRelation_FileStream >> featureToFilesRelation;
-    fb.close();
-
-    std::string err = picojson::get_last_error();
-    if (! err.empty()) {
-        std::cerr << "Failed to parse featureToFilesRelation file!\n";
-        std::cerr << err << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // check if the type of the value is "object"
-    if (! featureToFilesRelation.is<picojson::object>()) {
-        std::cerr << "featureToFilesRelation::JSON is not an object" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    node(rootItem, featureToFilesRelation.get<picojson::object>());
+    node(rootItem, jsonDoc.object());
 }
 
 ComponentModel::~ComponentModel()
@@ -73,9 +61,40 @@ ComponentModel::~ComponentModel()
     delete rootItem;
 }
 
-void ComponentModel::save()
+ComponentModelItem *ComponentModel::getRootItem()
 {
+    return rootItem;
+}
 
+bool ComponentModel::save(QIODevice *device, bool freeAfterUse)
+{
+    if (device==0) {
+        device = new QFile(featureToFilesRelationfile+".try");
+        device->open(QIODevice::WriteOnly);
+        freeAfterUse = true;
+    }
+
+    if (!device->isOpen())
+        return false;
+
+    QJsonDocument jsonDoc;
+    // if there is only one subitem use that as root
+    if (rootItem->childs.size()==1 && rootItem->childs[0]->type==ComponentModelItem::TYPE) {
+        QJsonObject rootJson;
+        static_cast<ComponentModelItem*>(rootItem->childs[0])->toJSon(rootJson, this);
+        jsonDoc.setObject(rootJson);
+    } else {// for more items use an array in an object
+        QJsonObject rootJson;
+        rootItem->toJSon(rootJson, this);
+        jsonDoc.setObject(rootJson);
+    }
+    device->write(jsonDoc.toJson().replace("    ","\t"));
+
+    device->close();
+    if (freeAfterUse)
+        delete device;
+
+    return true;
 }
 
 void ComponentModel::remove_non_existing_files()
@@ -83,12 +102,12 @@ void ComponentModel::remove_non_existing_files()
 
 }
 
-QStringList ComponentModel::get_used_files()
+QStringList ComponentModel::get_used_files() const
 {
-    return rootItem->get_all_files();
+    return rootItem->get_all_files(true);
 }
 
-QModelIndexList ComponentModel::get_missing_files()
+QModelIndexList ComponentModel::get_missing_files() const
 {
     QModelIndexList list;
     QQueue<QModelIndex> queue;
@@ -116,28 +135,94 @@ QModelIndexList ComponentModel::get_missing_files()
     return list;
 }
 
-QStringList ComponentModel::removeComponent(ComponentModelItem *c)
+QString ComponentModel::relative_directory(const QString &absolute_path)
 {
-    QStringList l = c->get_all_files();
-    beginResetModel();
-    delete c;
-    endResetModel();
+    QString b = base_directory.absolutePath();
+    if (absolute_path.startsWith(b))
+        return absolute_path.mid(b.size());
+    return absolute_path;
+}
+
+void ComponentModel::update(ComponentModelBaseItem *item)
+{
+    Q_ASSERT(item);
+    Q_ASSERT(item!=rootItem);
+    QModelIndex index = createIndex(item->getRow(),0,item);
+    emit dataChanged(index, index);
+}
+
+QModelIndex ComponentModel::indexOf(ComponentModelBaseItem *item) const
+{
+    if (!item)
+        return QModelIndex();
+    return createIndex(item->getRow(),0,item);
+}
+
+
+QStringList ComponentModel::removeComponent(ComponentModelItem *item)
+{
+    Q_ASSERT(item);
+    QStringList l = item->get_all_files(true);
+    QModelIndex index = createIndex(item->getRow(),0,item);
+    beginRemoveRows(index.parent(),index.row(),index.row());
+    // Remove from parent
+    {
+        ComponentModelBaseItem* parent = item->parent;
+        if (parent)
+            parent->childs.removeOne(item);
+    }
+    // Remote item and childs
+    delete item;
+    endRemoveRows();
     return l;
 }
 
-void ComponentModel::addComponent(ComponentModelItem *parent)
+QStringList ComponentModel::removeFile(ComponentModelFileItem *item)
 {
-    ComponentModelItem::createComponent(QString(), parent);
+    Q_ASSERT(item);
+    // Return file name
+    QStringList l;
+    if (!item->not_exist)
+        l << item->get_full_path();
+
+    QModelIndex index = createIndex(item->getRow(),0,item);
+    beginRemoveRows(index.parent(),index.row(),index.row());
+    // Remove from parent
+    {
+        ComponentModelBaseItem* parent = item->parent;
+        if (parent)
+            parent->childs.removeOne(item);
+    }
+    // Remote item and childs
+    delete item;
+    endRemoveRows();
+    return l;
 }
 
-QStringList ComponentModel::get_relative_dirs_list(QDir path)
+ComponentModelItem* ComponentModel::addComponent(ComponentModelItem *parent)
 {
-    QStringList relative_dirs;
-    while (path != base_directory) {
-        relative_dirs.append(path.dirName());
-        path.cdUp();
+    if (!parent)
+        parent = rootItem;
+
+    ComponentModelItem* i = ComponentModelItem::createComponent(parent->get_directory(), parent);
+    i->update_component_name();
+//    QModelIndex index = createIndex(i->getRow(),0,i);
+//    beginInsertRows(index.parent(),index.row(),index.row());
+//    endInsertRows();
+//    emit dataChanged(index.parent(),index);
+    beginResetModel();
+    endResetModel();
+    return i;
+}
+
+void ComponentModel::clear(bool removeEntries)
+{
+    beginResetModel();
+    if (removeEntries) {
+        qDeleteAll(rootItem->childs);
+        rootItem->childs.clear();
     }
-    return relative_dirs;
+    endResetModel();
 }
 
 int ComponentModel::columnCount(const QModelIndex &) const
@@ -152,10 +237,10 @@ Qt::ItemFlags ComponentModel::flags(const QModelIndex &index) const
         return defaultFlags | Qt::ItemIsDropEnabled;
 
     ComponentModelBaseItem *item = static_cast<ComponentModelBaseItem*>(index.internalPointer());
-    if (item->type == ComponentModelItem::TYPE)
-        return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
-    else
+    if (item->type == ComponentModelItem::TYPE) {
         return Qt::ItemIsDropEnabled | defaultFlags;
+    } else
+        return Qt::ItemIsDragEnabled | defaultFlags;
 }
 
 Qt::DropActions ComponentModel::supportedDropActions() const
@@ -183,7 +268,7 @@ QMimeData *ComponentModel::mimeData(const QModelIndexList &indexes) const
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
 
     foreach (const QModelIndex &index, indexes) {
-        if (index.isValid()) {
+        if (index.isValid() && index.column()==0) {
             ComponentModelBaseItem *item = static_cast<ComponentModelBaseItem*>(index.internalPointer());
             if (item->type == ComponentModelFileItem::TYPE)
                 stream << static_cast<ComponentModelFileItem*>(item)->get_full_path();
@@ -196,8 +281,6 @@ QMimeData *ComponentModel::mimeData(const QModelIndexList &indexes) const
 
 bool ComponentModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
-    Q_UNUSED(row);Q_UNUSED(column);Q_UNUSED(parent);
-
     if (action == Qt::IgnoreAction)
         return true;
 
@@ -207,14 +290,23 @@ bool ComponentModel::dropMimeData(const QMimeData *data, Qt::DropAction action, 
     QByteArray encodedData = data->data("application/files.text.list");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
 
+    ComponentModelBaseItem *item = static_cast<ComponentModelBaseItem*>(parent.internalPointer());
+    if (item->type==ComponentModelFileItem::TYPE)
+        item = item->parent;
+    ComponentModelItem* target = (ComponentModelItem*)item;
+
+    QStringList files;
+    QString file;
     while (!stream.atEnd()) {
-        QString text;
-        stream >> text;
-        QFileInfo info(text);
-        // info.fileName()
-        //TODO
+        stream >> file;
+        files << file;
     }
 
+    target->addFiles(files, ComponentModelItem::AllowOneSubdirCreateSubcomponents);
+    beginResetModel();
+    endResetModel();
+
+    // If we return true, Qt automatically calls removeRows of the source model
     return true;
 }
 
@@ -315,47 +407,26 @@ int ComponentModel::rowCount(const QModelIndex &parent) const
 }
 
 
-bool ComponentModel::componentArray(ComponentModelItem *current_item, const picojson::value::array& obj) {
+bool ComponentModel::componentArray(ComponentModelItem *current_item, const QJsonArray& arr) {
     bool result = true;
-    for (picojson::value::array::const_iterator i = obj.begin(); i != obj.end(); ++i) {
-        const picojson::value& value = *i;
+    for (auto i = arr.begin(); i!=arr.end();++i) {
+        const QJsonValue& value = *i;
 
-        if (!value.is<picojson::object>()) {
-            std::cerr << "[OBJECT] expected in comp" << std::endl;
+        if (!value.isObject()) {
+            qWarning() << "[OBJECT] expected in comp";
             return false;
         }
-        result &= node(current_item, value.get<picojson::object>());
+        result &= node(current_item, value.toObject());
         if (!result)
             return false;
     }
     return result;
 }
 
-QList<QString> ComponentModel::get_files(const picojson::value::object& obj) {
-    QList<QString> files;
-    if (obj.count("file")) {
-        files.append(QString::fromStdString(obj.at("file").get<std::string>()));
-    } else if (obj.count("files")) {
-        const picojson::value::array& arr = obj.at("files").get<picojson::array>();
-        for (picojson::value::array::const_iterator i = arr.begin(); i != arr.end(); ++i) {
-            files.append(QString::fromStdString(i->get<std::string>()));
-        }
-    }
-    return files;
-}
-
-QString ComponentModel::getMapString(const picojson::value::object& obj, std::string name) {
-    auto i = obj.find(name);
-    if (i==obj.end())
-        return QString();
-    else
-        return QString::fromStdString(i->second.get<std::string>());
-}
-
-bool ComponentModel::node(ComponentModelItem *current_item, const picojson::value::object& obj) {
+bool ComponentModel::node(ComponentModelItem *current_item, const QJsonObject& obj) {
     bool result = true;
     // Determine (sub)directory
-    QString subdir = getMapString(obj, "subdir");
+    QString subdir = obj.value("subdir").toString();
     QDir new_dir(current_item->get_directory());
     if (subdir.startsWith("/"))
         subdir.remove(0,1);
@@ -364,24 +435,24 @@ bool ComponentModel::node(ComponentModelItem *current_item, const picojson::valu
 
     // Create new component
     ComponentModelItem* new_item = ComponentModelItem::createComponent(new_dir,current_item);
-    new_item->depends = getMapString(obj, "depends");
-    new_item->vname = getMapString(obj, "vname");
+    new_item->depends = obj.value("depends").toString();
+    new_item->vname = obj.value("vname").toString();
     new_item->update_component_name();
 
     // Add files
-    QList<QString> files = get_files(obj);
+    QJsonArray files;
+    if (obj.contains("file"))
+        files.append(obj.value("file").toString());
+    else if (obj.contains("files"))
+        files = obj.value("files").toArray();
+
     for (auto i = files.begin(); i!=files.end();++i) {
-         ComponentModelFileItem::createFile(*i, new_item);
+        ComponentModelFileItem::createFile((*i).toString(), new_item);
     }
 
     // Subcomponents
-    if (obj.count("comp")) {
-        const picojson::value& value = obj.at("comp");
-        if (!value.is<picojson::array>()) {
-            std::cerr << "[ARRAY] expected as comp" << std::endl;
-            return false;
-        }
-        result &= componentArray(new_item, value.get<picojson::array>());
+    if (obj.contains("comp")) {
+        result &= componentArray(new_item, obj.value("comp").toArray());
     }
 
     return result;

@@ -17,8 +17,4 @@ ComponentModelBaseItem::~ComponentModelBaseItem() {
         child->parent = 0;
     qDeleteAll(childs);
     childs.clear();
-
-    int r = getRow();
-    if (r)
-        parent->childs.removeAt(r);
 }

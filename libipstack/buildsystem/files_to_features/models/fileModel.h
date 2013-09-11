@@ -29,25 +29,28 @@
 #include <QVariant>
 #include <QObject>
 #include <QDir>
-#include "picojson.h"
-#include "componentmodelbaseitem.h"
 
-class ComponentModelItem;
-class ComponentModel : public QAbstractItemModel
+class FileModelItem;
+class FileModel : public QAbstractItemModel
 {
     Q_OBJECT
-    friend class ComponentModelItem;
+
 public:
-    ComponentModel(const QString& base_directory, const QString& featureToFilesRelationfile, QObject *parent = 0);
-    ~ComponentModel();
+    FileModel(const QString& base_directory, QObject *parent = 0);
+    ~FileModel();
+    /// This will read the filesystem and create a copy of the structure.
+    void createFileTree();
+    /// Remove files from this model. Filenames have to be the full absolute path.
+    void removeFiles(const QStringList& files);
+    /// Add files. Full absolute path names are required.
+    void addFiles(const QStringList& files);
+    /// Return amount of files in this model. Usually called after "removeFiles".
+    int get_unused_files_size() const;
 
-    void save();
-    void remove_non_existing_files();
+    /// Return the file paths of a filename.
+    QList<FileModelItem *> get_file_path(const QString& filename);
 
-    QStringList get_used_files();
-    QModelIndexList get_missing_files();
-    QStringList removeComponent(ComponentModelItem* c);
-    void addComponent(ComponentModelItem* parent);
+    FileModelItem* getRootItem();
 
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation,
@@ -65,29 +68,12 @@ public:
     QMimeData *mimeData(const QModelIndexList &indexes) const;
     bool dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent );
 
-    /**
-     * Return the string of the map at position "name". Return an empty string
-     * if the map does not contain that key.
-     */
-    QString getMapString(const picojson::value::object& obj, std::string name);
-    /**
-     * Return a list of files either via the "files" key of the obj map or via
-     * the "file" key. An empty list is returned if neither of those keys is existing.
-     */
-    QList<QString> get_files(const picojson::value::object& obj);
-    /**
-     * Parse a json object. The FeatureToFiles json objects are those with keys
-     * like those: name, vname, file, files, subdir, comp.
-     * Nodes are traversed recursively.
-     */
-    bool node(ComponentModelItem* current_item, const picojson::value::object& obj);
-    /**
-     * A "comp" element of a node is parsed via this method.
-     * Usually a component contains several (sub-)nodes.
-     */
-    bool componentArray(ComponentModelItem* current_item, const picojson::value::array& obj);
 private:
+    QMultiMap<QString,FileModelItem*> all_files;
+    FileModelItem *rootItem;
     const QDir base_directory;
-    ComponentModelItem *rootItem;
+    void addFile(QStringList subDirsReverse, const QString& file);
     QStringList get_relative_dirs_list(QDir path);
+Q_SIGNALS:
+    void unused_files_update(int number);
 };

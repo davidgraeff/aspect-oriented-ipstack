@@ -14,26 +14,28 @@ QMAKE_CXXFLAGS += -std=c++11
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    fileModel.cpp \
+    models/fileModel.cpp \
     pickdependencies.cpp \
-    dependencyModel.cpp \
-    componentModel.cpp \
-    componentmodelbaseitem.cpp \
-    componentmodelfileitem.cpp \
-    componentModelItem.cpp \
-    qlistwidgetitemwithcompmodelindex.cpp
+    models/dependencyModel.cpp \
+    models/componentModel.cpp \
+    models/componentmodelbaseitem.cpp \
+    models/componentmodelfileitem.cpp \
+    models/componentModelItem.cpp \
+    problem_list_item.cpp \
+    models/filemodelitem.cpp
 
 HEADERS  += mainwindow.h \
     picojson.h \
     options.h \
-    fileModel.h \
+    models/fileModel.h \
     pickdependencies.h \
-    dependencyModel.h \
-    componentModel.h \
-    componentModelItem.h \
-    componentmodelbaseitem.h \
-    componentmodelfileitem.h \
-    qlistwidgetitemwithcompmodelindex.h
+    models/dependencyModel.h \
+    models/componentModel.h \
+    models/componentModelItem.h \
+    models/componentmodelbaseitem.h \
+    models/componentmodelfileitem.h \
+    problem_list_item.h \
+    models/filemodelitem.h
 
 FORMS    += mainwindow.ui \
     pickdependencies.ui

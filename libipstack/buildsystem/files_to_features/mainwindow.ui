@@ -119,16 +119,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QLabel" name="labelPath">
-              <property name="text">
-               <string>...</string>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::TextBrowserInteraction</set>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_2">
               <property name="sizePolicy">
@@ -149,13 +139,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QLabel" name="labelDepends">
-              <property name="text">
-               <string>...</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="0">
              <widget class="QLabel" name="label_3">
               <property name="text">
@@ -163,8 +146,22 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="2">
-             <widget class="QLineEdit" name="lineEdit"/>
+            <item row="0" column="2" colspan="2">
+             <widget class="QLineEdit" name="labelPath">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2" colspan="2">
+             <widget class="QLineEdit" name="labelDepends">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2" colspan="2">
+             <widget class="QLineEdit" name="lineName"/>
             </item>
            </layout>
           </widget>
@@ -247,7 +244,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QGroupBox" name="groupProblems">
+      <widget class="QWidget" name="widgetBottom" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -260,12 +257,9 @@
          <height>50</height>
         </size>
        </property>
-       <property name="title">
-        <string> Problems detected:</string>
-       </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <property name="leftMargin">
-         <number>0</number>
+         <number>9</number>
         </property>
         <property name="topMargin">
          <number>9</number>
@@ -278,6 +272,9 @@
         </property>
         <item>
          <widget class="QListWidget" name="listProblems"/>
+        </item>
+        <item>
+         <widget class="QListWidget" name="listLog"/>
         </item>
        </layout>
       </widget>
@@ -302,7 +299,7 @@ padding-left:4px;
 padding-right:4px;
 background: qradialgradient(cx: 0.3, cy: -0.4,
 fx: 0.3, fy: -0.4,
-radius: 1.35, stop: 0 #fff, stop: 1 #888);
+radius: 1.35, stop: 0 #fff, stop: 1 #aaa);
 min-width: 80px;
 }
 
@@ -321,7 +318,8 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
 #bottomFrame QPushButton:checked {
 background: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
-radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+radius: 1.35, stop: 0 #fff, stop: 1 #333);
+border-style: outset;
 }
 
 </string>
@@ -333,13 +331,10 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        <item>
         <widget class="QPushButton" name="btnShowProblems">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show problems section.&lt;/p&gt;&lt;p&gt;The red number (if any) next to the label indicates how many proplems have been found.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show problems section and hide logs.&lt;/p&gt;&lt;p&gt;The red number (if any) next to the label indicates how many proplems have been found.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Problems</string>
-         </property>
-         <property name="icon">
-          <iconset theme="document-properties"/>
          </property>
          <property name="iconSize">
           <size>
@@ -351,7 +346,23 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
           <bool>true</bool>
          </property>
          <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnShowLog">
+         <property name="toolTip">
+          <string>Show log section and hide problems</string>
+         </property>
+         <property name="text">
+          <string>Log</string>
+         </property>
+         <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -362,9 +373,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
          </property>
          <property name="text">
           <string>Component details</string>
-         </property>
-         <property name="icon">
-          <iconset theme="document-properties"/>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -381,9 +389,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
          </property>
          <property name="text">
           <string>Unused files</string>
-         </property>
-         <property name="icon">
-          <iconset theme="document-properties"/>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -438,6 +443,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
      <string>File</string>
     </property>
     <addaction name="actionClear_and_propose_component_structure"/>
+    <addaction name="actionClear_use_filesystem_based_structure"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -450,9 +456,16 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
     <addaction name="actionCollapse_all_2"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuProblems">
+    <property name="title">
+     <string>Problems</string>
+    </property>
+    <addaction name="actionBe_smart"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuComponents"/>
    <addaction name="menuUnused_files"/>
+   <addaction name="menuProblems"/>
   </widget>
   <action name="actionDetectRemoved">
    <property name="icon">
@@ -486,7 +499,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
   </action>
   <action name="actionSynchronize_with_file_system">
    <property name="icon">
-    <iconset theme="view-refresh"/>
+    <iconset theme="view-refresh">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Synchronize with file system</string>
@@ -497,7 +512,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
   </action>
   <action name="actionAdd_component">
    <property name="icon">
-    <iconset theme="list-add"/>
+    <iconset theme="list-add">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Add subcomponent</string>
@@ -505,7 +522,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
   </action>
   <action name="actionRemove_selected_components">
    <property name="icon">
-    <iconset theme="list-remove"/>
+    <iconset theme="list-remove">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Remove selected components</string>
@@ -538,10 +557,22 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
   </action>
   <action name="actionClear_and_propose_component_structure">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
-    <string>Clear and propose component structure</string>
+    <string>Clear + use kconfig feature model based structure</string>
+   </property>
+  </action>
+  <action name="actionClear_use_filesystem_based_structure">
+   <property name="text">
+    <string>Clear + use filesystem based structure</string>
+   </property>
+  </action>
+  <action name="actionBe_smart">
+   <property name="text">
+    <string>Be smart!</string>
    </property>
   </action>
  </widget>
@@ -549,30 +580,14 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
  <resources/>
  <connections>
   <connection>
-   <sender>btnShowProblems</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>groupProblems</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>35</x>
-     <y>610</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>185</x>
-     <y>417</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>btnShowUnusedFiles</sender>
    <signal>toggled(bool)</signal>
    <receiver>groupBox</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>317</x>
-     <y>613</y>
+     <x>501</x>
+     <y>624</y>
     </hint>
     <hint type="destinationlabel">
      <x>531</x>
@@ -587,7 +602,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>211</x>
+     <x>309</x>
      <y>616</y>
     </hint>
     <hint type="destinationlabel">

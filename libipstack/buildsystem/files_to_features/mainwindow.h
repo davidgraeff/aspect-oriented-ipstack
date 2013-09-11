@@ -33,6 +33,7 @@ class MainWindow;
 class Options;
 class FileModel;
 class ComponentModel;
+class ComponentModelBaseItem;
 class ComponentModelItem;
 class ComponentModelFileItem;
 
@@ -44,6 +45,7 @@ public:
     explicit MainWindow(Options* o, QWidget *parent = 0);
     ~MainWindow();
     void update_problems();
+    void add_log(const QString& msg);
     
 private slots:
     void on_actionQuit_triggered();
@@ -66,6 +68,18 @@ private slots:
 
     void on_actionClear_and_propose_component_structure_triggered();
 
+    void on_lineName_textChanged(const QString &arg1);
+
+    void on_btnShowProblems_toggled(bool checked);
+
+    void on_btnShowLog_toggled(bool checked);
+
+    void on_listProblems_activated(const QModelIndex &index);
+
+    void on_actionClear_use_filesystem_based_structure_triggered();
+
+    void on_actionBe_smart_triggered();
+
 private:
     Ui::MainWindow *ui;
     Options* options;
@@ -75,4 +89,5 @@ private:
     ComponentModelItem* currentComponent;
     ComponentModelFileItem* currentComponentFile;
     QSortFilterProxyModel* componentModelProxy;
+    void focusComponent(ComponentModelBaseItem *item);
 };

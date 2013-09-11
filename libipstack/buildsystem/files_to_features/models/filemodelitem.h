@@ -23,18 +23,33 @@
  */
 
 #pragma once
-#include <QString>
-#include <QList>
 
-class ComponentModelItem;
-class ComponentModelBaseItem {
-    public:
+#include <QDir>
+
+class FileModelItem {
+public:
+    ~FileModelItem();
+
+    //// Attributes ////
+    QString name;
+    bool isFile;
+    QString full_absolute_path();
+
+    //// Model tree ////
     int getRow();
-    int type;
+    FileModelItem* parent;
+    QList<FileModelItem*> childs;
 
-    ComponentModelItem* parent;
-    QList<ComponentModelBaseItem*> childs;
-    ~ComponentModelBaseItem();
-protected:
-    ComponentModelBaseItem();
+    //// Creation ////
+    static FileModelItem* createFile(const QString& name, FileModelItem* parent);
+    static FileModelItem* createDir(const QString& name, FileModelItem* parent);
+
+    //// Add/remove child ////
+    void addChild(FileModelItem* item);
+    FileModelItem* removeChild(const QString& filename);
+
+    FileModelItem* getItemByName(const QString& filename);
+private:
+    FileModelItem() {}
+    inline int binary_search(const QString& filename, bool lower_bound_only=false);
 };
