@@ -30,6 +30,7 @@
 namespace Ui {
 class MainWindow;
 }
+class FilterProxyModel;
 class Options;
 class FileModel;
 class ComponentModel;
@@ -51,43 +52,28 @@ private slots:
     void on_actionQuit_triggered();
     void on_actionSave_triggered();
     void on_actionDetectRemoved_triggered();
-
     void on_actionSynchronize_with_file_system_triggered();
-
     void on_actionAdd_component_triggered();
-
     void on_actionRemove_selected_components_triggered();
-
     void on_treeComponents_clicked(const QModelIndex &index);
-
     void on_btnChangeSubdir_clicked();
-
     void on_btnChangeDepends_clicked();
-
     void on_actionExpand_all_missing_files_only_triggered();
-
     void on_actionClear_and_propose_component_structure_triggered();
-
     void on_lineName_textChanged(const QString &arg1);
-
     void on_btnShowProblems_toggled(bool checked);
-
     void on_btnShowLog_toggled(bool checked);
-
     void on_listProblems_activated(const QModelIndex &index);
-
     void on_actionClear_use_filesystem_based_structure_triggered();
-
     void on_actionBe_smart_triggered();
-
 private:
     Ui::MainWindow *ui;
     Options* options;
     FileModel* filemodel;
-    QSortFilterProxyModel* filemodelProxy;
+    FilterProxyModel* filemodelProxy;
     ComponentModel* componentModel;
     ComponentModelItem* currentComponent;
     ComponentModelFileItem* currentComponentFile;
-    QSortFilterProxyModel* componentModelProxy;
+    FilterProxyModel* componentModelProxy;
     void focusComponent(ComponentModelBaseItem *item);
 };

@@ -33,6 +33,7 @@
 #include "models/componentmodelfileitem.h"
 #include "models/dependencyModel.h"
 #include "problem_list_item.h"
+#include "filterproxymodel.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QImage>
@@ -63,22 +64,22 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
 
     // models
     filemodel = new FileModel(QString::fromStdString(options->base_directory), this);
-    filemodelProxy = new QSortFilterProxyModel(this);
+    filemodelProxy = new FilterProxyModel(this);
     filemodelProxy->setSourceModel(filemodel);
     filemodelProxy->setDynamicSortFilter(true);
     filemodelProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(ui->lineSearchUnusedFiles,&QLineEdit::textChanged,
-            filemodelProxy, &QSortFilterProxyModel::setFilterFixedString);
+            filemodelProxy, &FilterProxyModel::setFilterFixedString);
     ui->treeFiles->setModel(filemodelProxy);
 
     componentModel = new ComponentModel(QString::fromStdString(options->base_directory),
                                         QString::fromStdString(options->featureToFilesRelationfile), this);
-    componentModelProxy = new QSortFilterProxyModel(this);
+    componentModelProxy = new FilterProxyModel(this);
     componentModelProxy->setSourceModel(componentModel);
     componentModelProxy->setDynamicSortFilter(true);
     componentModelProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(ui->lineSearchComponents,&QLineEdit::textChanged,
-            componentModelProxy, &QSortFilterProxyModel::setFilterFixedString);
+            componentModelProxy, &FilterProxyModel::setFilterFixedString);
 
     ui->treeComponents->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->treeComponents->setModel(componentModelProxy);

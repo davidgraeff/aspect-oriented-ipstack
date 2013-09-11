@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     models/componentmodelfileitem.cpp \
     models/componentModelItem.cpp \
     problem_list_item.cpp \
-    models/filemodelitem.cpp
+    models/filemodelitem.cpp \
+    filterproxymodel.cpp
 
 HEADERS  += mainwindow.h \
     picojson.h \
@@ -35,7 +36,8 @@ HEADERS  += mainwindow.h \
     models/componentmodelbaseitem.h \
     models/componentmodelfileitem.h \
     problem_list_item.h \
-    models/filemodelitem.h
+    models/filemodelitem.h \
+    filterproxymodel.h
 
 FORMS    += mainwindow.ui \
     pickdependencies.ui
