@@ -56,6 +56,7 @@ void FileModel::createFileTree()
         addFile(get_relative_dirs_list(d.absoluteDir()), d.fileName());
     }
     endResetModel();
+    emit unused_files_update(all_files.size());
 }
 
 void FileModel::removeFiles(const QStringList &files)
@@ -78,26 +79,30 @@ void FileModel::removeFiles(const QStringList &files)
             }
         }
         if (parent) {
-            FileModelItem* currentItem;
-            QString filename = d.fileName();
-            for (;;) {
-                if ((currentItem = parent->removeChild(filename))) {
-                    if (currentItem->isFile) {
-                        all_files.remove(filename, currentItem);
-                    }
-                    delete currentItem;
-                    if (parent->childs.isEmpty() && parent->parent) {
-                        filename = parent->name;
-                        parent = parent->parent;
-                    } else
-                        break;
-                } else
-                    break;
-            }
+            removeFileAndEmptyDirs(parent,d.fileName());
         }
     }
     endResetModel();
     emit unused_files_update(all_files.size());
+}
+
+void FileModel::removeFileAndEmptyDirs(FileModelItem* parent, QString filename)
+{
+    FileModelItem* currentItem;
+    for (;;) {
+        if ((currentItem = parent->removeChild(filename))) {
+            if (currentItem->isFile) {
+                all_files.remove(filename, currentItem);
+            }
+            delete currentItem;
+            if (parent->childs.isEmpty() && parent->parent) {
+                filename = parent->name;
+                parent = parent->parent;
+            } else
+                break;
+        } else
+            break;
+    }
 }
 
 void FileModel::addFiles(const QStringList &files)
@@ -166,13 +171,13 @@ Qt::ItemFlags FileModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index);
     if (!index.isValid())
-        return defaultFlags | Qt::ItemIsDropEnabled;
+        return defaultFlags;
 
     FileModelItem *item = static_cast<FileModelItem*>(index.internalPointer());
     if (item->isFile)
-        return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
+        return Qt::ItemIsDragEnabled | defaultFlags;
     else
-        return Qt::ItemIsDropEnabled | defaultFlags;
+        return defaultFlags;
 }
 
 Qt::DropActions FileModel::supportedDropActions() const
@@ -210,26 +215,15 @@ QMimeData *FileModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-bool FileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool FileModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    Q_UNUSED(row);Q_UNUSED(column);Q_UNUSED(parent);
-
-    if (action == Qt::IgnoreAction)
-        return true;
-
-    if (!data->hasFormat("application/files.text.list"))
-        return false;
-
-    QByteArray encodedData = data->data("application/files.text.list");
-    QDataStream stream(&encodedData, QIODevice::ReadOnly);
-
-    while (!stream.atEnd()) {
-        QString text;
-        stream >> text;
-        QFileInfo info(text);
-        addFile(get_relative_dirs_list(info.absoluteDir()), info.fileName());
+    FileModelItem *item = static_cast<FileModelItem*>(parent.internalPointer());
+    qDebug() << "removeFile" << item->name << row;
+    beginRemoveRows(parent,row,row+count);
+    for (int r=row+count-1;r>=row;--r) {
+        removeFileAndEmptyDirs(item,item->childs[r]->name);
     }
-
+    endRemoveRows();
     return true;
 }
 

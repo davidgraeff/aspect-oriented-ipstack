@@ -234,7 +234,10 @@
             <bool>true</bool>
            </property>
            <property name="dragDropMode">
-            <enum>QAbstractItemView::DragDrop</enum>
+            <enum>QAbstractItemView::DragOnly</enum>
+           </property>
+           <property name="defaultDropAction">
+            <enum>Qt::MoveAction</enum>
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -467,16 +470,6 @@ border-style: outset;
    <addaction name="menuUnused_files"/>
    <addaction name="menuProblems"/>
   </widget>
-  <action name="actionDetectRemoved">
-   <property name="icon">
-    <iconset theme="edit-find-replace">
-     <normaloff/>
-    </iconset>
-   </property>
-   <property name="text">
-    <string>Detect moved and deleted files</string>
-   </property>
-  </action>
   <action name="actionSave">
    <property name="icon">
     <iconset theme="document-save">
@@ -485,6 +478,9 @@ border-style: outset;
    </property>
    <property name="text">
     <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -495,6 +491,9 @@ border-style: outset;
    </property>
    <property name="text">
     <string>Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionSynchronize_with_file_system">
@@ -519,6 +518,9 @@ border-style: outset;
    <property name="text">
     <string>Add subcomponent</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="actionRemove_selected_components">
    <property name="icon">
@@ -528,6 +530,9 @@ border-style: outset;
    </property>
    <property name="text">
     <string>Remove selected components</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
   <action name="actionExpand_all">

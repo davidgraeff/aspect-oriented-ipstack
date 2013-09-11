@@ -44,8 +44,6 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow), options(o)
 {
-    currentComponent=0;
-    currentComponentFile=0;
     ui->setupUi(this);
     on_btnShowProblems_toggled(false);
     on_btnShowLog_toggled(false);
@@ -62,7 +60,7 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     ui->listProblems->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->listProblems->addAction(ui->actionBe_smart);
 
-    // models
+    // file models
     filemodel = new FileModel(QString::fromStdString(options->base_directory), this);
     filemodelProxy = new FilterProxyModel(this);
     filemodelProxy->setSourceModel(filemodel);
@@ -71,7 +69,9 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     connect(ui->lineSearchUnusedFiles,&QLineEdit::textChanged,
             filemodelProxy, &FilterProxyModel::setFilterFixedString);
     ui->treeFiles->setModel(filemodelProxy);
+    connect(filemodel,&FileModel::unused_files_update,ui->treeFiles,&QTreeView::expandAll);
 
+    // component model
     componentModel = new ComponentModel(QString::fromStdString(options->base_directory),
                                         QString::fromStdString(options->featureToFilesRelationfile), this);
     componentModelProxy = new FilterProxyModel(this);
@@ -85,7 +85,10 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     ui->treeComponents->setModel(componentModelProxy);
     ui->treeComponents->expand(componentModelProxy->index(0,0));
 
+    connect(componentModel,&ComponentModel::removed_existing_files,filemodel,&FileModel::addFiles);
+
     on_actionSynchronize_with_file_system_triggered();
+    on_treeComponents_clicked(QModelIndex());
     update_problems();
 }
 
@@ -189,12 +192,6 @@ void MainWindow::on_actionSave_triggered()
     componentModel->save();
 }
 
-void MainWindow::on_actionDetectRemoved_triggered()
-{
-    componentModel->remove_non_existing_files();
-    update_problems();
-}
-
 void MainWindow::on_actionSynchronize_with_file_system_triggered()
 {
     filemodel->createFileTree();
@@ -206,8 +203,11 @@ void MainWindow::on_actionSynchronize_with_file_system_triggered()
 
 void MainWindow::on_actionAdd_component_triggered()
 {
-    if (!currentComponent)
-        return;
+    ComponentModelItem* currentComponent;
+    if (!ui->treeComponents->currentIndex().isValid())
+        currentComponent=componentModel->getRootItem();
+    else
+        currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
 
     focusComponent(componentModel->addComponent(currentComponent));
     add_log(tr("Added component to %1").arg(currentComponent->parent->cache_component_name));
@@ -215,24 +215,14 @@ void MainWindow::on_actionAdd_component_triggered()
 
 void MainWindow::on_actionRemove_selected_components_triggered()
 {
-    if (!currentComponent)
-        return;
-
-    focusComponent(currentComponent->parent);
-    QString component_name = currentComponent->cache_component_name;
-    // Remove component, all files that are "freed" in that process are readded to
-    // the unused-file model.
-    QStringList unused_files = componentModel->removeComponent(currentComponent);
-    filemodel->addFiles(unused_files);
-    ui->treeFiles->expandAll();
+    QModelIndexList list = ui->treeComponents->selectionModel()->selectedRows();
+    for (int i = list.size() - 1; i >= 0; --i) {
+        QModelIndex index = list[i];
+        componentModelProxy->removeRow(index.row(), index.parent());
+    }
 
     // update problems and log
     update_problems();
-    add_log(tr("Removed component %1 with %2 files").arg(component_name).arg(unused_files.size()));
-
-    // Set all selected pointers to 0
-    currentComponent = 0;
-    currentComponentFile = 0;
 }
 
 void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
@@ -240,13 +230,15 @@ void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
     if (!index.isValid()) {
         ui->btnChangeSubdir->setEnabled(false);
         ui->btnChangeDepends->setEnabled(false);
+        ui->actionRemove_selected_components->setEnabled(false);
         return;
     }
 
+    ui->actionRemove_selected_components->setEnabled(true);
+
     ComponentModelBaseItem* b = static_cast<ComponentModelBaseItem*>(componentModelProxy->mapToSource(index).internalPointer());
     if (b->type == ComponentModelItem::TYPE) {
-        currentComponent = (ComponentModelItem*)b;
-        currentComponentFile = 0;
+        ComponentModelItem* currentComponent = (ComponentModelItem*)b;
 
         ui->labelDepends->setText(currentComponent->depends);
         ui->labelPath->setText(componentModel->relative_directory(currentComponent->get_directory()));
@@ -257,8 +249,8 @@ void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
         ui->btnChangeSubdir->setEnabled(true);
         ui->btnChangeDepends->setEnabled(true);
     } else {
-        currentComponentFile = (ComponentModelFileItem*)b;
-        currentComponent = currentComponentFile->parent;
+        ComponentModelFileItem* currentComponentFile = (ComponentModelFileItem*)b;
+        ComponentModelItem* currentComponent = currentComponentFile->parent;
 
         ui->labelDepends->setText(currentComponent->depends);
         ui->labelPath->setText(componentModel->relative_directory(currentComponentFile->get_full_path()));
@@ -273,8 +265,10 @@ void MainWindow::on_treeComponents_clicked(const QModelIndex &index)
 
 void MainWindow::on_btnChangeSubdir_clicked()
 {
-    if (!currentComponent)
+    if (!ui->treeComponents->currentIndex().isValid())
         return;
+    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
+
 
     QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
                                                 currentComponent->get_directory(),
@@ -297,8 +291,9 @@ void MainWindow::on_btnChangeSubdir_clicked()
 
 void MainWindow::on_btnChangeDepends_clicked()
 {
-    if (!currentComponent)
+    if (!ui->treeComponents->currentIndex().isValid())
         return;
+    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
 
     PickDependencies* p = new PickDependencies(QString::fromStdString(options->kconfigfile));
     p->set_initial_selection(currentComponent->depends);
@@ -313,8 +308,9 @@ void MainWindow::on_btnChangeDepends_clicked()
 
 void MainWindow::on_lineName_textChanged(const QString &arg1)
 {
-    if (!currentComponent)
+    if (!ui->treeComponents->currentIndex().isValid())
         return;
+    ComponentModelItem* currentComponent=(ComponentModelItem*)ui->treeComponents->currentIndex().internalPointer();
 
     currentComponent->vname = arg1;
     currentComponent->update_component_name();

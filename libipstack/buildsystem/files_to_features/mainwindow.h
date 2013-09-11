@@ -51,7 +51,6 @@ public:
 private slots:
     void on_actionQuit_triggered();
     void on_actionSave_triggered();
-    void on_actionDetectRemoved_triggered();
     void on_actionSynchronize_with_file_system_triggered();
     void on_actionAdd_component_triggered();
     void on_actionRemove_selected_components_triggered();
@@ -72,8 +71,6 @@ private:
     FileModel* filemodel;
     FilterProxyModel* filemodelProxy;
     ComponentModel* componentModel;
-    ComponentModelItem* currentComponent;
-    ComponentModelFileItem* currentComponentFile;
     FilterProxyModel* componentModelProxy;
     void focusComponent(ComponentModelBaseItem *item);
 };

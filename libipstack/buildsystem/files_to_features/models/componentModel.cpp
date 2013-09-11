@@ -97,11 +97,6 @@ bool ComponentModel::save(QIODevice *device, bool freeAfterUse)
     return true;
 }
 
-void ComponentModel::remove_non_existing_files()
-{
-
-}
-
 QStringList ComponentModel::get_used_files() const
 {
     return rootItem->get_all_files(true);
@@ -159,7 +154,7 @@ QModelIndex ComponentModel::indexOf(ComponentModelBaseItem *item) const
 }
 
 
-QStringList ComponentModel::removeComponent(ComponentModelItem *item)
+void ComponentModel::removeComponent(ComponentModelItem *item)
 {
     Q_ASSERT(item);
     QStringList l = item->get_all_files(true);
@@ -174,10 +169,10 @@ QStringList ComponentModel::removeComponent(ComponentModelItem *item)
     // Remote item and childs
     delete item;
     endRemoveRows();
-    return l;
+    emit removed_existing_files(l);
 }
 
-QStringList ComponentModel::removeFile(ComponentModelFileItem *item)
+void ComponentModel::removeFile(ComponentModelFileItem *item)
 {
     Q_ASSERT(item);
     // Return file name
@@ -196,7 +191,7 @@ QStringList ComponentModel::removeFile(ComponentModelFileItem *item)
     // Remote item and childs
     delete item;
     endRemoveRows();
-    return l;
+    emit removed_existing_files(l);
 }
 
 ComponentModelItem* ComponentModel::addComponent(ComponentModelItem *parent)
@@ -243,6 +238,19 @@ Qt::ItemFlags ComponentModel::flags(const QModelIndex &index) const
         return Qt::ItemIsDragEnabled | defaultFlags;
 }
 
+bool ComponentModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    ComponentModelItem *item = static_cast<ComponentModelItem*>(parent.internalPointer());
+    qDebug() << "remove" << item->cache_component_name << row;
+    for (int r=row+count-1;r>=row;--r) {
+        if (item->childs[r]->type == ComponentModelItem::TYPE)
+            removeComponent((ComponentModelItem*)item->childs[r]);
+        else
+            removeFile((ComponentModelFileItem*)item->childs[r]);
+    }
+    return true;
+}
+
 Qt::DropActions ComponentModel::supportedDropActions() const
 {
     return Qt::MoveAction;
@@ -281,6 +289,7 @@ QMimeData *ComponentModel::mimeData(const QModelIndexList &indexes) const
 
 bool ComponentModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
+    Q_UNUSED(row); Q_UNUSED(column);
     if (action == Qt::IgnoreAction)
         return true;
 
@@ -303,8 +312,7 @@ bool ComponentModel::dropMimeData(const QMimeData *data, Qt::DropAction action, 
     }
 
     target->addFiles(files, ComponentModelItem::AllowOneSubdirCreateSubcomponents);
-    beginResetModel();
-    endResetModel();
+    emit dataChanged(parent, index(row,column,parent));
 
     // If we return true, Qt automatically calls removeRows of the source model
     return true;

@@ -38,12 +38,14 @@ class FileModel : public QAbstractItemModel
 public:
     FileModel(const QString& base_directory, QObject *parent = 0);
     ~FileModel();
+public Q_SLOTS:
     /// This will read the filesystem and create a copy of the structure.
     void createFileTree();
     /// Remove files from this model. Filenames have to be the full absolute path.
     void removeFiles(const QStringList& files);
     /// Add files. Full absolute path names are required.
     void addFiles(const QStringList& files);
+public:
     /// Return amount of files in this model. Usually called after "removeFiles".
     int get_unused_files_size() const;
 
@@ -62,11 +64,11 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
-    Qt::DropActions supportedDropActions () const;
+    Qt::DropActions supportedDropActions() const;
     Qt::DropActions supportedDragActions () const;
     QStringList mimeTypes() const;
     QMimeData *mimeData(const QModelIndexList &indexes) const;
-    bool dropMimeData ( const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent );
+    virtual bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
 private:
     QMultiMap<QString,FileModelItem*> all_files;
@@ -74,6 +76,7 @@ private:
     const QDir base_directory;
     void addFile(QStringList subDirsReverse, const QString& file);
     QStringList get_relative_dirs_list(QDir path);
+    void removeFileAndEmptyDirs(FileModelItem* parent, QString filename);
 Q_SIGNALS:
     void unused_files_update(int number);
 };

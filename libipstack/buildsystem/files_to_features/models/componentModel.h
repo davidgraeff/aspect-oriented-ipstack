@@ -52,12 +52,6 @@ public:
     bool save(QIODevice* device=0, bool freeAfterUse = true);
 
     /**
-     * Remove all file entries that do not belong to an existing file.
-     * This also removes empty subcomponents.
-     */
-    void remove_non_existing_files();
-
-    /**
      * Update model for the item. Call this after you have changed values
      * of item and want to have that reflected in views that use this model.
      * @param item Update the model at items positions.
@@ -86,8 +80,8 @@ public:
     QString relative_directory(const QString& absolute_path);
 
     ///////////////////// Add/Remove /////////////////////
-    QStringList removeComponent(ComponentModelItem* item);
-    QStringList removeFile(ComponentModelFileItem* item);
+    void removeComponent(ComponentModelItem* item);
+    void removeFile(ComponentModelFileItem* item);
     // Return added component
     ComponentModelItem *addComponent(ComponentModelItem* parent=0);
     /// if removeEntries is true all content will be erased and the model gets
@@ -105,6 +99,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
+    virtual bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
     ///////////////////// Model/View Drag&Drop /////////////////////
     Qt::DropActions supportedDropActions () const;
@@ -128,4 +123,8 @@ private:
      * Usually a component contains several (sub-)nodes.
      */
     bool componentArray(ComponentModelItem* current_item, const QJsonArray &arr);
+
+Q_SIGNALS:
+    void removed_existing_files(const QStringList& files);
+    void added_files(const QStringList& files);
 };
