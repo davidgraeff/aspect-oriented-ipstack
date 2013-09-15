@@ -70,6 +70,12 @@ public:
             usage();
             return;
         }
+        
+        if (!base_directory.size()) {
+            std::cerr << "base_directory not set!\n\n";
+            usage();
+            return;
+        }
 
         failed = false;
     }

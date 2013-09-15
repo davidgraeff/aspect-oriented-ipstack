@@ -26,6 +26,8 @@
 
 #include <QDir>
 
+class FileModel;
+
 class FileModelItem {
 public:
     ~FileModelItem();
@@ -41,17 +43,18 @@ public:
     QList<FileModelItem*> childs;
 
     //// Creation ////
-    static FileModelItem* createFile(const QString& name, FileModelItem* parent);
-    static FileModelItem* createDir(const QString& name, FileModelItem* parent);
+    static FileModelItem* createFile(FileModel* filemodel, const QString& name, FileModelItem* parent);
+    static FileModelItem* createDir(FileModel* filemodel, const QString& name, FileModelItem* parent);
 
-    //// Add/remove child ////
+    //// Add child ////
     void addChild(FileModelItem* item);
-    FileModelItem* removeChild(const QString& filename);
+
+    int binary_search(const QString& filename, bool lower_bound_only=false);
 
     FileModelItem* getItemByName(const QString& filename);
 
     QStringList get_all_files() const;
 private:
+    FileModel* filemodel;
     FileModelItem() {}
-    inline int binary_search(const QString& filename, bool lower_bound_only=false);
 };

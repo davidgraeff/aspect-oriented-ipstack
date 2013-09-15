@@ -5,11 +5,21 @@ FamilyBaseItem::FamilyBaseItem(FamilyModel* componentModel) : componentModel(com
 {
 }
 
-int FamilyBaseItem::getRow() {
+int FamilyBaseItem::getRow() const {
     if (parent) {
-        return parent->childs.indexOf(this);
+        return parent->childs.indexOf((FamilyBaseItem*)this);
     } else
         return 0;
+}
+
+const QList<FamilyBaseItem *> &FamilyBaseItem::getChilds() const
+{
+    return childs;
+}
+
+QList<FamilyBaseItem *> &FamilyBaseItem::getChilds()
+{
+    return childs;
 }
 
 FamilyBaseItem::~FamilyBaseItem() {

@@ -83,7 +83,7 @@ public:
 
     ///////////////////// Add/Remove /////////////////////
     void removeComponent(FamilyComponent* item);
-    void removeFile(FamilyFile* item);
+    void removeFile(FamilyFile *item);
     // Return added component
     FamilyComponent *addComponent(FamilyComponent* parent=0);
     /// if removeEntries is true all content will be erased and the model gets
@@ -113,6 +113,7 @@ private:
     const QDir base_directory;
     QString featureToFilesRelationfile;
     FamilyComponent *rootItem;
+    mutable QList<FamilyFile*> moveFilesList;
 
     QIcon icon_missing;
     QIcon icon_file;
@@ -139,4 +140,5 @@ Q_SIGNALS:
     void rejected_existing_files(const QDir &subdir, const QStringList& files);
     // This signal is emitted if files are added to the family model
     void added_files(const QStringList& files);
+	void changed();
 };

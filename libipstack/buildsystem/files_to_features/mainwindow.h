@@ -36,6 +36,7 @@ class FamilyModel;
 class FamilyBaseItem;
 class FamilyComponent;
 class FamilyFile;
+class ProblemListItem;
 
 class MainWindow : public QMainWindow
 {
@@ -54,6 +55,7 @@ private slots:
     void on_actionAdd_component_triggered();
     void on_actionRemove_selected_components_triggered();
     void familyModelSelectionChanged(const QModelIndex &index);
+    void problemSelectionChanged(const QModelIndex &index);
     void on_btnChangeSubdir_clicked();
     void on_btnChangeDepends_clicked();
     void on_actionExpand_all_missing_files_only_triggered();
@@ -65,6 +67,11 @@ private slots:
     void on_actionClear_use_filesystem_based_structure_triggered();
     void on_actionBe_smart_triggered();
     void rejected_files(const QDir &subdir, const QStringList& files);
+	void familyModelChanged();
+
+    void on_actionBe_smart_Selection_only_triggered();
+
+    void on_labelDepends_textChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -74,4 +81,6 @@ private:
     FamilyModel* componentModel;
     FilterProxyModel* componentModelProxy;
     void focusComponent(FamilyBaseItem *item);
+    void closeEvent(QCloseEvent* e);
+    void solveProblems(const QList<ProblemListItem*> &problems);
 };

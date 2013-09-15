@@ -37,7 +37,9 @@ protected:
     FamilyBaseItem(FamilyModel* componentModel);
     FamilyModel* componentModel;
 public:
-    int getRow();
+    int getRow() const;
+    const QList<FamilyBaseItem*>& getChilds() const;
+    QList<FamilyBaseItem*>& getChilds();
     int type;
 
     // The parent item is always a component, never a file

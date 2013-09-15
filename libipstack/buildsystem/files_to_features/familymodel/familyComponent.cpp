@@ -17,8 +17,6 @@ FamilyComponent* FamilyComponent::createComponent(FamilyModel *componentModel, c
 
     int c=0;
     if (parent) {
-        QModelIndex parentModelIndex = componentModel->createIndex(parent->getRow(),0,parent);
-
         QString cache_relative_dir = absolut_directory.dirName();
         // Insertion sort iteration step
         for (int m=parent->childs.size();c<m;++c) {
@@ -29,6 +27,8 @@ FamilyComponent* FamilyComponent::createComponent(FamilyModel *componentModel, c
             if (static_cast<FamilyComponent*>(base)->cache_relative_directory >= cache_relative_dir)
                 break;
         }
+        QModelIndex parentModelIndex = (parent==componentModel->rootItem) ? QModelIndex()
+                  : componentModel->createIndex(parent->getRow(),0,parent);
         componentModel->beginInsertRows(parentModelIndex,c,c);
         parent->childs.insert(c, item);
         componentModel->endInsertRows();
@@ -55,7 +55,8 @@ void FamilyComponent::toJSon(QJsonObject &jsonObject)
         jsonObject.insert("vname", vname);
     if (depends.size())
         jsonObject.insert("depends", depends);
-    QString relative_dir = componentModel->relative_directory(directory.absolutePath());
+    QString relative_dir = (!parent) ? componentModel->relative_directory(directory.absolutePath()) :
+									   parent->directory.relativeFilePath(directory.absolutePath());
     if (relative_dir.size()>1)
         jsonObject.insert("subdir", relative_dir);
 
@@ -83,9 +84,9 @@ void FamilyComponent::toJSon(QJsonObject &jsonObject)
         jsonObject.insert("comp", subcomponents);
 }
 
-QList<FamilyFile*> FamilyComponent::addFiles(const QStringList &files, FamilyComponent::add_files_enum subdirFlag)
+void FamilyComponent::addFiles(const QStringList &files, FamilyComponent::add_files_enum subdirFlag)
 {
-    QList<FamilyFile*> addedItems;
+    QStringList addedItems;
     QStringList rejected;
     foreach(const QString& file, files) {
         QString relative_filepath = directory.relativeFilePath(file);
@@ -95,20 +96,27 @@ QList<FamilyFile*> FamilyComponent::addFiles(const QStringList &files, FamilyCom
             if (subdirFlag==AllowOneSubdirCreateSubcomponents) {
                 FamilyComponent* subcomp = findOrCreateRecursivly(this, QFileInfo(relative_filepath).path());
                 Q_ASSERT(subcomp);
-                qDebug() << "addfile: " << subcomp->cache_component_name << QFileInfo(relative_filepath).fileName();
-                addedItems << FamilyFile::createFile(componentModel,QFileInfo(relative_filepath).fileName(),subcomp);
+                //qDebug() << "addfile: " << subcomp->cache_component_name << QFileInfo(relative_filepath).fileName();
+                addedItems << file;
+                FamilyFile::createFile(componentModel,QFileInfo(relative_filepath).fileName(),subcomp);
             } else if (subdirFlag == AllowMultipleSubdirLevels) {
-                addedItems << FamilyFile::createFile(componentModel,relative_filepath,this);
+                addedItems << file;
+                FamilyFile::createFile(componentModel,relative_filepath,this);
             } else {
                 Q_ASSERT(1==0);
             }
         }
     }
 
+    // emit signal for rejected files
     if (rejected.size())
         emit componentModel->rejected_existing_files(directory, rejected);
 
-    return addedItems;
+    // emit signal for added files
+    if (addedItems.size()) {
+        emit componentModel->added_files(addedItems);
+        emit componentModel->changed();
+    }
 }
 
 FamilyComponent *FamilyComponent::findOrCreateRecursivly(FamilyComponent *current, QString relative_path)
@@ -118,19 +126,27 @@ FamilyComponent *FamilyComponent::findOrCreateRecursivly(FamilyComponent *curren
 
     int temp = relative_path.indexOf("/");
     QString next_subdir;
+    QString desiredDir;
     // Determine next sub dir.
     if (temp==-1) {
         next_subdir = relative_path;
+        desiredDir = current->directory.absoluteFilePath(next_subdir);
         relative_path = QString();
+        // Exception: If the current component does not have any files, we reuse it
+        if (current->childs.isEmpty()) {
+            current->set_directory(desiredDir, false);
+            if (current->vname.isEmpty())
+                current->vname = next_subdir;
+            current->update_component_name();
+            return current;
+        }
     } else {
         next_subdir = relative_path.mid(0,temp);
+        desiredDir = current->directory.absoluteFilePath(next_subdir);
         relative_path = relative_path.mid(temp+1);
     }
 
-//    qDebug() << "findOrCreateRecursivly" << relative_path << "next" << next_subdir;
-
     // Try to find a subcomponent with the desired subdirectory part stored in next_subdir.
-    QString desiredDir = current->directory.absoluteFilePath(next_subdir);
     FamilyComponent* findExisting = 0;
     foreach(FamilyBaseItem* subitem, current->childs) {
         if (subitem->type == FamilyComponent::TYPE) {

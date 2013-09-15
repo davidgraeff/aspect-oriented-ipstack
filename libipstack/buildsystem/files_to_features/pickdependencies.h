@@ -24,11 +24,11 @@
 
 #pragma once
 
-#include <QDialog>
 #include <QPushButton>
 #include <QComboBox>
 #include <QSet>
 #include <QMap>
+#include <QDialog>
 
 namespace Ui {
 class PickDependencies;

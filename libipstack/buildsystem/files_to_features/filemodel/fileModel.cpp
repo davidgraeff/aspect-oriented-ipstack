@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QColor>
 #include <QMimeData>
+#include <QUrl>
 
 FileModel::FileModel(const QString& base_directory, QObject *parent)
     : QAbstractItemModel(parent), rootItem(0), base_directory(QDir(base_directory))
@@ -44,7 +45,7 @@ void FileModel::createFileTree()
 {
     all_files.clear();
     delete rootItem;
-    rootItem = FileModelItem::createDir(base_directory.absolutePath(), 0);
+    rootItem = FileModelItem::createDir(this, base_directory.absolutePath(), 0);
 
     QStringList filter;
     filter << "*.ah" << "*.cpp" << "*.h";
@@ -64,7 +65,6 @@ void FileModel::removeFiles(const QStringList &files)
     if (files.isEmpty())
         return;
 
-    beginResetModel();
     QListIterator<QString> it(files);
     while(it.hasNext()) {
         QFileInfo d(it.next());
@@ -82,22 +82,29 @@ void FileModel::removeFiles(const QStringList &files)
             removeFileAndEmptyDirs(parent,d.fileName());
         }
     }
-    endResetModel();
     emit unused_files_update(all_files.size());
 }
 
 void FileModel::removeFileAndEmptyDirs(FileModelItem* parent, QString filename)
 {
     FileModelItem* currentItem;
+    int index;
     for (;;) {
-        if ((currentItem = parent->removeChild(filename))) {
-            if (currentItem->isFile) {
-                all_files.remove(filename, currentItem);
-            }
+        if ((index = parent->binary_search(filename))!=-1) {
+            Q_ASSERT(index<parent->childs.size());
+            currentItem = parent->childs[index];
+            beginRemoveRows(createIndex(index,0,currentItem).parent(),index,index);
+            // Delete item (removes automatically from hash list and deletes children)
+            parent->childs.removeAt(index);
             delete currentItem;
-            if (parent->childs.isEmpty() && parent->parent) {
+            endRemoveRows();
+            // Look for empty parent dirs
+            if (parent->childs.isEmpty()) {
                 filename = parent->name;
-                parent = parent->parent;
+                if (parent->parent)
+                    parent = parent->parent;
+                else
+                    parent = rootItem;
             } else
                 break;
         } else
@@ -139,14 +146,14 @@ void FileModel::addFile(QStringList subDirsReverse, const QString &file)
         const QString dirname = subDirsReverse.takeLast();
         FileModelItem* found = parent->getItemByName(dirname);
         if (!found) { // We did not find this directory in out tree, we create one
-            parent = FileModelItem::createDir(dirname, parent);
+            parent = FileModelItem::createDir(this, dirname, parent);
         } else { // we found it and use it
             parent = found;
         }
     }
 
     // Add file
-    all_files.insertMulti(file, FileModelItem::createFile(file, parent));
+    all_files.insertMulti(file, FileModelItem::createFile(this,file, parent));
 }
 
 QStringList FileModel::get_relative_dirs_list(QDir path)
@@ -178,63 +185,42 @@ Qt::ItemFlags FileModel::flags(const QModelIndex &index) const
 
 Qt::DropActions FileModel::supportedDropActions() const
 {
-    return Qt::MoveAction;
+    return Qt::CopyAction;
 }
 
 Qt::DropActions FileModel::supportedDragActions() const
 {
-    return Qt::MoveAction;
+    return Qt::CopyAction;
 }
 
 QStringList FileModel::mimeTypes() const
 {
     QStringList types;
-    types << "application/files.text.list";
+    types << "text/uri-list";
     return types;
 }
 
 QMimeData *FileModel::mimeData(const QModelIndexList &indexes) const
 {
     QMimeData *mimeData = new QMimeData();
-    QByteArray encodedData;
-
-    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+    QList<QUrl> urls;
 
     foreach (const QModelIndex &index, indexes) {
         if (index.isValid() && index.column()==0) {
             FileModelItem *item = static_cast<FileModelItem*>(index.internalPointer());
             if (item->isFile)
-                stream << item->full_absolute_path();
+                urls << QUrl::fromLocalFile(item->full_absolute_path());
             else {
                 QStringList files = item->get_all_files();
                 foreach(const QString& file, files)
-                    stream << file;
+                    urls << QUrl::fromLocalFile(file);
             }
 
         }
     }
 
-    mimeData->setData("application/files.text.list", encodedData);
+    mimeData->setUrls(urls);
     return mimeData;
-}
-
-bool FileModel::removeRows(int row, int count, const QModelIndex &parent)
-{
-    // First determine the parent FileModel item
-    FileModelItem *item;
-    if (parent.isValid())
-        item = static_cast<FileModelItem*>(parent.internalPointer());
-    else
-        item = rootItem;
-    Q_ASSERT(item);
-
-    // Start removing from parent item
-    beginRemoveRows(parent,row,row+count);
-    for (int r=row+count-1;r>=row;--r) {
-        removeFileAndEmptyDirs(item,item->childs[r]->name);
-    }
-    endRemoveRows();
-    return true;
 }
 
 QVariant FileModel::data(const QModelIndex &index, int role) const

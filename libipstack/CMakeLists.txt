@@ -1,7 +1,7 @@
 # Look at doc/cmake_integrate_libipstack.mk for futher help
 
 cmake_minimum_required (VERSION 2.8.8)
-
+SET(IPSTACK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 ############## BUILD_ONLY_ONE_TASK ##############
 # * Remove all busy waiting
 # * Add ipstack_periodic()
@@ -10,7 +10,7 @@ option (BUILD_ONLY_ONE_TASK  "Assume we have only one main loop and no multitask
 
 # Add files
 if (BUILD_ONLY_ONE_TASK)
-	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/no_multitask/no_multitask.ah" "${CMAKE_CURRENT_SOURCE_DIR}/api/no_multitask.h")
+	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC} "${IPSTACK_SOURCE_DIR}/no_multitask/no_multitask.cpp" "${IPSTACK_SOURCE_DIR}/no_multitask/no_multitask.ah" "${CMAKE_CURRENT_SOURCE_DIR}/api/no_multitask.h")
 endif()
 
 ############## BUILD_WITH_ASPECTLESS_INTERFACE ##############
@@ -21,8 +21,8 @@ option (BUILD_WITH_ASPECTLESS_INTERFACE  "Build the library and provide methods 
 # Add files
 if (BUILD_WITH_ASPECTLESS_INTERFACE)
 	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC}
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/receive_and_send.ah"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/os_integration.ah"
+		"${IPSTACK_SOURCE_DIR}/aspectless_external_interface/receive_and_send.ah"
+		"${IPSTACK_SOURCE_DIR}/aspectless_external_interface/os_integration.ah"
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/receive_and_send.h"
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/os_integration.h")
 endif()
@@ -35,21 +35,8 @@ option (BUILD_LIBIPSTACK_WITH_ALL_FILES "Ony do this for continous integration!"
 # irq safeness for aspectless interface with multiple tasks
 if (BUILD_WITH_ASPECTLESS_INTERFACE AND NOT BUILD_ONLY_ONE_TASK)
 	SET(IPSTACK_ADDITIONAL_SRC ${IPSTACK_ADDITIONAL_SRC}
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/aspectless_external_interface/lock_multitask_access.ah"
+		"${IPSTACK_SOURCE_DIR}/aspectless_external_interface/lock_multitask_access.ah"
 		"${CMAKE_CURRENT_SOURCE_DIR}/api/lock_multitask_access.h")
-endif()
-
-############## files_to_features Tool ##############
-add_subdirectory(buildsystem/files_to_features)
-if (FILES_TO_FEATURES_TOOL_FOUND)
-	# Add make target for directly execute the tool with the right files
-	add_custom_target(fix_files_to_features
-		COMMAND ${PROJECT_NAME}
-		-f "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json"
-		-k "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.fm"
-		-b "${CMAKE_SOURCE_DIR}/src"
-		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
-		DEPENDS ${PROJECT_NAME} COMMENT "Executing files_to_features" VERBATIM)
 endif()
 
 ############## KCONFIG and determine_relevant_files ##############
@@ -93,10 +80,10 @@ IF (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG)
 		COMMAND ${CMAKE_COMMAND}
 		-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
 		-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
-		-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
+		-Dbase_directory=${IPSTACK_SOURCE_DIR}
 		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_features=${BUILD_LIBIPSTACK_WITHOUT_KCONFIG}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
-		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
 		DEPENDS "${KCONFIG_EXECUTABLE}" COMMENT "Executing kconfig+determine_relevant_files"
 		DEPENDS determine_relevant_files VERBATIM)
 else()
@@ -110,11 +97,27 @@ else()
 		COMMAND ${CMAKE_COMMAND}
 		-Doutput_filename=${SRC_FILE} -Doutput_definitions_filename=${DEFINITIONS_FILE}
 		-DfeaturesFilesRelationFile=${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json
-		-Dbase_directory=${CMAKE_CURRENT_SOURCE_DIR}/src
+		-Dbase_directory=${IPSTACK_SOURCE_DIR}
 		-DkconfigFile=${KCONFIG_RESULT_FILE} -Dall_files=${BUILD_LIBIPSTACK_WITH_ALL_FILES}
 		-P "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/determine_relevant_files.cmake"
-		COMMAND cmake -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
 		DEPENDS determine_relevant_files COMMENT "Executing relevant_source_files" VERBATIM)
+endif()
+
+############## files_to_features Tool ##############
+add_subdirectory(buildsystem/files_to_features)
+if (FILES_TO_FEATURES_TOOL_FOUND)
+	# Remove determine_relevant_files output file
+	# Add make target for directly execute the files_to_features tool with the right files
+	add_custom_target(fix_files_to_features
+		COMMAND ${CMAKE_COMMAND} -E remove "${SRC_FILE}"
+		COMMAND ${CMAKE_COMMAND} -E remove "${DEFINITIONS_FILE}"
+		COMMAND files_to_features
+		-f "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.json"
+		-k "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/ipstack.fm"
+		-b "${IPSTACK_SOURCE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+		COMMENT "Executing files_to_features" VERBATIM)
 endif()
 
 ############## Build or rerun cmake ##############

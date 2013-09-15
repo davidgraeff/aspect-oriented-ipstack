@@ -54,7 +54,7 @@ public:
     /// In contrast if you use AllowOneSubdirCreateSubcomponents for every subdir
     /// part of the path a subcomponent is created. This is recommend!
     enum add_files_enum {AllowMultipleSubdirLevels,AllowOneSubdirCreateSubcomponents};
-    QList<FamilyFile*> addFiles(const QStringList& files, add_files_enum subdirFlag);
+    void addFiles(const QStringList& files, add_files_enum subdirFlag);
     static FamilyComponent* findOrCreateRecursivly(FamilyComponent* current, QString relative_path);
     QStringList get_all_files(bool only_existing, bool remove_files = false);
 

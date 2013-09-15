@@ -1,4 +1,5 @@
 #include "filemodelitem.h"
+#include "fileModel.h"
 #include <QDebug>
 
 int FileModelItem::getRow() {
@@ -16,11 +17,16 @@ QString FileModelItem::full_absolute_path() const {
 }
 
 FileModelItem::~FileModelItem() {
+    // Remove from files hash list
+    if (isFile) {
+        filemodel->all_files.remove(name, this);
+    }
     qDeleteAll(childs);
 }
 
-FileModelItem *FileModelItem::createFile(const QString &name, FileModelItem *parent) {
+FileModelItem *FileModelItem::createFile(FileModel *filemodel, const QString &name, FileModelItem *parent) {
     FileModelItem* item = new FileModelItem();
+    item->filemodel = filemodel;
     item->name = name; item->isFile = true;
     if (parent && parent->getItemByName(name)) { // already a child with this filename in parent
         delete item;
@@ -33,8 +39,9 @@ FileModelItem *FileModelItem::createFile(const QString &name, FileModelItem *par
     return item;
 }
 
-FileModelItem *FileModelItem::createDir(const QString &name, FileModelItem *parent) {
+FileModelItem *FileModelItem::createDir(FileModel *filemodel, const QString &name, FileModelItem *parent) {
     FileModelItem* item = new FileModelItem();
+    item->filemodel = filemodel;
     item->name = name; item->isFile = false;
     item->parent = parent;
     if (parent) {
@@ -45,15 +52,6 @@ FileModelItem *FileModelItem::createDir(const QString &name, FileModelItem *pare
 
 void FileModelItem::addChild(FileModelItem *item) {
     childs.insert(binary_search(item->name,true),item);
-}
-
-FileModelItem *FileModelItem::removeChild(const QString &filename) {
-    int i = binary_search(filename);
-    if (i==-1) {
-        return 0;
-    } else {
-        return childs.takeAt(i);
-    }
 }
 
 FileModelItem *FileModelItem::getItemByName(const QString &filename) {

@@ -23,8 +23,10 @@ a working Qt5 installation and a c++11 capable compiler.
 
 ![Picture of files_to_features_tool](files_to_features_tool.png)
 
-You can start the editor by using `make fix_files_to_features` manually. It
-is also invoked if missing files or new files are detected.
+You can start the editor by using `make fix_files_to_features` manually. This
+will not work, if you've already refactored your files structure. In that case
+remove the `relevant_source_files`-file in your build directory and after that
+use `make fix_files_to_features`.
 
 ![Picture of files_to_features_tool](files_to_features_tool_problems.png)
 

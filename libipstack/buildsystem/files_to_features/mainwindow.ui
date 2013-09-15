@@ -103,7 +103,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Full path:</string>
+               <string>Relative path:</string>
               </property>
              </widget>
             </item>
@@ -155,13 +155,17 @@
             </item>
             <item row="1" column="2" colspan="2">
              <widget class="QLineEdit" name="labelDepends">
-              <property name="readOnly">
-               <bool>true</bool>
+              <property name="placeholderText">
+               <string>Use the left button for dependency selection!</string>
               </property>
              </widget>
             </item>
             <item row="2" column="2" colspan="2">
-             <widget class="QLineEdit" name="lineName"/>
+             <widget class="QLineEdit" name="lineName">
+              <property name="placeholderText">
+               <string>Describe this component</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -274,7 +278,11 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QListWidget" name="listProblems"/>
+         <widget class="QListWidget" name="listProblems">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QListWidget" name="listLog"/>
@@ -464,6 +472,7 @@ border-style: outset;
      <string>Problems</string>
     </property>
     <addaction name="actionBe_smart"/>
+    <addaction name="actionBe_smart_Selection_only"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuComponents"/>
@@ -578,6 +587,14 @@ border-style: outset;
   <action name="actionBe_smart">
    <property name="text">
     <string>Be smart!</string>
+   </property>
+  </action>
+  <action name="actionBe_smart_Selection_only">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Be smart! (Selection only)</string>
    </property>
   </action>
  </widget>

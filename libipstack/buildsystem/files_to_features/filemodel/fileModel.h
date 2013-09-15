@@ -34,7 +34,7 @@ class FileModelItem;
 class FileModel : public QAbstractItemModel
 {
     Q_OBJECT
-
+    friend class FileModelItem;
 public:
     FileModel(const QString& base_directory, QObject *parent = 0);
     ~FileModel();
@@ -68,7 +68,6 @@ public:
     Qt::DropActions supportedDragActions () const;
     QStringList mimeTypes() const;
     QMimeData *mimeData(const QModelIndexList &indexes) const;
-    virtual bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
 private:
     QMultiMap<QString,FileModelItem*> all_files;

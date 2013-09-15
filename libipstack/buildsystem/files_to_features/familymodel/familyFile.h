@@ -35,7 +35,7 @@ public:
      * @brief get_full_path
      * @return absolute file path
      */
-    QString get_full_path();
+    QString get_full_path() const;
     enum {TYPE=0};
     static FamilyFile *createFile(FamilyModel *componentModel, const QString& filename, FamilyComponent* parent);
 private:

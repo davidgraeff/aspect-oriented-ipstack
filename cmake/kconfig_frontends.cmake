@@ -1,6 +1,6 @@
 enable_language(CXX)
 # Find Qt because we want it for kconfigs qconfig
-find_package (Qt COMPONENTS QtCore REQUIRED)
+find_package (Qt4 COMPONENTS QtCore REQUIRED)
 find_program(autoconf_prog autoconf)
 if (NOT autoconf_prog)
 	message(FATAL_ERROR "Autoconf is neccessary for kconfig-frontends")

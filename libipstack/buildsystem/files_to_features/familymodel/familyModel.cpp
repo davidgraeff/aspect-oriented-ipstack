@@ -33,6 +33,9 @@
 #include <QTreeWidgetItemIterator>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QUrl>
+
+Q_DECLARE_METATYPE(FamilyComponent*)
 
 FamilyModel::FamilyModel(const QString& base_directory, const QString &featureToFilesRelationfile, QObject *parent)
     : QAbstractItemModel(parent), base_directory(QDir(base_directory)), featureToFilesRelationfile(featureToFilesRelationfile)
@@ -73,7 +76,7 @@ FamilyComponent *FamilyModel::getRootItem()
 bool FamilyModel::save(QIODevice *device, bool freeAfterUse)
 {
     if (device==0) {
-        device = new QFile(featureToFilesRelationfile+".try");
+        device = new QFile(featureToFilesRelationfile);
         device->open(QIODevice::WriteOnly);
         freeAfterUse = true;
     }
@@ -145,6 +148,7 @@ void FamilyModel::update(FamilyBaseItem *item)
     Q_ASSERT(item!=rootItem);
     QModelIndex index = createIndex(item->getRow(),0,item);
     emit dataChanged(index, index);
+	emit changed();
 }
 
 QModelIndex FamilyModel::indexOf(FamilyBaseItem *item) const
@@ -171,6 +175,7 @@ void FamilyModel::removeComponent(FamilyComponent *item)
     delete item;
     endRemoveRows();
     emit removed_existing_files(l);
+	emit changed();
 }
 
 void FamilyModel::removeFile(FamilyFile *item)
@@ -181,7 +186,7 @@ void FamilyModel::removeFile(FamilyFile *item)
     if (!item->not_exist)
         l << item->get_full_path();
 
-    QModelIndex index = createIndex(item->getRow(),0,item);
+    QModelIndex index = createIndex(item->getRow(),0,(void*)item);
     beginRemoveRows(index.parent(),index.row(),index.row());
     // Remove from parent
     {
@@ -190,9 +195,11 @@ void FamilyModel::removeFile(FamilyFile *item)
             parent->childs.removeOne(item);
     }
     // Remote item and childs
+    qDebug() << "removeFile" << item->filename;
     delete item;
     endRemoveRows();
     emit removed_existing_files(l);
+	emit changed();
 }
 
 FamilyComponent* FamilyModel::addComponent(FamilyComponent *parent)
@@ -202,12 +209,7 @@ FamilyComponent* FamilyModel::addComponent(FamilyComponent *parent)
 
     FamilyComponent* i = FamilyComponent::createComponent(this, parent->get_directory(), parent);
     i->update_component_name();
-//    QModelIndex index = createIndex(i->getRow(),0,i);
-//    beginInsertRows(index.parent(),index.row(),index.row());
-//    endInsertRows();
-//    emit dataChanged(index.parent(),index);
-//    beginResetModel();
-//    endResetModel();
+	emit changed();
     return i;
 }
 
@@ -219,6 +221,7 @@ void FamilyModel::clear(bool removeEntries)
         rootItem->childs.clear();
     }
     endResetModel();
+	emit changed();
 }
 
 int FamilyModel::columnCount(const QModelIndex &) const
@@ -234,7 +237,7 @@ Qt::ItemFlags FamilyModel::flags(const QModelIndex &index) const
 
     FamilyBaseItem *item = static_cast<FamilyBaseItem*>(index.internalPointer());
     if (item->type == FamilyComponent::TYPE) {
-        return Qt::ItemIsDropEnabled | defaultFlags;
+        return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
     } else
         return Qt::ItemIsDragEnabled | defaultFlags;
 }
@@ -261,7 +264,7 @@ bool FamilyModel::removeRows(int row, int count, const QModelIndex &parent)
 
 Qt::DropActions FamilyModel::supportedDropActions() const
 {
-    return Qt::MoveAction;
+    return Qt::MoveAction | Qt::CopyAction;
 }
 
 Qt::DropActions FamilyModel::supportedDragActions() const
@@ -272,26 +275,26 @@ Qt::DropActions FamilyModel::supportedDragActions() const
 QStringList FamilyModel::mimeTypes() const
 {
     QStringList types;
-    types << "application/files.text.list";
+    types << "application/files.pointer.list";
+    types << "text/uri-list";
     return types;
 }
 
 QMimeData *FamilyModel::mimeData(const QModelIndexList &indexes) const
 {
     QMimeData *mimeData = new QMimeData();
-    QByteArray encodedData;
+    const QByteArray encodedData;
 
-    QDataStream stream(&encodedData, QIODevice::WriteOnly);
-
+    moveFilesList.clear();
     foreach (const QModelIndex &index, indexes) {
         if (index.isValid() && index.column()==0) {
             FamilyBaseItem *item = static_cast<FamilyBaseItem*>(index.internalPointer());
             if (item->type == FamilyFile::TYPE)
-                stream << static_cast<FamilyFile*>(item)->get_full_path();
+                moveFilesList << static_cast<FamilyFile*>(item);
         }
     }
 
-    mimeData->setData("application/files.text.list", encodedData);
+    mimeData->setData("application/files.pointer.list", encodedData);
     return mimeData;
 }
 
@@ -301,32 +304,40 @@ bool FamilyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int
     if (action == Qt::IgnoreAction)
         return true;
 
-    if (!data->hasFormat("application/files.text.list"))
-        return false;
-
-    QByteArray encodedData = data->data("application/files.text.list");
-    QDataStream stream(&encodedData, QIODevice::ReadOnly);
-
     FamilyBaseItem *item = static_cast<FamilyBaseItem*>(parent.internalPointer());
+    if (!item)
+        item = rootItem;
     if (item->type==FamilyFile::TYPE)
         item = item->parent;
+    Q_ASSERT(item);
     FamilyComponent* target = (FamilyComponent*)item;
 
-    QStringList files;
-    QString file;
-    while (!stream.atEnd()) {
-        stream >> file;
-        files << file;
+    if (data->hasFormat("application/files.pointer.list")) {
+        QStringList files;
+        foreach(FamilyFile* source_file_entry, moveFilesList) {
+            files << source_file_entry->get_full_path();
+            removeFile(source_file_entry);
+        }
+
+        moveFilesList.clear();
+        target->addFiles(files, FamilyComponent::AllowOneSubdirCreateSubcomponents);
+
+        // If we return true, Qt automatically calls removeRows of the source model
+        return false;
+    } else if (data->hasFormat("text/uri-list") && action == Qt::CopyAction) {
+        QList<QUrl> urls = data->urls();
+        QStringList files;
+        foreach(const QUrl& url, urls) {
+            files << url.toLocalFile();
+        }
+
+        target->addFiles(files, FamilyComponent::AllowOneSubdirCreateSubcomponents);
+
+        // If we return true, Qt automatically calls removeRows of the source model
+        return true;
     }
 
-    target->addFiles(files, FamilyComponent::AllowOneSubdirCreateSubcomponents);
-//    if (row==-1)
-//        emit dataChanged(parent, index(item->childs.size()-1,1,parent));
-//    else
-//        emit dataChanged(parent, index(row,1,parent));
-
-    // If we return true, Qt automatically calls removeRows of the source model
-    return true;
+    return false;
 }
 
 QVariant FamilyModel::data(const QModelIndex &index, int role) const

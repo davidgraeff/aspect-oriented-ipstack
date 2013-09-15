@@ -38,13 +38,16 @@
 #include <QMessageBox>
 #include <QImage>
 #include <QDebug>
-#include <QPainter>
+#include <QSettings>
+#include <QCloseEvent>
 
 MainWindow::MainWindow(Options* o, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow), options(o)
 {
     ui->setupUi(this);
+    setWindowTitle(tr("%1 - %2[*]").arg(qApp->applicationName()).
+                   arg(QFileInfo(QString::fromStdString(options->featureToFilesRelationfile)).fileName()));
     on_btnShowProblems_toggled(false);
     on_btnShowLog_toggled(false);
     QAction* sep = new QAction(this);
@@ -88,16 +91,106 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
             this, &MainWindow::familyModelSelectionChanged);
 
     connect(componentModel,&FamilyModel::removed_existing_files,filemodel,&FileModel::addFiles);
+    connect(componentModel,&FamilyModel::added_files,filemodel,&FileModel::removeFiles);
     connect(componentModel,&FamilyModel::rejected_existing_files,this,&MainWindow::rejected_files);
+	connect(componentModel,&FamilyModel::changed,this,&MainWindow::familyModelChanged);
 
+    // problems
+    connect(ui->listProblems->selectionModel(),&QItemSelectionModel::currentChanged,
+            this, &MainWindow::problemSelectionChanged);
+
+    // init
     on_actionSynchronize_with_file_system_triggered();
     familyModelSelectionChanged(QModelIndex());
     update_problems();
+	ui->actionSave->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent* e)
+{
+    { // save window geometry settings
+        QSettings settings;
+        settings.setValue("geometry", saveGeometry());
+        settings.setValue("windowState", saveState());
+    }
+
+    if (!ui->actionSave->isEnabled()) {
+        e->accept();
+        return;
+    }
+    QMessageBox mb(tr("Save configuration?"), tr("Save configuration?"), QMessageBox::Warning,
+            QMessageBox::Yes | QMessageBox::Default, QMessageBox::No, QMessageBox::Cancel | QMessageBox::Escape);
+    mb.setButtonText(QMessageBox::Yes, tr("&Save changes"));
+    mb.setButtonText(QMessageBox::No, tr("&Discard changes"));
+    mb.setButtonText(QMessageBox::Cancel, tr("Cancel Exit"));
+    switch (mb.exec()) {
+    case QMessageBox::Yes:
+        on_actionSave_triggered();
+        e->accept();
+        break;
+    case QMessageBox::No:
+        e->accept();
+        break;
+    case QMessageBox::Cancel:
+        e->ignore();
+        break;
+    }
+}
+
+void MainWindow::solveProblems(const QList<ProblemListItem*>& problems)
+{
+    if (componentModel->rowCount()>0 &&
+            QMessageBox::warning(this, tr("Be smart!"),
+                  tr("This will remove all missing files, and correct paths for moved files. It also removes empty components and unneccessary nested subcomponents."),
+                    QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel) == QMessageBox::Yes) {
+
+
+        for(int i=0;i<problems.count();++i) {
+            ProblemListItem* item = problems[i];
+
+            switch (item->type) {
+                case ProblemListItem::COMPONENT_WITH_ONLY_FILES: {
+                    FamilyComponent* i = (FamilyComponent*)item->problem_component_item.data();
+                    // Add all files of the item to the parent item
+                    i->parent->addFiles(i->get_all_files(true), FamilyComponent::AllowMultipleSubdirLevels);
+                    // Remove from parent and delete item
+                    i->parent->childs.removeOne(i);
+                    delete i;
+                break; }
+                case ProblemListItem::EMPTY_COMPONENT:
+                    componentModel->removeComponent((FamilyComponent*)item->problem_component_item.data());
+                break;
+                case ProblemListItem::MOVED_FILE: {
+                    FamilyFile* i = (FamilyFile*)item->problem_component_item.data();
+                    FamilyComponent* parent = i->parent;
+                    componentModel->removeFile(i);
+                    parent->addFiles(QStringList() << item->maybe_moved, FamilyComponent::AllowMultipleSubdirLevels);
+
+                break;}
+                case ProblemListItem::REMOVED_FILE:
+                    componentModel->removeFile((FamilyFile*)item->problem_component_item.data());
+                break;
+                case ProblemListItem::UNUSED_FILES:
+                break;
+            }
+        }
+
+        // update the view by emitting reset signals
+        componentModel->clear(false);
+
+        // update problems section by rescanning files
+        on_actionSynchronize_with_file_system_triggered();
+    }
+}
+
+void MainWindow::familyModelChanged() {
+    setWindowModified(true);
+	ui->actionSave->setEnabled(true);
 }
 
 void MainWindow::update_problems()
@@ -192,6 +285,8 @@ void MainWindow::on_actionQuit_triggered()
 
 void MainWindow::on_actionSave_triggered()
 {
+    setWindowModified(false);
+    ui->actionSave->setEnabled(false);
     componentModel->save();
 }
 
@@ -255,7 +350,9 @@ void MainWindow::familyModelSelectionChanged(const QModelIndex &index)
         FamilyFile* currentComponentFile = (FamilyFile*)b;
         FamilyComponent* currentComponent = currentComponentFile->parent;
 
+        ui->labelDepends->blockSignals(true);
         ui->labelDepends->setText(currentComponent->depends);
+        ui->labelDepends->blockSignals(false);
         ui->labelPath->setText(componentModel->relative_directory(currentComponentFile->get_full_path()));
         ui->lineName->setEnabled(false);
         ui->lineName->blockSignals(true); // do not update the component by the value we set now
@@ -264,6 +361,13 @@ void MainWindow::familyModelSelectionChanged(const QModelIndex &index)
         ui->btnChangeSubdir->setEnabled(false);
         ui->btnChangeDepends->setEnabled(false);
     }
+}
+
+void MainWindow::problemSelectionChanged(const QModelIndex &)
+{
+    int number_of_items = ui->listProblems->selectedItems().size();
+    ui->actionBe_smart_Selection_only->setEnabled(number_of_items);
+    ui->actionBe_smart_Selection_only->setText(tr("Be smart! (%1 items)").arg(number_of_items));
 }
 
 void MainWindow::on_btnChangeSubdir_clicked()
@@ -286,10 +390,21 @@ void MainWindow::on_btnChangeSubdir_clicked()
      * should to be removed from the component model. We ask the user.
      */
     bool removeFiles = false;
-    if (currentComponent->childs.size() && QMessageBox::question(this,tr("Change subdir?"),
-                                  tr("You are about to change a subdirectory of a component, where files are listed. The filepaths would be invalid after the change, should they be removed?"),
-                                  QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes) {
-        removeFiles = true;
+    if (currentComponent->childs.size()) {
+        int r = QMessageBox::question(this,tr("Change subdir?"),
+                                            tr("You are about to change a subdirectory of a component, where files are listed.\n"
+                                             "All filepaths would be invalid after the change!\n"
+                                             "Remove file entries?"),
+                                            tr("Remove entries"),
+                                            tr("Leave entries"),
+                                            tr("Cancel"));
+        if (r == 0) {
+            removeFiles = true;
+            add_log(tr("Remove files of %s").arg(currentComponent->cache_component_name));
+        } if (r == 2) {
+            add_log(tr("Aborted changing a directory"));
+            return;
+        }
     }
     currentComponent->set_directory(dir,removeFiles);
     componentModel->update(currentComponent);
@@ -309,7 +424,9 @@ void MainWindow::on_btnChangeDepends_clicked()
         currentComponent->depends = p->get_dependency_string();
         currentComponent->update_component_name();
         componentModel->update(currentComponent);
+        ui->labelDepends->blockSignals(true);
         ui->labelDepends->setText(currentComponent->depends);
+        ui->labelDepends->blockSignals(false);
     }
     p->deleteLater();
 }
@@ -322,6 +439,18 @@ void MainWindow::on_lineName_textChanged(const QString &arg1)
     Q_ASSERT(currentComponent);
 
     currentComponent->vname = arg1;
+    currentComponent->update_component_name();
+    componentModel->update(currentComponent);
+}
+
+void MainWindow::on_labelDepends_textChanged(const QString &arg1)
+{
+    if (!ui->treeComponents->currentIndex().isValid())
+        return;
+    FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
+    Q_ASSERT(currentComponent);
+
+    currentComponent->depends = arg1;
     currentComponent->update_component_name();
     componentModel->update(currentComponent);
 }
@@ -479,52 +608,32 @@ void MainWindow::focusComponent(FamilyBaseItem* item)
 
 void MainWindow::on_actionBe_smart_triggered()
 {
-    if (componentModel->rowCount()>0 &&
-            QMessageBox::warning(this, tr("Be smart!"),
-                  tr("This will remove all missing files, and correct paths for moved files. It also removes empty components and unneccessary nested subcomponents."),
-                    QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel) == QMessageBox::Yes) {
-
-
-        for(int i=0;i<ui->listProblems->count();++i) {
-            ProblemListItem* item = (ProblemListItem*)ui->listProblems->item(i);
-            if (item->problem_component_item.isNull()) {
-                ui->listProblems->removeItemWidget(item);
-                continue;
-            }
-
-            switch (item->type) {
-                case ProblemListItem::COMPONENT_WITH_ONLY_FILES: {
-                    FamilyComponent* i = (FamilyComponent*)item->problem_component_item.data();
-                    // Add all files of the item to the parent item
-                    i->parent->addFiles(i->get_all_files(true), FamilyComponent::AllowMultipleSubdirLevels);
-                    // Remove from parent and delete item
-                    i->parent->childs.removeOne(i);
-                    delete i;
-                break; }
-                case ProblemListItem::EMPTY_COMPONENT:
-                    componentModel->removeComponent((FamilyComponent*)item->problem_component_item.data());
-                break;
-                case ProblemListItem::MOVED_FILE: {
-                    FamilyFile* i = (FamilyFile*)item->problem_component_item.data();
-                    FamilyComponent* parent = i->parent;
-                    componentModel->removeFile(i);
-                    parent->addFiles(QStringList() << item->maybe_moved, FamilyComponent::AllowMultipleSubdirLevels);
-
-                break;}
-                case ProblemListItem::REMOVED_FILE:
-                    componentModel->removeFile((FamilyFile*)item->problem_component_item.data());
-                break;
-                case ProblemListItem::UNUSED_FILES:
-                break;
-            }
+    QList<ProblemListItem*> problems;
+    for(int i=1;i<ui->listProblems->count();++i) {
+        ProblemListItem* item = (ProblemListItem*)ui->listProblems->item(i);
+        if (item->problem_component_item.isNull()) {
+            ui->listProblems->removeItemWidget(item);
+            continue;
         }
-
-        // update the view by emitting reset signals
-        componentModel->clear(false);
-
-        // update problems section by rescanning files
-        on_actionSynchronize_with_file_system_triggered();
+        problems.append(item);
     }
+    solveProblems(problems);
+}
+
+
+void MainWindow::on_actionBe_smart_Selection_only_triggered()
+{
+    QList<ProblemListItem*> problems;
+    for(int i=1;i<ui->listProblems->selectedItems().count();++i) {
+        QListWidgetItem* listitem = ui->listProblems->selectedItems()[i];
+        ProblemListItem* item = (ProblemListItem*)listitem;
+        if (item->problem_component_item.isNull()) {
+            ui->listProblems->removeItemWidget(item);
+            continue;
+        }
+        problems.append(item);
+    }
+    solveProblems(problems);
 }
 
 void MainWindow::rejected_files(const QDir& subdir, const QStringList &files)
@@ -538,3 +647,4 @@ void MainWindow::rejected_files(const QDir& subdir, const QStringList &files)
                 arg(componentModel->relative_directory(file)));
     }
 }
+

@@ -7,7 +7,7 @@ FamilyFile::FamilyFile(FamilyModel *componentModel) : FamilyBaseItem(componentMo
 {
 }
 
-QString FamilyFile::get_full_path()
+QString FamilyFile::get_full_path() const
 {
     if (parent)
         return static_cast<FamilyComponent*>(parent)->get_directory().absoluteFilePath(filename);
