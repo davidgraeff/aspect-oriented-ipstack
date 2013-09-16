@@ -25,6 +25,7 @@
 #include "pickdependencies.h"
 #include "ui_pickdependencies.h"
 #include "kconfigmodel/kconfigModel.h"
+#include "filterproxymodel.h"
 #include <QDebug>
 #include <QHBoxLayout>
 
@@ -35,7 +36,14 @@ PickDependencies::PickDependencies(const QString& kconfig_input_filename, QWidge
     ui->setupUi(this);
     ui->frame->setLayout(new QVBoxLayout());
     ui->treeView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    ui->treeView->setModel(new DependencyModel(kconfig_input_filename, this));
+    dependsModel = new DependencyModel(kconfig_input_filename,this);
+    dependsModelProxy = new FilterProxyModel(this);
+    dependsModelProxy->setSourceModel(dependsModel);
+    dependsModelProxy->setDynamicSortFilter(true);
+    dependsModelProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    connect(ui->lineSearch,&QLineEdit::textChanged,
+            dependsModelProxy, &FilterProxyModel::setFilterFixedString);
+    ui->treeView->setModel(dependsModelProxy);
     ui->treeView->expandAll();
 }
 
@@ -87,7 +95,7 @@ void PickDependencies::set_initial_selection(const QString &depends_pattern)
             negated = false;
 
             // select item in tree view
-            QModelIndex compModelIndex = static_cast<DependencyModel*>(ui->treeView->model())->indexOf(w.mid(1));
+            QModelIndex compModelIndex = dependsModelProxy->mapFromSource(dependsModel->indexOf(w.mid(1)));
             ui->treeView->scrollTo(compModelIndex);
             ui->treeView->selectionModel()->select(compModelIndex,QItemSelectionModel::Select);
 
@@ -113,18 +121,11 @@ void PickDependencies::set_initial_selection(const QString &depends_pattern)
 
 void PickDependencies::on_buttonBox_accepted()
 {
-//    QModelIndexList list = ui->treeView->selectionModel()->selectedIndexes();
-//    DependencyModel* model = (DependencyModel*)ui->treeView->model();
-//    foreach (QModelIndex index, list)
-//        if (index.column()==0)
-//            list_of_selected_features << model->feature_name(index);
-
     accept();
 }
 
 void PickDependencies::on_buttonBox_rejected()
 {
-//    list_of_selected_features.clear();
     rejected();
 }
 
@@ -132,10 +133,9 @@ void PickDependencies::on_treeView_clicked(const QModelIndex &)
 {
     QSet<QString> list_of_selected_features;
     QModelIndexList list = ui->treeView->selectionModel()->selectedIndexes();
-    DependencyModel* model = (DependencyModel*)ui->treeView->model();
     foreach (QModelIndex index, list)
         if (index.column()==0)
-            list_of_selected_features << model->feature_name(index);
+            list_of_selected_features << dependsModel->feature_name(dependsModelProxy->mapToSource(index));
 
     // get removed features
     QSet<QString> removed_features(used_depends);

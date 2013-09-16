@@ -17,10 +17,17 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Select dependencies from the tree below and change the concatenation operators after that.</string>
+      <string>Select dependencies from the tree below and change the concatenation operators after that. Click on a dependency button below the list to negate this dependency.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lineSearch">
+     <property name="placeholderText">
+      <string>Search dependencies</string>
      </property>
     </widget>
    </item>

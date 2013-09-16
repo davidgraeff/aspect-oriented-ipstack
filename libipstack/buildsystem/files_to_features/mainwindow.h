@@ -37,6 +37,7 @@ class FamilyBaseItem;
 class FamilyComponent;
 class FamilyFile;
 class ProblemListItem;
+class DependencyModel;
 
 class MainWindow : public QMainWindow
 {
@@ -73,6 +74,10 @@ private slots:
 
     void on_labelDepends_textChanged(const QString &arg1);
 
+    void on_btnShowUnusedFiles_toggled(bool checked);
+
+    void on_btnShowMissingDepends_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
     Options* options;
@@ -80,6 +85,8 @@ private:
     FilterProxyModel* filemodelProxy;
     FamilyModel* componentModel;
     FilterProxyModel* componentModelProxy;
+    DependencyModel* dependsModel;
+    FilterProxyModel* dependsModelProxy;
     void focusComponent(FamilyBaseItem *item);
     void closeEvent(QCloseEvent* e);
     void solveProblems(const QList<ProblemListItem*> &problems);

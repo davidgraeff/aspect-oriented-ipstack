@@ -27,8 +27,19 @@
 #include <QDebug>
 
 DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject *parent)
-    : QAbstractItemModel(parent)
+    : QAbstractItemModel(parent), rootItem(0), kconfig_input_filename(kconfig_input_filename)
 {
+    createModel();
+}
+
+DependencyModel::~DependencyModel()
+{
+    delete rootItem;
+}
+
+void DependencyModel::createModel()
+{
+    delete rootItem;
     rootItem = new DependencyModelItem();
 
     QFile file(kconfig_input_filename);
@@ -48,11 +59,13 @@ DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject 
         QString line = file.readLine().trimmed();
         if (line.startsWith("menuconfig ")) {
             currentItem = new DependencyModelItem;
+            currentItem->model = this;
             currentItem->name = line.remove(0, 11).trimmed();
             continue;
         }
         if (line.startsWith("config ")) {
             currentItem = new DependencyModelItem;
+            currentItem->model = this;
             currentItem->name = line.remove(0, 7).trimmed();
             continue;
         }
@@ -73,9 +86,10 @@ DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject 
         if (currentItem) {
             if (line.isEmpty()) {
                 inhelp = false;
-                if (currentItem->text.size())
+                if (currentItem->text.size()) {
                     items.append(currentItem);
-                else
+                    itemList.insert(currentItem->name, currentItem);
+                } else
                     delete currentItem;
                 currentItem = 0;
                 continue;
@@ -106,11 +120,11 @@ DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject 
         before = items.size();
 
         for(int i=items.size()-1;i>=0;--i) {
-            DependencyModelItem* foundParent = getItemByName(items[i]->depends, rootItem);
+            DependencyModelItem* foundParent = itemList.value(items[i]->depends);
             if (foundParent) {
                 items[i]->parent = foundParent;
                 items[i]->row = foundParent->childs.size();
-                foundParent->childs.append(items[i]);
+                foundParent->insertSorted(items[i]);
                 items.removeAt(i);
             }
         }
@@ -122,13 +136,8 @@ DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject 
     for(int i=items.size()-1;i>=0;--i) {
         items[i]->parent = rootItem;
         items[i]->row = rootItem->childs.size();
-        rootItem->childs.append(items[i]);
+        rootItem->insertSorted(items[i]);
     }
-}
-
-DependencyModel::~DependencyModel()
-{
-	delete rootItem;
 }
 
 int DependencyModel::columnCount(const QModelIndex &) const
@@ -162,11 +171,16 @@ QString DependencyModel::feature_name(const QModelIndex &current) {
 
 QModelIndex DependencyModel::indexOf(const QString &name)
 {
-    DependencyModelItem* d = getItemByName(name, rootItem);
+    DependencyModelItem* d = itemList.value(name);
     if (d) {
         return createIndex(d->row, 0, d);
     } else
         return QModelIndex();
+}
+
+int DependencyModel::count()
+{
+    return itemList.size();
 }
 
 DependencyModelItem *DependencyModel::getRootItem()
@@ -174,19 +188,9 @@ DependencyModelItem *DependencyModel::getRootItem()
     return rootItem;
 }
 
-DependencyModelItem* DependencyModel::getItemByName(const QString& name, DependencyModelItem *current)
+DependencyModelItem* DependencyModel::getItemByName(const QString& name)
 {
-    if( current->name == name ) {
-        return current;
-    }
-
-    for( int r = 0, m = current->childs.size(); r < m; r++ ) {
-        DependencyModelItem *item = getItemByName(name, current->childs[r]);
-        if (item)
-            return item;
-    }
-
-    return 0;
+    return itemList.value(name);
 }
 
 QVariant DependencyModel::headerData(int section, Qt::Orientation orientation,
@@ -253,4 +257,21 @@ int DependencyModel::rowCount(const QModelIndex &parent) const
         parentItem = static_cast<DependencyModelItem*>(parent.internalPointer());
 
     return parentItem->childs.size();
+}
+
+
+int DependencyModelItem::binary_search_text_lower_bound(const QString &text)
+{
+    int half=0, begin=0, middle=0, n = childs.size();
+    while (n>0) {
+        half = n >> 1;
+        middle = begin + half;
+        if (childs[middle]->text < text) {
+            begin = middle + 1;
+            n -= half + 1;
+        } else {
+            n = half;
+        }
+    }
+    return begin;
 }

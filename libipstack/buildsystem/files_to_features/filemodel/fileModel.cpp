@@ -31,9 +31,9 @@
 #include <QUrl>
 
 FileModel::FileModel(const QString& base_directory, QObject *parent)
-    : QAbstractItemModel(parent), rootItem(0), base_directory(QDir(base_directory))
+    : QAbstractItemModel(parent), base_directory(QDir(base_directory))
 {
-    createFileTree();
+    rootItem = FileModelItem::createDir(this, this->base_directory.absolutePath(), 0);
 }
 
 FileModel::~FileModel()

@@ -29,20 +29,28 @@
 #include <QVariant>
 #include <QObject>
 
+class DependencyModel;
 class DependencyModelItem {
 public:
     QString name;
     QString text;
     QString description;
+    DependencyModel* model;
 
     QString depends;
     int row;
     DependencyModelItem* parent;
     QList<DependencyModelItem*> childs;
 
+    void insertSorted(DependencyModelItem* newItem) {
+        childs.insert(binary_search_text_lower_bound(newItem->text), newItem);
+    }
+
     ~DependencyModelItem() {
         qDeleteAll(childs);
     }
+private:
+    int binary_search_text_lower_bound(const QString& text);
 };
 
 class DependencyModel : public QAbstractItemModel
@@ -53,9 +61,12 @@ public:
     DependencyModel(const QString& kconfig_input_filename, QObject *parent = 0);
     ~DependencyModel();
 
+    void createModel();
+
     /// Return name of feature at position @index
     QString feature_name(const QModelIndex &current);
     QModelIndex indexOf(const QString& name);
+    int count();
     DependencyModelItem* getRootItem();
 
 	QVariant data(const QModelIndex &index, int role) const;
@@ -68,5 +79,7 @@ public:
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 private:
     DependencyModelItem *rootItem;
-    DependencyModelItem* getItemByName(const QString& name, DependencyModelItem*current);
+    QString kconfig_input_filename;
+    DependencyModelItem* getItemByName(const QString& name);
+    QMap<QString, DependencyModelItem*> itemList;
 };

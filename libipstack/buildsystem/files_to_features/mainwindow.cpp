@@ -50,8 +50,23 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
                    arg(QFileInfo(QString::fromStdString(options->featureToFilesRelationfile)).fileName()));
     on_btnShowProblems_toggled(false);
     on_btnShowLog_toggled(false);
+    on_btnShowUnusedFiles_toggled(false);
+
+    { // restore window geometry settings
+        QSettings settings;
+        restoreGeometry(settings.value("geometry").toByteArray());
+        restoreState(settings.value("windowState").toByteArray());
+
+        ui->btnShowComponentDetails->setChecked(settings.value("btnShowComponentDetails").toBool());
+        ui->btnShowLog->setChecked(settings.value("btnShowLog").toBool());
+        ui->btnShowMissingDepends->setChecked(settings.value("btnShowMissingDepends").toBool());
+        ui->btnShowProblems->setChecked(settings.value("btnShowProblems").toBool());
+        ui->btnShowUnusedFiles->setChecked(settings.value("btnShowUnusedFiles").toBool());
+    }
+
     QAction* sep = new QAction(this);
     sep->setSeparator(true);
+    // prepare component tree
     ui->treeComponents->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->treeComponents->addActions(QList<QAction*>() << ui->actionAdd_component
                                    << ui->actionRemove_selected_components
@@ -60,8 +75,20 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
                                    << ui->actionExpand_all_missing_files_only
                                    << sep);
 
+    // prepare problems list
     ui->listProblems->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->listProblems->addAction(ui->actionBe_smart);
+    ui->listProblems->addActions(QList<QAction*>() << ui->actionBe_smart << ui->actionBe_smart_Selection_only);
+
+    // dependency model
+    dependsModel = new DependencyModel(QString::fromStdString(options->kconfigfile),this);
+    dependsModelProxy = new FilterProxyModel(this);
+    dependsModelProxy->setSourceModel(dependsModel);
+    dependsModelProxy->setDynamicSortFilter(true);
+    dependsModelProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    connect(ui->lineSearchMissingDepends,&QLineEdit::textChanged,
+            dependsModelProxy, &FilterProxyModel::setFilterFixedString);
+    ui->treeDependencies->setModel(dependsModelProxy);
+    ui->treeDependencies->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     // file models
     filemodel = new FileModel(QString::fromStdString(options->base_directory), this);
@@ -117,6 +144,11 @@ void MainWindow::closeEvent(QCloseEvent* e)
         QSettings settings;
         settings.setValue("geometry", saveGeometry());
         settings.setValue("windowState", saveState());
+        settings.setValue("btnShowComponentDetails", ui->btnShowComponentDetails->isChecked());
+        settings.setValue("btnShowLog", ui->btnShowLog->isChecked());
+        settings.setValue("btnShowMissingDepends", ui->btnShowMissingDepends->isChecked());
+        settings.setValue("btnShowProblems", ui->btnShowProblems->isChecked());
+        settings.setValue("btnShowUnusedFiles", ui->btnShowUnusedFiles->isChecked());
     }
 
     if (!ui->actionSave->isEnabled()) {
@@ -176,6 +208,7 @@ void MainWindow::solveProblems(const QList<ProblemListItem*>& problems)
                     componentModel->removeFile((FamilyFile*)item->problem_component_item.data());
                 break;
                 case ProblemListItem::UNUSED_FILES:
+                case ProblemListItem::MISSING_DEPENDENCIES:
                 break;
             }
         }
@@ -202,6 +235,14 @@ void MainWindow::update_problems()
         problem_item->setIcon(QIcon::fromTheme("dialog-information"));
         problem_item->setText(tr("%1 files in your project directory are not used by any component!").
                               arg(filemodel->get_unused_files_size()));
+        ui->listProblems->addItem(problem_item);
+    }
+
+    if (dependsModel->count()) {
+        auto* problem_item = new ProblemListItem(ProblemListItem::MISSING_DEPENDENCIES);
+        problem_item->setIcon(QIcon::fromTheme("dialog-information"));
+        problem_item->setText(tr("%1 kconfig dependencies are not used!").
+                              arg(dependsModel->count()));
         ui->listProblems->addItem(problem_item);
     }
 
@@ -560,6 +601,29 @@ void MainWindow::on_actionClear_use_filesystem_based_structure_triggered()
     }
 }
 
+void MainWindow::on_btnShowUnusedFiles_toggled(bool checked)
+{
+    ui->btnShowUnusedFiles->setChecked(checked);
+    if (checked) {
+        ui->btnShowMissingDepends->setChecked(false);
+        ui->groupMissingDependencies->setVisible(false);
+    }
+    ui->groupUnusedFiles->setVisible(checked);
+    ui->widgetRight->setVisible(ui->btnShowUnusedFiles->isChecked()||ui->btnShowMissingDepends->isChecked());
+}
+
+void MainWindow::on_btnShowMissingDepends_toggled(bool checked)
+{
+    ui->btnShowMissingDepends->setChecked(checked);
+    if (checked) {
+        ui->btnShowUnusedFiles->setChecked(false);
+        ui->groupUnusedFiles->setVisible(false);
+    }
+    ui->groupMissingDependencies->setVisible(checked);
+    ui->widgetRight->setVisible(ui->btnShowUnusedFiles->isChecked()||ui->btnShowMissingDepends->isChecked());
+
+}
+
 void MainWindow::on_btnShowProblems_toggled(bool checked)
 {
     ui->btnShowProblems->setChecked(checked);
@@ -584,15 +648,15 @@ void MainWindow::on_btnShowLog_toggled(bool checked)
 
 void MainWindow::on_listProblems_activated(const QModelIndex &index)
 {
-    if (index.row()==0) {
+    ProblemListItem* item = (ProblemListItem*)ui->listProblems->item(index.row());
+    if(item->type==ProblemListItem::UNUSED_FILES) {
         ui->btnShowUnusedFiles->setChecked(true);
+    } else if(item->type==ProblemListItem::MISSING_DEPENDENCIES) {
+        ui->btnShowMissingDepends->setChecked(true);
+    } else if (item->problem_component_item.isNull()) {
+        ui->listProblems->removeItemWidget(item);
     } else {
-        ProblemListItem* item = (ProblemListItem*)ui->listProblems->item(index.row());
-        if (item->problem_component_item.isNull()) {
-            ui->listProblems->removeItemWidget(item);
-        } else {
-            focusComponent(item->problem_component_item.data());
-        }
+        focusComponent(item->problem_component_item.data());
     }
 }
 

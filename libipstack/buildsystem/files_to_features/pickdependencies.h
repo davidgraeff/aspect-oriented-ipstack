@@ -59,6 +59,8 @@ class depend : public QObject {
     depend() {}
 };
 
+class FilterProxyModel;
+class DependencyModel;
 class PickDependencies : public QDialog
 {
     Q_OBJECT
@@ -84,4 +86,6 @@ private slots:
 
 private:
     Ui::PickDependencies *ui;
+    FilterProxyModel* dependsModelProxy;
+    DependencyModel* dependsModel;
 };
