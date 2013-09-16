@@ -892,9 +892,9 @@ menuconfig ipstack
 			choice
 				prompt "Sendbuffer freeing"
 				depends on ipstack
+				default ipstack_memory_sendbuffer_free_not
 
 				config ipstack_memory_sendbuffer_free_not
-					default y
 					bool "No automatic freeing"
 					help
 						You have to free your sendbuffers yourself. This is the best
@@ -940,9 +940,6 @@ menuconfig ipstack
 		
 		menu "Default memory in mempools for a socket"
 			depends on ipstack
-			help
-				Those are default values if you create for example a tcp or udp socket
-				and do not define any memory related attributes.
 		
 			config cfIPSTACK_BLOCKSIZE_BIG
 				depends on ipstack
