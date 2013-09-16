@@ -100,13 +100,25 @@ private:
 			}
 		}
 		std::string dir;
-		void cd(const std::string& sub) {
+		// counter for every cd(..) how many subdirs we entered
+		// to go that many levels up by calling up()
+		std::list<int> dir_stack;
+		// you may enter multiple subdirs at once
+		void cd(std::string sub) {
 			if (sub.size() && sub[0] != '/')
-				dir += '/';
+				sub = '/' + sub;
 			dir += sub;
+			// count how many subdirs we entered
+			dir_stack.push_back(std::count(sub.begin(), sub.end(), '/'));
 		}
 		void up() {
-			int i = dir.find_last_of('/');
+			size_t i = std::string::npos;
+			int how_many_levels = dir_stack.back();
+			dir_stack.pop_back();
+			// go up() multiple times if neccessary
+			while(how_many_levels--)
+				i = dir.find_last_of('/', i-1);
+			// remove from dir string
 			if (i!=std::string::npos)
 				dir.erase(i);
 		}

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "ipv4.h"
-#include "../InternetChecksum.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv4/InternetChecksum.h"
 #include "tcp/TCP_Segment.h"
 #include "sending/SendBuffer.h"
 

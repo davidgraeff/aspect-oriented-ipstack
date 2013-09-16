@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "operating_system_integration/System.h"
+#include "os_integration/System.h"
 #include <iostream>
 
 using namespace ipstack;

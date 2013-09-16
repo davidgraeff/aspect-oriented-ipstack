@@ -20,7 +20,7 @@
 #define __TCP_RTT_ESTIMATION_SLICE__
 
 #include "util/ipstack_inttypes.h"
-#include "operating_system_integration/Clock.h"
+#include "os_integration/Clock.h"
 
 slice class TCP_RTT_Estimation_Slice {
   private:

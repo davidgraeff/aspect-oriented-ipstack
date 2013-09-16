@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "util/MemoryInterface.h"
-#include "ReceiveBuffer.h"
+#include "receive/ReceiveBuffer.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include <string.h> //for memcpy
 

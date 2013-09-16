@@ -18,10 +18,10 @@
 #pragma once
 
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6/InternetChecksum.h"
+#include "ipv6/InternetChecksum.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "ICMPv6_Packet.h"
+#include "icmpv6/ICMPv6_Packet.h"
 #include <iostream>
 
 using namespace ipstack;

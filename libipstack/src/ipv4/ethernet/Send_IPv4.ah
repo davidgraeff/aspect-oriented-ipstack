@@ -21,8 +21,8 @@
 #include "ethernet/Eth_Frame.h"
 #include "sending/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
-#include "ipv4.h"
-#include "ipv4onSockets.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv4/IPv4onSockets.h"
 
 using namespace ipstack;
 

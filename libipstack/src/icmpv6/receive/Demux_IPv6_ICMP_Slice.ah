@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ICMPv6_Packet.h"
+#include "icmpv6/ICMPv6_Packet.h"
 #include "router/Interface.h"
 
 using namespace ipstack;

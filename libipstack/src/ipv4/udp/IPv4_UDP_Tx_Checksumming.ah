@@ -18,8 +18,8 @@
 #pragma once
 
 #include "udp/UDP_Packet.h"
-#include "ipv4.h"
-#include "../InternetChecksum.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv4/InternetChecksum.h"
 #include "sending/SendBuffer.h"
 #include "router/Interface.h"
 

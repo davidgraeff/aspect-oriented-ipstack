@@ -19,8 +19,8 @@
 #include "TCP_Socket.h"
 #include "demux/Demux.h"
 #include "sending/SendBuffer.h"
-#include "ReceiveBuffer.h"
-#include "operating_system_integration/Clock.h"
+#include "receive/ReceiveBuffer.h"
+#include "os_integration/Clock.h"
 
 namespace ipstack
 {

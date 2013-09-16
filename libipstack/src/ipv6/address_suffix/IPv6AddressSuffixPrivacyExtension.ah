@@ -23,7 +23,7 @@
 #pragma once
 
 #include "ipv6/IPv6_Packet.h"
-#include "operating_system_integration/Clock.h"
+#include "os_integration/Clock.h"
 #include "router/Interface.h"
 #include "ipv6/IPv6AddressUtilities.h"
 
