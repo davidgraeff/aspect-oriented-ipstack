@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __INTERNET_CHECKSUM__
-#define __INTERNET_CHECKSUM__
-
+#pragma once
 #include "ipv4/IPv4_Packet.h"
 #include "util/ipstack_inttypes.h"
 
@@ -47,6 +44,4 @@ class InternetChecksumV4 {
 };
 
 } //namespace ipstack
-
-#endif // __INTERNET_CHECKSUM__ 
 

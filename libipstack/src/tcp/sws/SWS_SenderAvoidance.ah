@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
-#define __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
-
+#pragma once
 #include "../TCP_Socket.h"
 #include "SWS_SenderAvoidance_Slice.ah"
 
@@ -84,6 +81,3 @@ advice "ipstack::TCP_Socket" : slice SWS_SenderAvoidance_Slice;
 
 
 };
-
-#endif // __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_AH__
-

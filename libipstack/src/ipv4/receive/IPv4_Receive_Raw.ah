@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011-2012 Christoph Borchert, David Graeff
 
-
-#ifndef __IPV4_RECEIVE_RAW_AH__
-#define __IPV4_RECEIVE_RAW_AH__
-
+#pragma once
 #include "ipv4/IPv4_Packet.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
@@ -36,5 +33,3 @@ aspect IPv4_Receive_Raw {
   }
    
 };
-
-#endif // __IPV4_RECEIVE_RAW_AH__

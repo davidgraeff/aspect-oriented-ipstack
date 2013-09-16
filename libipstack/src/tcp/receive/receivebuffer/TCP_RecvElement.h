@@ -15,9 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_RECVELEMENT_H__
-#define __TCP_RECVELEMENT_H__
+#pragma once
 
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Segment.h"
@@ -64,6 +62,3 @@ class TCP_RecvElement{
 };
 
 } // namespace ipstack
-
-#endif // __TCP_RECVELEMENT_H__
-

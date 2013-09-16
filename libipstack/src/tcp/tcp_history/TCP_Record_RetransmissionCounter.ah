@@ -14,10 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright (C) 2011 Christoph Borchert
-
-
-#ifndef __TCP_RETRANSMISSION_COUNTER_AH__
-#define __TCP_RETRANSMISSION_COUNTER_AH__
+#pragma once
 
 #include "TCP_History.h"
 #include "TCP_Record.h"
@@ -69,6 +66,4 @@ advice "ipstack::TCP_Record" : slice TCP_Record_RetransmissionCounter_Slice;
 	}
 
 };
-
-#endif //__TCP_RETRANSMISSION_COUNTER_AH__
 

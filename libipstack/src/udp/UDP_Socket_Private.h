@@ -13,30 +13,34 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2011 Christoph Borchert, 2012-2013 David Gräff
 
 #pragma once
-
-#include "memory_management/SocketMemory.h"
-#include "demux/DemuxLinkedListContainer.h"
 #include <string.h>
+#include "util/ipstack_inttypes.h"
 
 namespace ipstack
 {
 
 class UDP_Packet;
+class ReceiveBuffer;
 /**
- * Do not use this UDP_Socket directly but use the API version in IP:UDP_Socket.
- * This class allows to set the ports on a udp socket. Aspect slices are inserted
- * from IPv4 and IPv6 to provide the send and receive functionality.
+ * Some private members
  */
 class UDP_Socket_Private
 {
+	public:
+		// Not implemented, if receive is disabled
+		bool addToReceiveQueue(ReceiveBuffer* receivebuffer);
 	protected:
 		uint16_t dport;
 		uint16_t sport;
 
 		void setupHeader(UDP_Packet* packet, unsigned datasize) ;
+		
+		// block until receive event
+		// Not implemented, if receive is disabled
+		void block();
 };
 
 } //namespace ipstack

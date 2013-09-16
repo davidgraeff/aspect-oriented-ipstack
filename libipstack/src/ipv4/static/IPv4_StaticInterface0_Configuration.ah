@@ -1,6 +1,4 @@
-#ifndef __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
-#define __IPSTACK_IPV4_STATICINTERFACE0_CONFIGURATION_AH__
-
+#pragma once
 #include "cfAttribs.h"
 #include "router/Router.h"
 
@@ -16,5 +14,3 @@ aspect ipstack_ifcfg0_init  {
 		}
 	}
 };
-
-#endif

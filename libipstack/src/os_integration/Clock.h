@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert, 2013 David Gräff
 
-
-#ifndef __IPSTACK_CLOCK__
-#define __IPSTACK_CLOCK__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack {
@@ -32,5 +29,3 @@ public:
 };
 
 } // ipstack
-
-#endif /* __IPSTACK_CLOCK__ */

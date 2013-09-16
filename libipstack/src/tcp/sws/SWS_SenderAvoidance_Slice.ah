@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
-#define __SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 
 //using namespace ipstack;
@@ -27,6 +24,3 @@
 slice class SWS_SenderAvoidance_Slice {  
   uint16_t max_sendWindow; //max seen advertised window of remote peer
 };
-
-#endif //__SILLY_WINDOW_SYNDROME_SENDER_AVOIDANCE_SLICE__
-

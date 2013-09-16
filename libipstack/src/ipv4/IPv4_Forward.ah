@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __IPV4_FORWARD_AH__
-#define __IPV4_FORWARD_AH__
-
+#pragma once
 #include "ipv4/IPv4_Packet.h"
 #include "router/Router.h"
 #include "router/Interface.h"
@@ -53,5 +50,3 @@ aspect IPv4_Forward {
 	/* Affect class: XY */
 
 };
-
-#endif /*__IPV4_FORWARD_AH__ */

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2012-2013 David Gräff
 
 #pragma once
 
@@ -23,30 +23,23 @@
 using namespace ipstack;
 
 /**
-  * Halt system if a reschedule is requested within the ipstack while we are in the process of receiving a packet.
-  * (This should not happen actually)
+  * Halt system if we enter the demux method again while we are in the process of receiving a packet.
+  * We are not reantrant safe!
   */
-aspect ProtectRescheduleReceiving {
+aspect ProtectReceiving {
 	bool receiving;
 	
-	advice execution( "void ipstack::System::init()" ) : after() {
-		receiving = false;
-	}
-	
 	advice execution("% ipstack::Demux::demux(...)") : before() {
+		if (receiving) {
+			std::cout << "Fatal: Demux is not reantrant safe!" << std::endl;
+			System::haltsystem();
+		}
 		receiving = true;
 		std::cout << "Reschedule protect: receiving!" << std::endl;
 	}
 	
-	advice construction("ipstack::Demux") : after() {
+	advice construction("ipstack::Demux") : before() {
 		receiving = false;
 		std::cout << "Reschedule protect: on!" << std::endl;
-	}
-
-	advice execution("% AS::Schedule()") : before() {
-		if (!receiving)
-			return;
-		std::cout << "Fatal: A reschedule is requested while receiving!" << std::endl;
-		System::haltsystem();
 	}
 };

@@ -15,17 +15,13 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __INTERFACE_AH__
-#define __INTERFACE_AH__
-
+#pragma once
 #include "Interface.h"
 
 aspect Interface_Aspect {
 
   // Make Interface a base class of hw::hal::NetworkDevice
   advice "hw::hal::NetworkDevice" : slice class : public ipstack::Interface; 
+	#error "UNSINN"
 };
 
-
-#endif /* __INTERFACE_AH__ */

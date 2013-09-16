@@ -14,11 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // Copyright (C) 2011 Christoph Borchert
-
-
-#ifndef __IPV4_AH__
-#define __IPV4_AH__
-
+#pragma once
 #include "sending/Router_IPv4_Slice.ah"
 #include "Interface_IPv4_Slice.ah"
 #include "Socket_IPv4_Slice.ah"
@@ -36,6 +32,4 @@ aspect IPv4 {
   /* Affect class: _Socket */
   advice "ipstack::%_Socket" : slice Socket_IPv4_Slice;
 };
-
-#endif // __IPV4_AH__
 

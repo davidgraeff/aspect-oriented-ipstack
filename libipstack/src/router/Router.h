@@ -14,11 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // Copyright (C) 2011 Christoph Borchert
-
-
-#ifndef __ROUTER__
-#define __ROUTER__
-
+#pragma once
 namespace ipstack {
 class Interface;
 class Router {
@@ -42,4 +38,3 @@ class Router {
 
 } // namespace ipstack
 
-#endif /* __ROUTER__ */

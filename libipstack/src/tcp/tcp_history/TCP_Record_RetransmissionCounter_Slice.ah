@@ -15,13 +15,8 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
-#define __TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
+#pragma once
 
 slice class TCP_Record_RetransmissionCounter_Slice {
   uint8_t retransmission_counter;
 };
-
-#endif //__TCP_RECORD_RETRANSMISSION_COUNTER_SLICE__
-

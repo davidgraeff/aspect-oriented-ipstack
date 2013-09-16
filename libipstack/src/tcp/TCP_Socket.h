@@ -21,6 +21,9 @@
 
 namespace ipstack
 {
+	/**
+	 * Public API for a TCP Socket
+	 */
 	class TCP_Socket : public TCP_Socket_Private, public DemuxLinkedList<TCP_Socket>, public SocketMemory
 	{
 		public:

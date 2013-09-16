@@ -15,9 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_HISTORY_H__
-#define __TCP_HISTORY_H__
+#pragma once
 
 #include "util/ipstack_inttypes.h"
 #include "tcp/TCP_Segment.h"
@@ -49,6 +47,3 @@ class TCP_History {
 };
 
 } // namespace ipstack
-
-#endif // __TCP_HISTORY_H__
-

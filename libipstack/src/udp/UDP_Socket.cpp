@@ -29,7 +29,4 @@ namespace ipstack {
 	uint16_t UDP_Socket::get_sport() {
 		return sport;
 	}
-
-	bool UDP_Socket::bind() {return false;}
-	void UDP_Socket::unbind() {}
 }

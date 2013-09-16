@@ -99,19 +99,31 @@ menuconfig ipstack
 				default y
 		endmenu
 
-		menuconfig ipstack_linklayer_direct_response
+		menuconfig ipstack_direct_response
 			depends on ipstack
 			bool "Direct response: Use link layer remote addr as destination"
 			default y
 			help
 				Offers a way to avoid arp/ndp for address resolution but use the remote address directly.
-				This feature is necessary for ip stack managment tasks like ICMP and tcp reset,
+				This feature is usefull for ip stack managment tasks like ICMP and tcp reset,
 				where an additional address resolution is costly and not necessary.
-				A not implemented alternative is to
-				copy the received frame to the management memory buffer and create another OS Task that
-				soly reacts on received management packets (icmpv4/v6/tcp_reset) and generates (icmp/etc) responses
-				by using the known address resolution (arp/ndp).
+				If this option is not enabled, you have to provide a separate OS Task for management sockets and
+				copy the received frame to the incoming-buffer of a socket. The socket's task is responsible for
+				responses by using the known address resolution mechanisms (arp/ndp).
 				
+			config ipstack_debug_delay_send
+				depends on ipstack_icmp_ipv6
+				bool "Delay responses"
+				default y
+				help
+					An incoming icmpv6 packet may trigger the generation of multiple response messages.
+					For example an incoming "neighbor solicitation message" have to be answered by an
+					"neighbor advertisement message" and additionally if the remote host is unknown we have
+					to send a "neighbor solicitation message" on our own. For the case that the network device has
+					a shared buffer for incoming/outgoing traffic and because we do not copy the incoming
+					packet to a buffer of our own it is recommend to activate this option to delay sending
+					packets until the received packet has been processed entirely.
+			
 				
 		menuconfig ipstack_linklayer_offloading
 			depends on ipstack
@@ -681,19 +693,6 @@ menuconfig ipstack
 			help
 				The internet Control Message Protocol Version 6 is mandatory for IPv6 functionality. Because it will also serve as neighbour discovery (similar to IPv4 ARP) and link-layer address resolution this option reserves some memory for spontanous ICMPv6 responses or timed ICMPv6 messages. ICMP response messages consume Management Memory.
 			
-			menuconfig ipstack_debug_delay_send
-				depends on ipstack_icmp_ipv6
-				bool "Delay ICMPv6 responses"
-				default y
-				help
-					An incoming icmpv6 packet may trigger the generation of multiple response messages.
-					For example an incoming "neighbor solicitation message" have to be answered by an
-					"neighbor advertisement message" and additionally if the remote host is unknown we have
-					to send a "neighbor solicitation message" on our own. For the case that the network device has
-					a shared buffer for incoming/outgoing traffic and because we do not copy the incoming
-					packet to a buffer of our own it is recommend to activate this option to delay sending
-					packets until the received packet has been processed entirely.
-			
 			menuconfig ipstack_icmp_ipv6_echoreply
 				depends on ipstack_icmp_ipv6
 				bool "ICMP Echo reply"
@@ -892,26 +891,22 @@ menuconfig ipstack
 			choice
 				prompt "Sendbuffer freeing"
 				depends on ipstack
-				default ipstack_memory_sendbuffer_free_not
+				default ipstack_memory_sendbuffer_free
 
-				config ipstack_memory_sendbuffer_free_not
-					bool "No automatic freeing"
+				config ipstack_memory_sendbuffer_free
+					bool "Immediately freeing"
 					help
-						You have to free your sendbuffers yourself. This is the best
-						solution if your hardware does not use DMA so you can delete
-						sendbuffers right after calling send() and if your hardware
-						uses DMA it tells you somehow when a buffer has been send so
-						you can react and delete the buffer.
+						Sendbuffers are immediately freed if free() is called.
+						If you use DMA this is not what you want without intercepting
+						%_Socket::free() yourself and delay the freeing until your
+						hardware has actually send the packet.
 
 				config ipstack_memory_sendbuffer_free_garbagecollection
 					bool "Garbage collection before every alloc"
 					help
 						This will look through all active sendbuffers and free
 						those where hasbeensend() returns true. You have to use this
-						option if you do not want to care about freeing sendbuffers
-						or if your hardware uses DMA and does not tell via IRQ/Event
-						when sendbuffers are actually send and only polling is a
-						solution.
+						option if your hardware uses DMA.
 						Performance is impacted! This option uses more memory,
 						because all active sendbuffers have to be linked together.
 			endchoice

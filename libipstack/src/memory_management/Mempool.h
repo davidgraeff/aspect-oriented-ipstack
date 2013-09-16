@@ -17,6 +17,14 @@
 
 #pragma once
 
+/**
+ * In this file you'll find a stack-based memory-pool, well suited for small
+ * embedded systems. The class UniSizeMempool provides one kind of size for
+ * all slots and the BiSizeMempool provides two kinds of slots.
+ * You propably not want to use those classes directly, but instead
+ * the Mempool_instance_TCP or _UDP for your TCP or UDP Socket. 
+ */
+
 #include "MemoryInterface.h"
 #include "Mempool_Config.h"
 
@@ -24,7 +32,7 @@ namespace ipstack
 {
 
 template<unsigned BLOCKSIZE, unsigned COUNT>
-class SingleMempool : public MemoryInterface
+class UniSizeMempool : public MemoryInterface
 {
 	private:
 		char pool[BLOCKSIZE* COUNT];
@@ -32,7 +40,7 @@ class SingleMempool : public MemoryInterface
 		char** head;
 
 	public:
-		SingleMempool() : head(freelist + COUNT - 1) {
+		UniSizeMempool() : head(freelist + COUNT - 1) {
 			for (unsigned i = 0; i < COUNT; ++i) {
 				freelist[i] = pool + i * BLOCKSIZE;
 			}
@@ -68,9 +76,9 @@ class SingleMempool : public MemoryInterface
 
 template<unsigned tBLOCKSIZE_1 = ipstack::BLOCKSIZE_BIG, unsigned tCOUNT_1=ipstack::COUNT_BIG,
 unsigned tBLOCKSIZE_2 = ipstack::BLOCKSIZE_SMALL, unsigned tCOUNT_2 = ipstack::COUNT_SMALL>
-class BasicMempool : public MemoryInterface
+class BiSizeMempool : public MemoryInterface
 {
-		//This class is exactly as efficient as "BasicMempool" if tCOUNT_2 = 0
+		//This class is exactly as efficient as "UniSizeMempool" if tCOUNT_2 = 0
 	public:
 		enum { SIZE_BIG = tBLOCKSIZE_1 >= tBLOCKSIZE_2 ? tBLOCKSIZE_1 : tBLOCKSIZE_2,
 			   SIZE_SMALL = tBLOCKSIZE_1 < tBLOCKSIZE_2 ? tBLOCKSIZE_1 : tBLOCKSIZE_2,
@@ -79,8 +87,8 @@ class BasicMempool : public MemoryInterface
 			 };
 
 	private:
-		SingleMempool<SIZE_BIG, COUNT_BIG> mempool_big;
-		SingleMempool<SIZE_SMALL, COUNT_SMALL> mempool_small;
+		UniSizeMempool<SIZE_BIG, COUNT_BIG> mempool_big;
+		UniSizeMempool<SIZE_SMALL, COUNT_SMALL> mempool_small;
 
 	public:
 

@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __ROUTER_IPV4_SLICE__
-#define __ROUTER_IPV4_SLICE__
-
+#pragma once
 #include "router/Interface.h"
 #include "util/ipstack_inttypes.h"
 
@@ -55,6 +52,3 @@ public:
 		ipv4_gateway_addr = ipv4_addr;
 	}
 };
-
-#endif /* __ROUTER_IPV4_SLICE__ */
-

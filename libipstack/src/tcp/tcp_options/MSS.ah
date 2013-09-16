@@ -15,15 +15,13 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_OPTION_MSS_AH__
-#define __TCP_OPTION_MSS_AH__
+#pragma once
 
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Socket.h"
 #include "../TCP_Segment.h"
-#include "MSS_TCP_Segment_Slice.ah"
-#include "MSS_TCP_Socket_Slice.ah"
+#include "MSS_TCP_Segment_Slice.h"
+#include "MSS_TCP_Socket_Slice.h"
 
 using namespace ipstack;
 
@@ -105,6 +103,3 @@ advice "ipstack::TCP_Socket" : slice MSS_TCP_Socket_Slice;
 
 
 };
-
-#endif // __TCP_OPTION_MSS_AH__
-

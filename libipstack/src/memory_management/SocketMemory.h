@@ -41,4 +41,12 @@ public:
 	// Memory pool
 	inline void set_Mempool(MemoryInterface* m) { mempool = m; }
 	inline MemoryInterface* get_Mempool() { return mempool; }
+	
+	/**
+	 * Free a Sendbuffer or Receivebuffer by using this method. 
+	 */
+	void free(void* b) {
+		get_Mempool()->free(b);
+	}
+	
 };

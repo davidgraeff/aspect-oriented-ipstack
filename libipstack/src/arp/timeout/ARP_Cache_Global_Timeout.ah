@@ -1,0 +1,45 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert
+#pragma once
+#include "util/ipstack_inttypes.h"
+#include "os_integration/Clock.h"
+#include "ARP_Cache.h"
+
+using namespace ipstack;
+
+
+aspect ARP_Cache_Global_Timeout {
+  
+  enum { TIMEOUT = 20*60 }; //seconds
+  // BSD: if_ether.c: /* once resolved, good for 20 more minutes */
+
+  uint64_t timeout_window;
+
+  // *** Affect class: ARP_Cache
+  advice execution("% ipstack::ARP_Cache::%lookup(...)") &&
+         that(cache) :
+         before(ARP_Cache& cache) {
+
+    uint64_t curr_time = Clock::now(); //in ticks
+    
+    if(curr_time > timeout_window){
+      timeout_window = curr_time + Clock::ms_to_ticks(TIMEOUT * 1000UL);
+      cache.clear(); //invalidate all cache entries
+    }
+  }
+  
+};

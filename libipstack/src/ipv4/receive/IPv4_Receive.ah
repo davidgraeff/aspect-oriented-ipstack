@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __IPV4_RECEIVE_AH__
-#define __IPV4_RECEIVE_AH__
-
+#pragma once
 #include "ipv4/IPv4_Packet.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
@@ -92,5 +89,3 @@ advice "ipstack::Demux" : slice Demux_IPv4_Slice;
 		}
 	}
 };
-
-#endif // __IPV4_RECEIVE_AH__

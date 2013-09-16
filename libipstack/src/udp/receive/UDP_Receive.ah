@@ -13,14 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2011 Christoph Borchert, 2012-2013 David Gräff
 
 #pragma once
 
 #include "udp/UDP_Socket.h"
-#include "Demux_UDP_Slice.ah"
-#include "UDP_Receive_Slice.ah"
-#include "demux/Demux.h"
+#include "Demux_UDP_Slice.h"
 
 using namespace ipstack;
 
@@ -29,27 +27,9 @@ aspect UDP_Receive {
 	// *** Affect class: Demux for registering a socket to be able to receive packets
 	advice "ipstack::Demux" : slice Demux_UDP_Slice;
 
-	/* 
-	 * Affect class: UDP_Socket. Add bind/unbind delegation to UDP sockets
-	 * and a addToReceiveQueue method for receiving
-	 */
-	advice "ipstack::UDP_Socket" : slice UDP_Receive_Slice;
-
 	advice destruction("ipstack::UDP_Socket") &&
 	that(socket) : before(UDP_Socket& socket) {
 		// remove this socket at Demux on destruction
 		socket.unbind();
 	}
-	
-	advice execution("% ipstack::UDP_Socket::bind()") &&
-	that(socket) : around(UDP_Socket& socket) {
-		*(tjp->result()) =  Demux::Inst().bind ( &socket );
-	}
-	
-	advice execution("% ipstack::UDP_Socket::unbind()") &&
-	that(socket) : around(UDP_Socket& socket) {
-		Demux::Inst().unbind ( &socket );
-	}
-	
-
 };

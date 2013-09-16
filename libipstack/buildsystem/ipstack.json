@@ -962,7 +962,7 @@
 					"vname": "Direct response for Ethernet"
 				}
 			],
-			"depends": "&ipstack_linklayer_direct_response",
+			"depends": "&ipstack_direct_response",
 			"vname": "Direct response"
 		},
 		{

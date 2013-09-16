@@ -1,0 +1,51 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert
+
+#pragma once
+#include "ethernet/Eth_Frame.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "ARP.h"
+#include "util/ipstack_inttypes.h"
+
+using namespace ipstack;
+
+
+aspect ARP_Ethernet {
+
+	/* Affect class: Demux. ARP is only defined on ethernet link layer -> Use ethernet_demux. */
+	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
+	args(ethernet_frame, framelen, interface) && that(demux) :
+		after(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
+
+		Eth_Frame* eth_frame = (Eth_Frame*) ethernet_frame;
+
+		if (eth_frame->get_type() != ARP_Packet::ETH_TYPE_ARP)
+			return;
+
+		framelen -= Eth_Frame::ETH_HEADER_SIZE;
+		if (framelen < ARP_Packet::ARP_HEADER_SIZE)
+			return; //packet too small!
+
+		ARP_Packet* packet = (ARP_Packet*) eth_frame->get_data();
+
+		if (packet->get_hw_type() != ARP_Packet::ARP_HW_TYPE_ETH)
+			return; //we do not have an ARP packet over Ethernet
+
+		demux.arp_demux(packet, framelen, interface);
+	}
+};

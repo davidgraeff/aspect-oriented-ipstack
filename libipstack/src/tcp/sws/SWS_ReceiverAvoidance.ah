@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
-#define __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Socket.h"
 
@@ -57,6 +54,3 @@ aspect SillyWindowSyndrome_Receiver_Avoidance {
   }
   
 };
-
-#endif // __SILLY_WINDOW_SYNDROME_RECEIVER_AVOIDANCE_AH__
-

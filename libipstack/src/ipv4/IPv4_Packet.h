@@ -14,11 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // Copyright (C) 2011 Christoph Borchert
-
-
-#ifndef __IPV4__
-#define __IPV4__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack {
@@ -199,6 +195,4 @@ class IPv4_Packet{
 } __attribute__ ((packed)); //__attribute__ ((aligned(1), packed));
 
 } //namespace ipstack
-
-#endif // __IPV4__ 
 

@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_STATEMACHINE_AH__
-#define __TCP_STATEMACHINE_AH__
-
+#pragma once
 #include "closed.ah"
 #include "closewait.ah"
 #include "closing.ah"
@@ -49,5 +46,3 @@ aspect TCP_Statemachine {
   advice "ipstack::TCP_Socket" : slice TCP_State_Timewait;
 
 };
-
-#endif // __TCP_STATEMACHINE_AH__

@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __ETH_FRAME__
-#define __ETH_FRAME__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
 
@@ -70,5 +67,3 @@ class Eth_Frame {
 } __attribute__ ((packed));
 
 } // namespace ipstack
-
-#endif /* __ETH_FRAME__ */

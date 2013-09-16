@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __IPSTACK_RINGBUFFER_H__
-#define __IPSTACK_RINGBUFFER_H__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 
 #include "RingbufferBase.h"
@@ -103,6 +100,4 @@ class PacketbufferAPI<tBUFFERSIZE, 1> {
 
 } //namespace ipstack
 
-
-#endif // __IPSTACK_RINGBUFFER_H__
 

@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_RECORD_SLIDING_WINDOW_SLICE__
-#define __TCP_RECORD_SLIDING_WINDOW_SLICE__
-
+#pragma once
 using namespace ipstack;
 
 
@@ -30,6 +27,4 @@ slice class TCP_Record_SlidingWindow_Slice {
   void setPrev(TCP_Record* p) { prev = p; }
   TCP_Record* getPrev() { return prev; }
 };
-
-#endif //__TCP_RECORD_SLIDING_WINDOW_SLICE__
 

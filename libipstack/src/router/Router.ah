@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __ROUTER_AH__
-#define __ROUTER_AH__
-
+#pragma once
 #include "Router.h"
 #include "Interface.h"
 
@@ -39,5 +36,3 @@ aspect Router_Aspect {
     router.head_interface = &interface;
   }  
 };
-
-#endif /*__ROUTER_AH__ */

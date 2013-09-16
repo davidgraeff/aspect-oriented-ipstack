@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __RINGBUFFER_BASE_H__
-#define __RINGBUFFER_BASE_H__
-
+#pragma once
 namespace ipstack {
 
 class PolymorphRingbufferBase {
@@ -31,7 +28,5 @@ public:
 class EmptyRingbufferBase {};
 
 } //namespace ipstack
-
-#endif // __RINGBUFFER_BASE_H__
 
 

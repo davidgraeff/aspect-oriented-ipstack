@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __DEMUX__
-#define __DEMUX__
-
+#pragma once
 #include "router/Interface.h"
 
 namespace ipstack {
@@ -40,5 +37,3 @@ class Demux {
 };
 
 } // namespace ipstack
-
-#endif /* __DEMUX__ */

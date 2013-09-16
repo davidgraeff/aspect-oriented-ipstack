@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
-
-#ifndef __LITTLE_ENDIAN_AH__
-#define __LITTLE_ENDIAN_AH__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 
 //using namespace ipstack;
@@ -100,6 +97,4 @@ aspect Little_Endian {
 	}
 
 };
-
-#endif /*__LITTLE_ENDIAN_AH__ */
 

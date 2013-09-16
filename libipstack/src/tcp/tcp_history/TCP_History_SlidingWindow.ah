@@ -15,10 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __TCP_HISTORY_SLIDING_WINDOW_AH__
-#define __TCP_HISTORY_SLIDING_WINDOW_AH__
-
+#pragma once
 #include "TCP_History.h"
 #include "TCP_Record.h"
 #include "../TCP_Segment.h"
@@ -129,6 +126,4 @@ advice "ipstack::TCP_Record" : slice TCP_Record_SlidingWindow_Slice;
 	}
 
 };
-
-#endif // __TCP_HISTORY_SLIDING_WINDOW_AH__
 

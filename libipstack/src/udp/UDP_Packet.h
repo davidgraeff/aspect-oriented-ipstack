@@ -15,10 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __UDP__
-#define __UDP__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 #include "ip/InternetChecksum.h"
 
@@ -68,5 +65,3 @@ class UDP_Packet{
 } __attribute__ ((packed));
 
 } //namespace ipstack
-
-#endif // __UDP__

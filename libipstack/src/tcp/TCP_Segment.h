@@ -14,11 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // Copyright (C) 2011 Christoph Borchert
-
-
-#ifndef __TCP__
-#define __TCP__
-
+#pragma once
 #include "util/ipstack_inttypes.h"
 #include "ip/InternetChecksum.h"
 
@@ -122,6 +118,3 @@ class TCP_Segment{
 } __attribute__ ((packed));
 
 } //namespace ipstack
-
-#endif /* __TCP__ */
-

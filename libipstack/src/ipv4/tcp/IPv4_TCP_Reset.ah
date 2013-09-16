@@ -15,9 +15,7 @@
 //
 // Copyright (C) 2011 Christoph Borchert
 
-
-#ifndef __IPV4_TCP_RESET_AH__
-#define __IPV4_TCP_RESET_AH__
+#pragma once
 
 #include "ipv4/IPv4_Packet.h"
 #include "tcp/TCP_Segment.h"
@@ -64,6 +62,4 @@ aspect IPv4_TCP_Reset {
 	}
 
 };
-
-#endif //__IPV4_TCP_RESET_AH__
 
