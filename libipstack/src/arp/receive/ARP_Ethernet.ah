@@ -19,7 +19,7 @@
 #include "ethernet/Eth_Frame.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "ARP.h"
+#include "arp/ARP_Packet.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -28,11 +28,11 @@ using namespace ipstack;
 aspect ARP_Ethernet {
 
 	/* Affect class: Demux. ARP is only defined on ethernet link layer -> Use ethernet_demux. */
-	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
-	args(ethernet_frame, framelen, interface) && that(demux) :
-		after(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
+	advice execution("void ipstack::Demux::ethernet_demux(ReceiveBuffer&)") && args(buffer) && that(demux) :
+		after(ReceiveBuffer& buffer, Demux& demux) {
 
-		Eth_Frame* eth_frame = (Eth_Frame*) ethernet_frame;
+		Eth_Frame* eth_frame = buffer.p.ethernet_frame;
+		unsigned framelen = buffer.get_payload_size();
 
 		if (eth_frame->get_type() != ARP_Packet::ETH_TYPE_ARP)
 			return;
@@ -46,6 +46,6 @@ aspect ARP_Ethernet {
 		if (packet->get_hw_type() != ARP_Packet::ARP_HW_TYPE_ETH)
 			return; //we do not have an ARP packet over Ethernet
 
-		demux.arp_demux(packet, framelen, interface);
+		demux.arp_demux(packet, framelen, buffer.get_interface());
 	}
 };

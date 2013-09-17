@@ -29,11 +29,7 @@ class RawIP_Socket_Private
 {
 	public:
 		// Not implemented, if receive is disabled
-		bool addToReceiveQueue(ReceiveBuffer* receivebuffer);
-	protected:
-		// block until receive event
-		// Not implemented, if receive is disabled
-		void block();
+		bool addToReceiveQueue(ReceiveBuffer& receivebuffer);
 };
 
 } //namespace ipstack

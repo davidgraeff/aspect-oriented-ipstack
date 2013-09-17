@@ -18,7 +18,7 @@
 #pragma once
 
 #include "cfAttribs.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 namespace ipstack {
 

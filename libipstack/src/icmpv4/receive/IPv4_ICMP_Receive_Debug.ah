@@ -19,27 +19,18 @@
 
 #include "ipv4/IPv4_Packet.h"
 #include "ipv4/InternetChecksum.h"
-#include "demux/Demux.h"
 #include "router/Interface.h"
 #include "icmpv4/ICMPv4_Packet.h"
-#include "ICMPv4_Socket.h"
+#include "ICMPv4_DerivedSocket.h"
 #include <iostream>
 
 using namespace ipstack;
 
-
 aspect IPv4_ICMP_ReceiveOutput {
-	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") : 
-	order( "IPv4_ICMP_ReceiveOutput","%" && !"IPv4_ICMP_ReceiveOutput" );
-	
-	// *** Affect class: Demux
-	advice execution("void ipstack::Demux::icmpv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
-	args(packet, payloadlen, interface) && that(demux) :
-		around(IPv4_Packet* packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+	advice execution("bool ipstack::ICMPv4_DerivedSocket::acceptedData(%,%)") &&
+	args(type, code) && result(is_accepted) : after(uint8_t type, uint8_t code, bool is_accepted) {
 
-		ICMPv4_Packet* icmp = (ICMPv4_Packet*) packet->get_data();
-		std::cout <<"ICMPv4 received: Len "<<payloadlen<<
-			", Type: "<<icmp->get_type()<<", Code: "<<icmp->get_code() << std::endl;
-		tjp->proceed();
+		std::cout <<"ICMPv4 received: Accepted " << is_accepted <<
+			", Type: " << type << ", Code: " << code << std::endl;
 	}
 };

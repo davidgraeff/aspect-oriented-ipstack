@@ -17,26 +17,23 @@
 
 #pragma once
 
+#include "router/Interface.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "icmpv4/ICMPv4_Packet.h"
 #include "util/ipstack_inttypes.h"
-#include "router/Interface.h"
-#include "sending/SendBuffer.h"
 
 using namespace ipstack;
 
 /**
  * Set the IPv4 next header protocol to ICMPv4
  */
-aspect Sendbuffer_ICMPv4_aspect  {
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_ICMPv4_aspect");
+aspect Sendbuffer_IPCMPv4  {
+	advice execution("% ipstack::%Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_IPCMPv4");
 
-	advice execution("% ipstack::ICMPv4_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
-
+	advice execution("% ipstack::ICMPv4_DerivedSocket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		after(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
-		*(sendbuffer->nextheaderfield_ip) = ICMPv4_Packet::IPV4_TYPE_ICMP;
-		tjp->proceed();
-		return;
+		sendbuffer->p.transport_packet = sendbuffer->getDataPointer();
+		*(sendbuffer->p.nextheaderfield_ip) = ICMPv4_Packet::IPV4_TYPE_ICMP;
 	}
 };

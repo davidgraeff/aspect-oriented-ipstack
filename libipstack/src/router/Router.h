@@ -13,28 +13,34 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2011 Christoph Borchert, 2013 David Gräff
+
 #pragma once
+
 namespace ipstack {
-class Interface;
-class Router {
-  private:
-  //singleton design pattern
-  static Router inst_;
-  Router() {} //ctor hidden
-  Router(const Router&); //copy ctor hidden
-  Router& operator=(Router const&); // assign op. hidden
-  //~Router(); // dtor hidden: in CiAO ok, in linux-user-space not allowed!
+	class Interface;
+	
+	/**
+	 * Public API for the router. Add your interface here,
+	 * to be able to send data with libipstack.
+	 * Router is a singleton, get the instance by Router::Inst().
+	 */
+	class Router {
+	public:
+		/// Get singleton
+		static Router& Inst() { return inst_; } 
 
-  //Interfaces (linked list) head pointer
-  Interface* head_interface;
-  
-  public:
-  static Router& Inst() { return inst_; } //get singleton
-
-  Interface* get_interface(int index);
-  
-};
-
+		/// Get interface with number @index
+		Interface* get_interface(int index);
+		
+		/// Add hardware driver interface
+		void add_interface(Interface* interface);
+	private:
+		Router() {} //ctor hidden
+		Router(const Router&); //copy ctor hidden
+		Router& operator=(Router const&); // assign op. hidden
+		static Router inst_;
+		Interface* head_interface; //Interfaces (linked list) head pointer
+	};
 } // namespace ipstack
 

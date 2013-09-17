@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "util/ipstack_inttypes.h"
@@ -32,24 +32,32 @@ aspect Sendbuffer_IPv6 {
 	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
 		after(unsigned v) {
 		// check ip version
-		if (tjp->that()->m_useipversion == 6) {
+		if (tjp->that()->m_useipversion == IPV6_VERSION) {
 			*tjp->result() = v + tjp->that()->ipv6.getSpecificHeaderSize();
 		}
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
 		// check ip version
-		if (tjp->that()->m_useipversion == 6) {
+		if (tjp->that()->m_useipversion == IPV6_VERSION) {
 			IPV6& ipv6 = tjp->that()->ipv6;
 			uint_fast16_t headersize = ipv6.getSpecificHeaderSize();
-			sendbuffer->memstart_ip = sendbuffer->getDataPointer();
-			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
-			ipv6.setupHeader(ip, sendbuffer->getRemainingSize());
+			sendbuffer->p.ip_packet = sendbuffer->getDataPointer();
+			IPv6_Packet* ip6_packet = (IPv6_Packet*)sendbuffer->p.ip_packet;
+			ipv6.setupHeader(ip6_packet, sendbuffer->getRemainingSize());
 			sendbuffer->writtenToDataPointer(headersize);
+			
 			// set pointer to next header field
-			sendbuffer->nextheaderfield_ip = ip->get_nextheaderPointer();
+			sendbuffer->p.nextheaderfield_ip = ip6_packet->get_nextheaderPointer();
+			
+			// Proceed if direct response is off or if this should not be a reponse to a packet
+			if (use_as_response) {
+				// Set destination addr := remote src addr
+				const IPv6_Packet* remote_ip6_packet = (IPv6_Packet*)use_as_response->p.ip_packet;
+				ip6_packet->set_dst_ipaddr(remote_ip6_packet->get_src_ipaddr());
+			}
 		}
 		tjp->proceed();
 	}

@@ -21,7 +21,7 @@
 #include "ethernet/Eth_Frame.h"
 #include "router/Router.h"
 #include "demux/Demux.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/AddressMemory.h"

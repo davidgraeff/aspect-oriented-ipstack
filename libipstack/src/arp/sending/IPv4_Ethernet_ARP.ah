@@ -22,20 +22,20 @@
 #include "ethernet/Eth_Frame.h"
 #include "ethernet/EthernetAddressUtilities.h"
 #include "router/Router.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 using namespace ipstack;
 
 aspect IPv4_Socket_Ethernet_ARP_Aspect {
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "IPv4_Socket_Ethernet_ARP_Aspect");
 	
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
 		// check ip version
 		if (tjp->that()->m_useipversion == 4 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
-			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->memstart_ip;
-			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->p.ip_packet;
+			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->p.ethernet_frame);
 			Interface* interface = sendbuffer->getInterface();
 
 			const uint8_t* dst_hw_addr = ARP_Cache::Inst().ipv4_lookup(ip->get_dst_ipaddr(), interface);

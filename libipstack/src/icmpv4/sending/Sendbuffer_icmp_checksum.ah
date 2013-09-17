@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "icmpv4/ICMPv4_Packet.h"
 
 using namespace ipstack;
@@ -29,13 +29,13 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_ICMPv4_Checksum  {
-	advice execution("% ipstack::ICMPv4_Socket::send(...)") && args(dataToSend) :
+	advice execution("% ipstack::ICMPv4_DerivedSocket::send(...)") && args(dataToSend) :
 	before(SendBuffer* dataToSend) {
 		
-		ICMPv4_Packet* icmp = (ICMPv4_Packet*) dataToSend->memstart_transport;
-		const uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		ICMPv4_Packet* icmp = (ICMPv4_Packet*) dataToSend->p.transport_packet;
+		const uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		Interface* interface = dataToSend->getInterface();
-		icmp->set_checksum(0);
+		icmp->set_checksum(0); // for computing the checksum it has to be 0 before
 		icmp->set_checksum(icmp->calc_checksum(0, payloadsize, interface));
 
 	}

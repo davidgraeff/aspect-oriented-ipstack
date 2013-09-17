@@ -28,16 +28,37 @@ using namespace ipstack;
  * Add the ethernet header frame size to the estimateSendBufferMinSize(size)
  */
 aspect Sendbuffer_Ethernet {
-	/** Affect class: SendBuffer
-	 * Add a pointer to the start of the ethernet header
-	 */
-	advice "ipstack::SendBuffer" : slice Sendbuffer_Ethernet_Slice;
-
 	// Add the ethernet header size to the SendBuffer create call.
 	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
 		after(unsigned v) {
 		if (tjp->that()->getUsedInterface()->getType() == Interface::ETHERNET) {
 			*tjp->result() = v + Eth_Frame::ETH_HEADER_SIZE;
 		}
+	}
+	
+	// Before ARP or NDP
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : 
+		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_DirectResponse_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_%_Aspect");
+
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+			
+		// Proceed if direct response is off or if this should not be a reponse to a packet
+		if (!use_as_response) {
+			tjp->proceed();
+			return;
+		}
+
+		// we have an ethernet destination address: return true
+		*tjp->result() = true;
+
+		// Get destination ethernet frame from sendbuffer.
+		Eth_Frame* dest_eth_frame = sendbuffer->p.ethernet_frame;
+
+		// Get input ethernet frame from "direct response"-stored input data pointer.
+		const Eth_Frame* remote_eth_frame = use_as_response->p.ethernet_frame;
+		
+		// Set destination addr := remote src addr
+		dest_eth_frame->set_dst_hwaddr(remote_eth_frame->get_src_hwaddr());
 	}
 };

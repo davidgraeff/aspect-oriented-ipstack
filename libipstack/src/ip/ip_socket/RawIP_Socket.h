@@ -20,6 +20,7 @@
 #include "memory_management/SocketMemory.h"
 #include "util/ipstack_inttypes.h"
 #include "ip/ip_socket/RawIP_Socket_Private.h"
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 
 namespace ipstack
 {
@@ -41,45 +42,53 @@ class RawIP_Socket : public RawIP_Socket_Private, public SocketMemory
 		* Internally creates a sendbuffer with len bytes and copies all content of data to that one.
 		* If you first would have to concatanate your data, look at the SendBuffer API that is also
 		* available on this socket.
+		* @see SendBuffer()
 		* 
+		* @param use_as_response If you provide a receiveBuffer as input, the @data is send
+		* to the referred source/remote host. Warning: This ignores all set_ip and set_port methods
+		* you issued before!
 		* @return Returns true if the packet could be delivered to the network hardware. If no
 		* free memory is available or len is to big for allocation false is returned.
 		* 
 		* This method is not implemented, if you have disabled udp send support.
 		* 
 		* Example usage:
-		* udp_socket->send("test", 4);
+		* ip_socket->send("test", 4);
 		*/
-		bool send(char* data, int len);
+		bool send(char* data, int len, ReceiveBuffer* use_as_response = 0);
 	
 		/**
-		* The application has to free the memory of the buffer by calling ReceiveBuffer::free(buffer).
-		* For more information on ReceiveBuffers look into ReceiveBuffer.h.
+		* Return a smart pointer to a ReceiveBuffer. You can access the payload by using
+		* the get_payload_data() method and get the size by get_payload_size().
 		* 
-		* @return This method will return 0 if no received data is available and will never block.
+		* @return This method will return an invalid smart pointer (=0)
+		* if no received data is available and will never block.
 		* 
 		* This method is not implemented, if you have disabled udp receive support.
 		* 
 		* Example usage:
-		* ReceiveBuffer* b = socket->receive();
+		* SmartReceiveBufferPtr b = socket->receive();
 		* prinft(b->getData());
-		* ReceiveBuffer::free(b);
 		*/
-		ReceiveBuffer* receive();
+		SmartReceiveBufferPtr receive();
 		
 		/**
 		* Convenience method: Block until a packet is available or a timeout is reached.
 		* This API is only functional if not build with ONE_TASK!
 		* This method is not implemented, if you have disabled udp receive support.
 		*/
-		ReceiveBuffer* receive(uint64_t waitForPacketTimeoutMS);
+		SmartReceiveBufferPtr receive(uint64_t waitForPacketTimeoutMS);
 		
 		/**
 		* Convenience method: Block until a packet is available.
 		* This API is only functional if not build with ONE_TASK!
 		* This method is not implemented, if you have disabled udp receive support.
 		*/
-		ReceiveBuffer* receiveBlock();
+		SmartReceiveBufferPtr receiveBlock();
+	protected:
+		// block until receive event
+		// Not implemented, if receive is disabled
+		void block();
 };
 
 } //namespace ipstack

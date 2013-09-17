@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "../TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "os_integration/Clock.h"
 
 namespace ipstack

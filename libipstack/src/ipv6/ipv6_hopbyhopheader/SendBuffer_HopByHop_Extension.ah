@@ -20,7 +20,7 @@
 #include "router/Interface.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "IPv6HopByHop.h"
 #include "util/ipstack_inttypes.h"
 
@@ -42,8 +42,8 @@ aspect Sendbuffer_IPv6_HopByHop_extension {
 		}
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
 		// check ip version
 		if (tjp->that()->m_useipversion == 6) {
@@ -57,10 +57,10 @@ aspect Sendbuffer_IPv6_HopByHop_extension {
 			}
 			sendbuffer->writtenToDataPointer(size);
 			// set next header of ipv6
-			*(sendbuffer->nextheaderfield_ip) = IPv6HopByHop::IPV6_NEXTHEADER_HOPBYHOP;
+			*(sendbuffer->p.nextheaderfield_ip) = IPv6HopByHop::IPV6_NEXTHEADER_HOPBYHOP;
 			
 			// change next header pointer to point to the nextheader field of this extension.
-			sendbuffer->nextheaderfield_ip = nextHeader;
+			sendbuffer->p.nextheaderfield_ip = nextHeader;
 		}
 		tjp->proceed();
 	}

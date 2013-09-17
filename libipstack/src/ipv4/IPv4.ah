@@ -15,7 +15,7 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 #pragma once
-#include "sending/Router_IPv4_Slice.ah"
+#include "router/sendbuffer/Router_IPv4_Slice.ah"
 #include "Interface_IPv4_Slice.ah"
 #include "Socket_IPv4_Slice.ah"
 

@@ -20,7 +20,7 @@
 #include "router/Interface.h"
 #include "udp/UDP_Packet.h"
 #include "udp/UDP_Socket.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -29,26 +29,34 @@ using namespace ipstack;
  * Adds the UDP header to a SendBuffer
  */
 aspect Sendbuffer_UDP  {
-	advice execution("% ipstack::%UDP_Socket::estimateSendBufferMinSize()") && result(v) :
+	advice execution("% ipstack::UDP_Socket::estimateSendBufferMinSize()") && result(v) :
 		after(unsigned v) {
 			*tjp->result() = v + UDP_Packet::UDP_HEADER_SIZE;
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_UDP");
-	
-	advice execution("% ipstack::%UDP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		after(SendBuffer* sendbuffer) {
-		// remainingpayloadsize: this is payload AND the udp header size as determined in 
-		// estimateSendBufferMinSize() before.
+	advice execution("% ipstack::UDP_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_UDP");
 		
+	advice execution("% ipstack::UDP_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+			
 		// set ip next header protocol to UDP
-		*(sendbuffer->nextheaderfield_ip) = UDP_Packet::IP_TYPE_UDP;
-	}
-	
-	advice execution("% ipstack::UDP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		after(SendBuffer* sendbuffer) {
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
-		tjp->that()->setupHeader((UDP_Packet*)sendbuffer->getDataPointer(), sendbuffer->getRemainingSize());
+		*(sendbuffer->p.nextheaderfield_ip) = UDP_Packet::IP_TYPE_UDP;
+
+		UDP_Packet* udp_packet = sendbuffer->getDataPointer();
+		sendbuffer->p.transport_packet = udp_packet;
+		tjp->that()->setupHeader(udp_packet, sendbuffer->getRemainingSize());
 		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
+
+		// Proceed if direct response is off or if this should not be a reponse to a packet
+		if (!use_as_response) {
+			tjp->proceed();
+			return;
+		}
+
+		// Set destination addr := remote src addr
+		const UDP_Packet* remote_udp_packet = (UDP_Packet*)use_as_response->p.transport_packet;
+		udp_packet->set_dport(remote_udp_packet->get_sport());
+		
+		tjp->proceed();
 	}
 };

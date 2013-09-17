@@ -1,6 +1,6 @@
 #include "Half_Open_Requests.h"
 #include "tcp/TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 namespace ipstack
 {

@@ -20,7 +20,7 @@
 #include "router/Interface.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/IPv6onSockets.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "icmpv6/ICMPv6_Packet.h"
 #include "icmpv6/ICMPv6_Socket.h"
 #include "util/ipstack_inttypes.h"

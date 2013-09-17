@@ -101,6 +101,7 @@ class IPv4_Packet{
   void set_ttl(uint8_t t) { ttl = t; }
   
   uint8_t get_protocol() { return protocol; }
+  bool is_protocol(uint8_t p) { return protocol == p; }
   void set_protocol(uint8_t proto) { protocol = proto; }
   char* get_nextheaderPointer() {
 	  return (char*)&protocol;

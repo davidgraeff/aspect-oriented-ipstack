@@ -24,9 +24,8 @@
 using namespace ipstack;
 
 aspect Ethernet_Receive {
-	/* Affect class: Demux */
-advice "ipstack::Demux" : slice Demux_Ethernet_Slice;
-
+	advice "ipstack::Demux" : slice Demux_Ethernet_Slice;
+	
 	advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
 	args(data, len, interface) && that(demux) :
 		around(const void* data, unsigned len, Interface* interface, Demux& demux) {
@@ -38,7 +37,12 @@ advice "ipstack::Demux" : slice Demux_Ethernet_Slice;
 				return; //length too small or too big
 			}
 
-			demux.ethernet_demux(data, len, interface);
+			// This receiveBuffer object is used in the entire demux hierarchie.
+			// If it is interesting for a socket, it is cloned to the socket memory.
+			ReceiveBuffer buffer(interface, data, len);
+			buffer.p.ethernet_frame = data;
+			buffer.setPayloadPointer(data);
+			demux.ethernet_demux(buffer);
 		} else {
 			// only go on with demuxing if it is not an ethernet packet
 			tjp->proceed();

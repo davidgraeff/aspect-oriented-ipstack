@@ -19,7 +19,7 @@
 
 #include "util/ipstack_inttypes.h"
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/InternetChecksum.h"
 #include "icmpv6/ICMPv6_Packet.h"
@@ -34,11 +34,11 @@ aspect Sendbuffer_ICMPv6_Checksum  {
 	advice execution("% ipstack::ICMPv6_Socket::send(...)") && args(dataToSend) :
 		before(SendBuffer* dataToSend) {
 
-		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->memstart_ip;
-		ICMPv6_Packet* icmp = (ICMPv6_Packet*) dataToSend->memstart_transport;
+		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->p.ip_packet;
+		ICMPv6_Packet* icmp = (ICMPv6_Packet*) dataToSend->p.transport_packet;
 
 		Interface* interface = dataToSend->getInterface();
-		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		icmp->set_checksum(0);
 		icmp->set_checksum(icmp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, ICMPv6_Packet::IPV6_TYPE_ICMP), payloadsize, interface));
 	}

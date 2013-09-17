@@ -21,7 +21,7 @@
 //#include "TCP_Sendbuffer_Slice.ah"
 #include "TCP_Socket.h"
 #include "TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -36,10 +36,10 @@ aspect Sendbuffer_TCP  {
 	// First add the IP Header after that execute this TCP aspect
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_TCP");
 
-	advice execution("% ipstack::%TCP_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		after(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 		// set ip next header protocol to TCP
-		*(sendbuffer->nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
+		*(sendbuffer->p.nextheaderfield_ip) = TCP_Segment::IP_TYPE_TCP;
+		sendbuffer->p.transport_packet = sendbuffer->getDataPointer();
 	}
 };

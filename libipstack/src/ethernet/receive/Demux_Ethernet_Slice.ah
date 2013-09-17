@@ -18,13 +18,12 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "Eth_Frame.h"
 
 using namespace ipstack;
 
 slice class Demux_Ethernet_Slice {  
   private:
-  void ethernet_demux(const void* ethernet_frame, unsigned framelen, Interface* interface){
+  void ethernet_demux(ReceiveBuffer& buffer){
     //Aspects to be weaved here!
   }
 };

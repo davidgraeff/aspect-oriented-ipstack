@@ -19,7 +19,7 @@
 // #include <string.h>
 // #include "util/ipstack_inttypes.h"
 // #include "os_integration/System.h"
-// #include "sending/SendBuffer.h"
+// #include "router/sendbuffer/SendBuffer.h"
 // #include "router/Router.h"
 // #include <iostream>
 // using namespace ipstack;

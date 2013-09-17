@@ -21,7 +21,7 @@
 #include "ethernet/Eth_Frame.h"
 #include "ethernet/EthernetAddressUtilities.h"
 #include "router/Router.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/AddressMemory.h"
@@ -43,9 +43,9 @@ aspect IPv6_Ethernet_NDPCache_Blocking_Aspect {
 
 		// check ip version
 		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
-			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
+			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->p.ip_packet;
 			Interface* interface = sendbuffer->getInterface();
-			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->memstart_ethernet);
+			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->p.ethernet_frame);
 
 			NDPCacheEntry* entry = interface->ndpcache_find(ip->get_dst_ipaddr());
 			if (entry == 0) {

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
@@ -43,7 +43,7 @@ aspect NDPLookupDebug {
 		
 			// check ip version
 		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
-			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->memstart_ip;
+			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->p.ip_packet;
 			
 			lookup = 1;
 			char tempbuf[50] = {0};

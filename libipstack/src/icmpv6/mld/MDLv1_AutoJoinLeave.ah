@@ -23,7 +23,7 @@
 #include "MLDMessages.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
 
 /**

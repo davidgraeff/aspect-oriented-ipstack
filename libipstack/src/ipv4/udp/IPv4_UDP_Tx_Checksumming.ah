@@ -20,7 +20,7 @@
 #include "udp/UDP_Packet.h"
 #include "ipv4/IPv4_Packet.h"
 #include "ipv4/InternetChecksum.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "router/Interface.h"
 
 using namespace ipstack;
@@ -32,11 +32,11 @@ aspect IPv4_UDP_Tx_Checksumming {
 		if (tjp->that()->m_useipversion != 4) {
 			return;
 		}
-		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->memstart_ip;
-		UDP_Packet* udp = (UDP_Packet*) dataToSend->memstart_transport;
+		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->p.ip_packet;
+		UDP_Packet* udp = (UDP_Packet*) dataToSend->p.transport_packet;
 
 		Interface* interface = dataToSend->getInterface();
-		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		udp->set_checksum(0);
 		udp->set_checksum(udp->calc_checksum(InternetChecksumV4::computePseudoHeader(packet, payloadsize, UDP_Packet::IP_TYPE_UDP), payloadsize, interface));
 

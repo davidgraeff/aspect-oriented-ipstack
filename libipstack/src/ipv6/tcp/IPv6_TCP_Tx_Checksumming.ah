@@ -20,7 +20,7 @@
 #include "ipv6/IPv6_Packet.h"
 #include "../InternetChecksum.h"
 #include "tcp/TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "router/Interface.h"
 
 using namespace ipstack;
@@ -32,11 +32,11 @@ aspect IPv6_TCP_Tx_Checksumming {
 			return;
 		}
 
-		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->memstart_ip;
-		TCP_Segment* tcp = (TCP_Segment*) dataToSend->memstart_transport;
+		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->p.ip_packet;
+		TCP_Segment* tcp = (TCP_Segment*) dataToSend->p.transport_packet;
 
 		Interface* interface = dataToSend->getInterface();
-		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		tcp->set_checksum(0);
 		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
 

@@ -20,7 +20,7 @@
 #define __TCP_RETRANSMISSION_TRACKER_AH__
 
 #include "../TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "../tcp_history/TCP_Record.h"
 #include "../TCP_Socket.h"
 #include "TCP_RetransmissionTrackerSlice.ah"
@@ -51,7 +51,7 @@ aspect TCP_Retransmission_Tracker_aspect {
 	that(socket) :
 		before(TCP_Record* record, TCP_Socket& socket) {
 		SendBuffer* buffer = record->getSendBuffer();
-		TCP_Segment* segment = (TCP_Segment*)buffer->memstart_transport;
+		TCP_Segment* segment = (TCP_Segment*)buffer->p.transport_packet;
 		if (segment->get_seqnum() == socket.seqnum_unacked) {
 			//this is the first packet of this flight that got lost.
 			socket.setRetransmitting(); //slow start + rtt aspects can bind to

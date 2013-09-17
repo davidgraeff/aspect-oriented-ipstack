@@ -1,0 +1,125 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2013 David Gräff
+
+#pragma once
+#include "util/ipstack_inttypes.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv4/IPv4_Packet.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ip_management_memory/SharedMemory.h"
+#include "Sendbuffer_DebugInfo_Slice.ah"
+using namespace ipstack;
+#define MARK_MSG_LEN 100
+
+/**
+ * If SendBuffer DebugInfo is active, an implementation
+ * for sendbuffer->mark("some debug message") will be added. The debug and
+ * protect aspects of SendBuffer will use that message as additional output.
+ */
+aspect sendbuffer_debuginfo {
+	/* Affect class: SendBuffer */
+	advice "ipstack::SendBuffer" : slice SendBuffer_DebugInfo_Slice;
+	
+	struct mark_msg_struct {
+		SendBuffer* ptr;
+		char msg[MARK_MSG_LEN];
+	};
+
+	mark_msg_struct messages[SharedMemory::SLOTS];
+	unsigned nextMsg;
+	
+	void addDigitsForGetDestIPstring(char* buffer, uint8_t d) {
+		buffer[0] = d / 100 + '0';
+		if (buffer[0]=='0') buffer[0] = ' ';
+		d = d % 100;
+		buffer[1] = d / 10 + '0';
+		if (buffer[1]=='0') buffer[1] = ' ';
+		d = d % 10;
+		buffer[2] = d + '0';
+	}
+	
+	void getDestIPstring(SendBuffer& sendbuffer, char* tempbuf) {
+		IPv6_Packet* packet = (IPv6_Packet*)sendbuffer.p.ip_packet;
+		if (packet->get_version() == 6) {
+			ipstack::ipv6_addr_toString(packet->get_dst_ipaddr(), tempbuf);
+		} else {
+			uint8_t a,b,c,d;
+			IPv4_Packet* packet = (IPv4_Packet*)sendbuffer.p.ip_packet;
+			IPv4_Packet::convert_ipv4_addr(packet->get_dst_ipaddr(), a, b, c, d);
+			addDigitsForGetDestIPstring(&(tempbuf[0]), a);
+			tempbuf[3] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[4]), b);
+			tempbuf[7] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[8]), c);
+			tempbuf[11] = '.';
+			addDigitsForGetDestIPstring(&(tempbuf[12]), d);
+		}
+	}
+
+	advice execution( "% ipstack::SendBuffer::printAdditionalInfo()" ) && that(sendbuffer) : around(SendBuffer& sendbuffer) {
+		// find in messages array
+		char* message = 0;
+		for (int i=0;i<SharedMemory::SLOTS;++i) {
+			if (messages[i].ptr == &sendbuffer) {
+				message = messages[i].msg;
+				break;
+			}
+		}
+		if (message) {
+			std::cout << "   Buffer: " << &sendbuffer << ", Msg: " << message << std::endl;
+		}
+		char tempbuf[50] = {0};
+		getDestIPstring(sendbuffer, tempbuf);
+		std::cout << "   Destination: " << tempbuf << std::endl;
+	
+		uint8_t* lastByte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize();
+		std::cout << "   (In Bytes) Link layer: " << (uint8_t*)sendbuffer.p.ip_packet-(uint8_t*)sendbuffer.p.ethernet_frame
+		<< "; IP: " << (uint8_t*)sendbuffer.p.transport_packet-(uint8_t*)sendbuffer.p.ip_packet
+		<< ", Transport: " << lastByte-(uint8_t*)sendbuffer.p.transport_packet) << std::endl;
+	}
+	
+	advice execution( "void ipstack::System::init()" ) : after() {
+		nextMsg = 0;
+	}
+
+	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+		SendBuffer* b = *tjp->result();
+		if (b != 0) {
+			// clear messages with same SendBuffer pointer.
+			for (int i=0;i<SharedMemory::SLOTS;++i) {
+				if (messages[i].ptr == b)
+					messages[i].ptr = 0;
+			}
+			// add somewhere in the messages array
+			++nextMsg; if (nextMsg>=SharedMemory::SLOTS) nextMsg = 0;
+			memset( &(messages[nextMsg]), 0, sizeof(mark_msg_struct) );
+			messages[nextMsg].ptr = b;
+		}
+	}
+
+	advice execution("% ipstack::SendBuffer::mark(const char*)") && args(str) && that(sendbuffer) : after(const char* str, SendBuffer& sendbuffer) {
+		unsigned len = strlen(str);
+		len = ((len > MARK_MSG_LEN-1) ? MARK_MSG_LEN-1 : len);
+		
+		for (int i=0;i<SharedMemory::SLOTS;++i) {
+			if (messages[i].ptr == &sendbuffer) {
+				strncpy(&(messages[i].msg[0]), str, len);
+				break;
+			}
+		}
+	}
+};

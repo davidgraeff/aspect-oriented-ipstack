@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv4/IPv4_Packet.h"
 #include "util/ipstack_inttypes.h"
 
@@ -36,7 +36,7 @@ aspect Sendbuffer_IPv4_Checksum {
 			return;
 		}
 		
-		IPv4_Packet* ip = (IPv4_Packet*) dataToSend->memstart_ip;
+		IPv4_Packet* ip = (IPv4_Packet*) dataToSend->p.ip_packet;
 		ip->computeChecksum();
 	}
 };

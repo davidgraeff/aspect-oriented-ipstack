@@ -19,7 +19,7 @@
 
 #include "router/Interface.h"
 #include "ethernet/Eth_Frame.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "util/ipstack_inttypes.h"
@@ -55,7 +55,7 @@ aspect Sendbuffer_IPv6_Ethernet {
 
 		//we have an ethernet device
 		Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->getDataPointer());
-		sendbuffer->memstart_ethernet = eth_frame;
+		sendbuffer->p.ethernet_frame = eth_frame;
 		sendbuffer->writtenToDataPointer(Eth_Frame::ETH_HEADER_SIZE);
 		
 		ipv6addr nexthopAddr = ipv6.get_nexthop_ipaddr();

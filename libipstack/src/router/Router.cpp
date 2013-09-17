@@ -23,13 +23,18 @@ namespace ipstack {
 
 Router Router::inst_; //create singleton instance
 
-Interface* Router::get_interface(int index)
-{
-	Interface* interface = head_interface;
-	for (int i = 0; (i < index) && (interface != 0); i++) {
-		interface = interface->getNext();
+	Interface* Router::get_interface(int index)
+	{
+		Interface* interface = head_interface;
+		for (int i = 0; (i < index) && (interface != 0); i++) {
+			interface = interface->getNext();
+		}
+		return interface;
 	}
-	return interface;
-}
+
+	void add_interface(Interface* interface) {
+		interface.next_interface = head_interface;
+		head_interface = &interface;
+	}
 } // namespace ipstack
 

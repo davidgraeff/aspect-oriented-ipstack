@@ -18,10 +18,8 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "icmpv6/ICMPv6_Packet.h"
-#include "ipv6/IPv6_Packet.h"
-#include "ipv6/InternetChecksum.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -30,12 +28,12 @@ using namespace ipstack;
  * Set the IPv6 next header protocol to ICMPv6
  */
 aspect Sendbuffer_IPCMPv6  {
-	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_IPCMPv6");
+	advice execution("% ipstack::%Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_IPCMPv6");
 
-	advice execution("% ipstack::ICMPv6_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		after(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::ICMPv6_DerivedSocket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		after(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
-		sendbuffer->memstart_transport = sendbuffer->getDataPointer();
-		*(sendbuffer->nextheaderfield_ip) = ICMPv6_Packet::IPV6_TYPE_ICMP;
+		sendbuffer->p.transport_packet = sendbuffer->getDataPointer();
+		*(sendbuffer->p.nextheaderfield_ip) = ICMPv6_Packet::IPV6_TYPE_ICMP;
 	}
 };

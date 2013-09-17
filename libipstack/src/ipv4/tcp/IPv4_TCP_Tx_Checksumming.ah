@@ -20,7 +20,7 @@
 #include "ipv4/IPv4_Packet.h"
 #include "ipv4/InternetChecksum.h"
 #include "tcp/TCP_Segment.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 using namespace ipstack;
 
@@ -31,11 +31,11 @@ aspect IPv4_TCP_Tx_Checksumming {
 			return;
 		}
 		
-		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->memstart_ip;
-		TCP_Segment* tcp = (TCP_Segment*) dataToSend->memstart_transport;
+		IPv4_Packet* packet = (IPv4_Packet*)dataToSend->p.ip_packet;
+		TCP_Segment* tcp = (TCP_Segment*) dataToSend->p.transport_packet;
 		
 		Interface* interface = dataToSend->getInterface();
-		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->memstart_transport);
+		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		tcp->set_checksum(0);
 		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV4::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
 	}

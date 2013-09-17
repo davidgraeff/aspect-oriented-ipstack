@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv4/IPv4_Packet.h"
 #include "util/ipstack_inttypes.h"
 
@@ -37,18 +37,25 @@ aspect Sendbuffer_IPv4 {
 		}
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
 		// check ip version
 		if (tjp->that()->m_useipversion == 4) {
-			sendbuffer->memstart_ip = sendbuffer->getDataPointer();
-			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->memstart_ip;
+			sendbuffer->p.ip_packet = sendbuffer->getDataPointer();
+			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->p.ip_packet;
 			tjp->that()->ipv4.setupHeader(ip, sendbuffer->getRemainingSize());
 			sendbuffer->writtenToDataPointer(tjp->that()->ipv4.getSpecificHeaderSize());
 
 			// set pointer to next header field
-			sendbuffer->nextheaderfield_ip = ip->get_nextheaderPointer();
+			sendbuffer->p.nextheaderfield_ip = ip->get_nextheaderPointer();
+			
+			// Proceed if direct response is off or if this should not be a reponse to a packet
+			if (use_as_response) {
+				// Set destination addr := remote src addr
+				const IPv4_Packet* remote_ip4_packet = (IPv4_Packet*)use_as_response->p.ip_packet;
+				ip6_packet->set_dst_ipaddr(remote_ip4_packet->get_src_ipaddr());
+			}
 		}
 		tjp->proceed();
 	}

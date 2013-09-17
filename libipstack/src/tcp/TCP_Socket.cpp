@@ -18,8 +18,8 @@
 
 #include "TCP_Socket.h"
 #include "demux/Demux.h"
-#include "sending/SendBuffer.h"
-#include "receive/ReceiveBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
 #include "os_integration/Clock.h"
 
 namespace ipstack
@@ -125,7 +125,7 @@ void TCP_Socket::updateHistory(bool do_retransmit)
 	TCP_Record* record = history.get();
 	while (record != 0) {
 		SendBuffer* buffer = record->getSendBuffer();
-		TCP_Segment* segment = (TCP_Segment*)buffer->memstart_transport;
+		TCP_Segment* segment = (TCP_Segment*)buffer->p.transport_packet;
 		uint64_t timeout = record->getTimeout();
 		if (((timeout != 0) && (TCP_Segment::SEQ_LT(segment->get_seqnum(), seqnum_unacked))) ||
 			((timeout == 0) && interface->hasBeenSent(buffer->getDataStart()))) {

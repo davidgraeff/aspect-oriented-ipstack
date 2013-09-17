@@ -19,7 +19,7 @@
 #include "udp/UDP_Socket.h"
 #include "demux/Demux.h"
 #include <string.h> //for memcpy
-#include "receive/ReceiveBuffer.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
 #include "os_integration/Clock.h"
 
 /**
@@ -38,19 +38,22 @@ namespace ipstack {
 		Demux::Inst().unbind ( &socket );
 	}
 
-    bool UDP_Socket::addToReceiveQueue ( ReceiveBuffer* receivebuffer) {
-		if (is_packetbuffer_full()) {
+    bool UDP_Socket::addToReceiveQueue ( ReceiveBuffer& receivebuffer) {
+		ReceiveBuffer* socket_receive_buffer;
+		if (is_packetbuffer_full() || !(socket_receive_buffer=receivebuffer.clone(this))) {
 			return false;
 		}
-		packetbuffer->put(receivebuffer);
+		packetbuffer->put(socket_receive_buffer);
 		return true;
 	}
 	
-	ReceiveBuffer* UDP_Socket::receive(){
-		return (ReceiveBuffer*)packetbuffer->get();
+	void UDP_Socket::block() {}
+	
+	SmartReceiveBufferPtr UDP_Socket::receive(){
+		return SmartReceiveBufferPtr((ReceiveBuffer*)packetbuffer->get(), this);
 	}
 
-	ReceiveBuffer* UDP_Socket::receive(uint64_t waitForPacketTimeoutMS) {
+	SmartReceiveBufferPtr UDP_Socket::receive(uint64_t waitForPacketTimeoutMS) {
 		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
 		if (!recv) {
 			if (!waitForPacketTimeoutMS )
@@ -62,15 +65,15 @@ namespace ipstack {
 					break;
 			}
 		}
-		return recv;
+		return SmartReceiveBufferPtr(recv, this);
 	}
 	
-	ReceiveBuffer* UDP_Socket::receiveBlock(){
+	SmartReceiveBufferPtr UDP_Socket::receiveBlock(){
 		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
 		while(recv == 0){
 			block();
 			recv = (ReceiveBuffer*)packetbuffer->get();
 		}
-		return recv;
+		return SmartReceiveBufferPtr(recv, this);
 	}
 }

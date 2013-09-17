@@ -93,12 +93,12 @@ advice "ipstack::TCP_Socket" :
 		around(TCP_Record* record, TCP_Socket& socket) {
 
 		SendBuffer* buffer = record->getSendBuffer();
-		TCP_Segment* segment = (TCP_Segment*)buffer->memstart_transport;
+		TCP_Segment* segment = (TCP_Segment*)buffer->p.transport_packet;
 		if ((segment->get_seqnum() == socket.seqnum_unacked) || (socket.cwnd_opened())) {
 			//this is the first element that got lost (this is always allowed to be retransmitted)
 
 			//reduce cwnd by payload length
-			unsigned payload_len = ((char*)buffer->data - (char*)buffer->memstart_transport) - segment->get_header_len();
+			unsigned payload_len = ((char*)buffer->data - (char*)buffer->p.transport_packet) - segment->get_header_len();
 			socket.outstanding_bytes += payload_len; /* Multiple retransmissions of the same packet count more than once.
                                                   This seems to be unavoidable, because 'TCP_History' is processed
                                                   from tail to front, so that checks against seqnums cannot be made. */

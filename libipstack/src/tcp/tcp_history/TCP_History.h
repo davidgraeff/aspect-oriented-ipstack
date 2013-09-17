@@ -21,7 +21,7 @@
 #include "tcp/TCP_Segment.h"
 #include "tcp/TCP_Config.h"
 #include "TCP_Record.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 namespace ipstack {
 

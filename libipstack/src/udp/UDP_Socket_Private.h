@@ -31,7 +31,7 @@ class UDP_Socket_Private
 {
 	public:
 		// Not implemented, if receive is disabled
-		bool addToReceiveQueue(ReceiveBuffer* receivebuffer);
+		bool addToReceiveQueue(ReceiveBuffer& receivebuffer);
 	protected:
 		uint16_t dport;
 		uint16_t sport;

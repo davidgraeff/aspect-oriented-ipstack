@@ -21,7 +21,7 @@
 #include "ipv6/AddressMemory.h"
 #include "ipv6/RouteResult.h"
 #include "router/Router.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6onSockets.h"
 #include "Interface_Multicast_Slice.ah"
 
@@ -90,13 +90,11 @@ advice "ipstack::Interface" : slice Interface_Multicast_IPv6_Slice;
 			if (interface != alreadySendOnInterface && interface->isIPv6Up()) {
 				// recycle sendbuffer
 				dataToSend->recycle();
-				// set interface pointer for hasBeenSend
 				dataToSend->setInterface(interface);
-				dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
-				// for until packet has been send
-				while (!dataToSend->hasBeenSend()) {}
-				// set state
-				dataToSend->setState(SendBuffer::TransmittedState);
+				// Do not use the SendBuffer::send method as that is matched by checksum
+				// aspects and so on and our sendbuffer is perfectly valid already (we are
+				// in %_Socket::send actually)
+				interface->send(dataToSend->getDataStart(), dataToSend->getSize());
 			}
 			interface = interface->getNext();
 		}

@@ -17,7 +17,7 @@
 
 #pragma once
 #include "router/Interface.h"
-#include "sending/SendBuffer.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 using namespace ipstack;
 
@@ -30,7 +30,7 @@ aspect InternetChecksum_Tx_Offloading_udp {
 		around(SendBuffer* dataToSend) {
 
 		if (interface->hasTransmitterHardwareChecksumming()) {
-			unsigned ip_header_size = ((char*)dataToSend->memstart_transport - (char*)dataToSend->memstart_ip);
+			unsigned ip_header_size = ((char*)dataToSend->p.transport_packet - (char*)dataToSend->p.ip_packet);
 			//call specialized send function for checksum offloading
 			dataToSend()->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize(), false, ip_header_size);
 			return; // we do not execute the usual send Method

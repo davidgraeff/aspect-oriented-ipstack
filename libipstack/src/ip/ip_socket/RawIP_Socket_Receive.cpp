@@ -18,7 +18,7 @@
 #include "ip/RawIP_Socket.h"
 #include "demux/Demux.h"
 #include <string.h> //for memcpy
-#include "receive/ReceiveBuffer.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
 #include "os_integration/Clock.h"
 
 /**
@@ -28,28 +28,23 @@
  */
 
 namespace ipstack {
-
-	bool RawIP_Socket::bind() {
-		return Demux::Inst().bind ( &socket );
-	}
+	void RawIP_Socket::block() {}
 	
-	void RawIP_Socket::unbind() {
-		Demux::Inst().unbind ( &socket );
-	}
-
-    bool RawIP_Socket::addToReceiveQueue ( ReceiveBuffer* receivebuffer) {
-		if (is_packetbuffer_full()) {
+    bool RawIP_Socket_Private::addToReceiveQueue ( ReceiveBuffer& receivebuffer) {
+		ReceiveBuffer* socket_receive_buffer;
+		if (static_cast<RawIP_Socket*>(this)->is_packetbuffer_full() ||
+			!(socket_receive_buffer=receivebuffer.clone(this))) {
 			return false;
 		}
-		packetbuffer->put(receivebuffer);
+		static_cast<RawIP_Socket*>(this)->get_packetbuffer()->put(socket_receive_buffer);
 		return true;
 	}
 	
-	ReceiveBuffer* RawIP_Socket::receive(){
-		return (ReceiveBuffer*)packetbuffer->get();
+	SmartReceiveBufferPtr RawIP_Socket::receive(){
+		return SmartReceiveBufferPtr((ReceiveBuffer*)packetbuffer->get(), this);
 	}
 
-	ReceiveBuffer* RawIP_Socket::receive(uint64_t waitForPacketTimeoutMS) {
+	SmartReceiveBufferPtr RawIP_Socket::receive(uint64_t waitForPacketTimeoutMS) {
 		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
 		if (!recv) {
 			if (!waitForPacketTimeoutMS )
@@ -61,15 +56,15 @@ namespace ipstack {
 					break;
 			}
 		}
-		return recv;
+		return SmartReceiveBufferPtr(recv, this);
 	}
 	
-	ReceiveBuffer* RawIP_Socket::receiveBlock(){
+	SmartReceiveBufferPtr RawIP_Socket::receiveBlock(){
 		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
 		while(recv == 0){
 			block();
 			recv = (ReceiveBuffer*)packetbuffer->get();
 		}
-		return recv;
+		return SmartReceiveBufferPtr(recv, this);
 	}
 }

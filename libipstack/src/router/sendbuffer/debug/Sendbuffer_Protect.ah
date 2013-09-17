@@ -1,0 +1,221 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2013 David Gräff
+#pragma once
+#include "util/ipstack_inttypes.h"
+#include "os_integration/System.h"
+#include <iostream>
+#include "router/sendbuffer/SendBuffer.h"
+#include "router/Router.h"
+#include "Sendbuffer_Protect_Slice.ah"
+using namespace ipstack;
+
+/**
+  * This advice adds additional protection to sendbuffers and observe
+  * write usage behaviour. For performance reasons the wrong usage of
+  * a sendbuffer is not ruled out beforehand. You are able to
+  * write beyond the buffers size with "writtenToDataPointer", the
+  * "write" method silently fails if there is not enough space reserved
+  * and you are able to write to an already invalidated buffer.
+  *
+  * If you activate this aspect you will gain a simple protection against buffer
+  * overflow and you will be notified if writing to a sendbuffer fails.
+  * You are enforced to use the methods in the correct order (e.g.
+  * first getDataPointer() than writtenToDataPointer() ) and to fill the buffer
+  * entirely [otherwise we would create an invalid IP packet: length is wrong].
+  * 
+  * Additionally this aspect protects you from using invalid Interface* pointer
+  * for sending.
+  * 
+  * This aspect also serves as a simple unit test for the sendbuffer class.
+  */
+aspect sendbuffer_protect {
+	SendBuffer* lastbuffer;
+	uint8_t* checkbyte;
+	
+	/* Affect class: SendBuffer */
+	advice "ipstack::SendBuffer" : slice SendBuffer_Protect_Slice;
+	
+	advice execution( "void ipstack::System::init()" ) : after() {
+		std::cout << "SendBuffer protection: on" << std::endl;
+	}
+	
+	/**
+	  * Warning message if allocation fails
+	  */
+	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+		if (*tjp->result() == 0) {
+			std::cout << "SendBuffer: Allocation failed!" << std::endl;
+		} else {
+			(*tjp->result())->hasBeenTransmitted = false;
+		}
+	}
+
+	advice execution("% ipstack::SendBuffer::hasBeenSent(...)") && that(sendbuffer) : after(SendBuffer& sendbuffer) {
+		if (sendbuffer.hasBeenTransmitted == false) {
+			std::cout << "SendBuffer: You have to transmit the buffer to the NIC before calling hasBeenSent!" << std::endl;
+			System::haltsystem();
+		}
+	}
+	
+	advice execution("% ipstack::SendBuffer::getDataPointer()") && that(sendbuffer) : after(SendBuffer& sendbuffer) {
+		// store pointer to the sendbuffer. we will compare that in writtenToDataPointer.
+		lastbuffer = &sendbuffer;
+		// store the byte directly after the sendbuffer. If this changed we have a buffer overrun
+		checkbyte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
+	}
+	
+	advice execution("% ipstack::SendBuffer::writtenToDataPointer(%)") && args(length) && that(sendbuffer) :
+		around(uint_fast16_t length, SendBuffer& sendbuffer) {
+			
+		if (lastbuffer != &sendbuffer) {
+			std::cout << "SendBuffer::writtenToDataPointer: getDataPointer() have to be called before writtenToDataPointer()!" << std::endl;
+			System::haltsystem();
+		}
+		if (sendbuffer.getStateWithoutOptions()!=SendBuffer::WritingState) {
+			std::cout << "SendBuffer::writtenToDataPointer: buffer is not in writing state anymore!" << std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+		uint_fast16_t availsize = sendbuffer.getRemainingSize();
+		if (length>availsize) {
+			std::cout << "SendBuffer::writtenToDataPointer: length too big. Requested: "<< length<<", Available: "<<availsize<<"!" << std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+		tjp->proceed();
+		uint8_t* cbyte = (uint8_t*)(sendbuffer.getDataStart()) + sendbuffer.getSize() + 1;
+		if (*checkbyte != *cbyte) {
+			std::cout << "SendBuffer::writtenToDataPointer: buffer overrun ("<<*checkbyte<<")!=("<<*cbyte <<")!"<<std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+		if (sendbuffer.getRemainingSize()!=availsize-length) {
+			std::cout << "SendBuffer::writtenToDataPointer: before ("<<sendbuffer.getRemainingSize()<<")!= after ("<< availsize-length <<")!"<<std::endl;
+			System::haltsystem();
+		}
+	}
+	
+	advice execution("% ipstack::SendBuffer::write(%,%)") && args(newdata, length) && that(sendbuffer) :
+		around(const void* newdata, uint_fast16_t length, SendBuffer& sendbuffer) {
+			
+		// reset getDataPointer() -> writtenToDataPointer() sendbuffer pointer
+		// This is usually not wanted to first call getDataPointer() after that write() and than writtenToDataPointer()
+		// and should therefore fail
+		lastbuffer = 0;
+			
+		if (newdata==0) {
+			std::cout << "SendBuffer::write: invalid source buffer with len: "<<length <<"!" << std::endl;
+			System::haltsystem();
+		}
+		if (sendbuffer.getStateWithoutOptions()!=SendBuffer::WritingState) {
+			std::cout << "SendBuffer::write: buffer is not in writing state anymore!" << std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+		uint_fast16_t availsize = sendbuffer.getRemainingSize();
+		if (length>availsize) {
+			std::cout << "SendBuffer::write: length too big. Requested: "<< length<<", Available: "<<availsize<<"!" << std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+		tjp->proceed();
+		if (sendbuffer.getRemainingSize()!=availsize-length) {
+			std::cout << "SendBuffer::write: before ("<<sendbuffer.getRemainingSize()<<")!= after ("<< availsize-length <<")!"<<std::endl;
+			sendbuffer.printAdditionalInfo();
+			System::haltsystem();
+		}
+	}
+
+	advice execution("% ipstack::%_Socket::send(...)") && args(dataToSend) :
+		around(SendBuffer* dataToSend) {
+
+		if (dataToSend->getStateWithoutOptions()==SendBuffer::TransmittedState) {
+			std::cout << "SendBuffer: send failed. Buffer already transmitted "<< dataToSend<<"!"<<std::endl
+			dataToSend->printAdditionalInfo();
+			System::haltsystem();
+		} else
+		if (dataToSend->getStateWithoutOptions()==SendBuffer::InvalidState) {
+			std::cout << "SendBuffer: send failed. Buffer invalid "<< dataToSend<<"!"<<std::endl
+			System::haltsystem();
+		}
+
+		if (!dataToSend->getInterface()) {
+			std::cout << "SendBuffer: send failed. No interface provided!" << std::endl;
+			System::haltsystem();
+		}
+		
+		Interface* interface = dataToSend->getInterface();
+		
+		// check if the interface pointer is valid
+		Router& router = Router::Inst();
+		Interface* rInterface = router.get_interface(0);
+		bool found = false;
+		while (rInterface) {
+			if (interface == rInterface) {
+				found = true;
+				break;
+			}
+			rInterface = rInterface->getNext();
+		}
+		if (!found) {
+			std::cout << "SendBuffer: send failed. Interface pointer invalid " << interface << std::endl;
+			System::haltsystem();
+		}
+		
+		// check if all tcp/ip layers put their content into the buffer: we check the next header fields for known values
+		uint8_t* lastByte = (uint8_t*)(dataToSend->getDataStart()) + dataToSend->getSize();
+		
+		if (dataToSend->p.ethernet_frame>=dataToSend->getDataStart() && dataToSend->p.ethernet_frame<=lastByte) {
+			//Eth_Frame* dest_eth_frame = (Eth_Frame*)(dataToSend->p.ethernet_frame);
+		} else {
+			std::cout << "SendBuffer: send failed. Ethernet layer is missing " << dataToSend->p.ethernet_frame<<"!"<<std::endl;
+			System::haltsystem();
+		}
+		if (dataToSend->p.ip_packet>=dataToSend->getDataStart() && dataToSend->p.ip_packet<=lastByte) {
+			
+		} else {
+			std::cout << "SendBuffer: send failed. IP layer is missing " << dataToSend->p.ip_packet<<"!"<<std::endl;
+			System::haltsystem();
+		}
+		if (dataToSend->p.transport_packet>=dataToSend->getDataStart() && dataToSend->p.transport_packet<=lastByte) {
+			
+		} else {
+			std::cout << "SendBuffer: send failed. Transport layer is missing "<< dataToSend->p.transport_packet<<"!"<<std::endl;
+			System::haltsystem();
+		}
+		
+		// check size: all bytes written to the end or unused requested space? if unused space: print out the sizes of all layers.
+		//  if one size is 0 or has a strange value
+		// -> Pointcut of an aspect is wrong.
+		if (dataToSend->getRemainingSize()) {
+			std::cout << "SendBuffer: send failed. Buffer not filled to the end. Unused: "<<dataToSend->getRemainingSize()<<"!" << std::endl;
+			dataToSend->printAdditionalInfo();
+			System::haltsystem();
+		}
+		
+		lastbuffer = 0;
+		
+		tjp->proceed();
+		
+		if (dataToSend->getStateWithoutOptions()!=SendBuffer::TransmittedState) {
+			std::cout << "SendBuffer: should be in TransmittedState after sending "<< dataToSend<<"!"<<std::endl
+			System::haltsystem();
+		}
+		
+		dataToSend->hasBeenTransmitted = true;
+	}
+};
