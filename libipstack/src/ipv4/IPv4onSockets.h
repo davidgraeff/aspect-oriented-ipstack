@@ -28,6 +28,17 @@ namespace ipstack {
 	 */
 	class IPV4 {
 	public:
+		IPV4() ;
+		
+		void set_dst_addr(uint32_t dst);
+		void set_dst_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+		
+		uint32_t get_dst_addr() const;
+		uint32_t get_src_addr() const;
+		uint32_t get_nexthop_ipaddr();
+		
+		bool hasValidSrcDestAddresses() const;
+	public:
 		// cache for fast sending
 		Interface* interface;
 		bool using_gateway;
@@ -41,6 +52,7 @@ namespace ipstack {
 		uint16_t id;
 		
 		void resolveRoute();
+		static Interface* find_route(uint32_t ipv4_dstaddr)
 		
 		void setupHeader(IPv4_Packet* packet, unsigned datasize);
 		
@@ -55,18 +67,5 @@ namespace ipstack {
 		 */
 		unsigned getSpecificHeaderSize() ;
 
-	public:
-		IPV4() ;
-		
-		void set_dst_addr(uint32_t dst);
-		void set_dst_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
-		
-		uint32_t get_dst_addr() const;
-		
-		uint32_t get_src_addr() const;
-		
-		uint32_t get_nexthop_ipaddr();
-		
-		bool hasValidSrcDestAddresses() const;
 	}; // end IPV4 class
 } //namespace ipstack

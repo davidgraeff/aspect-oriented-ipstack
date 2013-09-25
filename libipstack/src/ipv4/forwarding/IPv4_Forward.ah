@@ -35,10 +35,10 @@ aspect IPv4_Forward {
 		Router& router = Router::Inst(); //short name
 
 		//TODO: verfiy the algorithm below! (perhaps optimize it?)
-		Interface* ir = router.ipv4_find_route(packet->get_dst_ipaddr());
+		Interface* ir = IPV4::find_route(packet->get_dst_ipaddr());
 		if (ir == 0) {
 			//destination is NOT on a local link. use gateway
-			ir = router.ipv4_find_route(router.ipv4_get_gateway_addr());
+			ir = IPV4::find_route(router.ipv4_get_gateway_addr());
 		}
 		//std::cout << "Routing over: " << (const char*) ir->name << std::endl;
 		if ((ir != 0) && (ir != interface)) {

@@ -4,29 +4,21 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// 
+// Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "ipv4/IPv4_Packet.h"
-#include "router/Interface.h"
+#include "util/ipstack_inttypes.h"
 
-using namespace ipstack;
-
-
-slice class Demux_UDP_IPv4_Slice {
-private:
-	/**
-	 * This method should be called if the udp port of the given socket is not assigned on the given
-	 * interface.
-	 */
-	void error_port_not_reachable(IPv4_Packet* ipv4_packet, Interface* interface) {}
-};
+// the lower 4 bits of the first byte are for the version information of an IP packet
+inline uint8_t get_ip_version(char* packet) {
+	return *(packet) & 0x0f;
+}

@@ -20,7 +20,6 @@
 #pragma once
 
 #include "memory_management/MemoryInterface.h"
-#include "memory_management/Ringbuffer.h"
 
 /**
  * Interface for beeing used in a socket class
@@ -30,23 +29,40 @@ class SocketMemory
 {
 protected:
 	MemoryInterface* mempool;
-	Packetbuffer* packetbuffer;
+	RingbufferInterface* packetbuffer;
 public:
-	SocketMemory(MemoryInterface* m, Packetbuffer* pb=0) : mempool(m), packetbuffer(pb) {}
+	SocketMemory(MemoryInterface* m, RingbufferInterface* pb=0) : mempool(m), packetbuffer(pb) {}
 	
-	// Packetbuffer
-	inline Packetbuffer* get_packetbuffer() { return packetbuffer; }
+	// Ringbuffer
+	inline RingbufferInterface* get_packetbuffer() { return packetbuffer; }
 	inline bool is_packetbuffer_full() {return packetbuffer->isFull();}
-	inline void set_packetbuffer(Packetbuffer* pb) { packetbuffer = pb; }
+	inline void set_packetbuffer(RingbufferInterface* pb) { packetbuffer = pb; }
 	// Memory pool
 	inline void set_Mempool(MemoryInterface* m) { mempool = m; }
 	inline MemoryInterface* get_Mempool() { return mempool; }
 	
 	/**
-	 * Free a Sendbuffer or Receivebuffer by using this method. 
+	 * Free a Sendbuffer or Receivebuffer by using these methods. 
 	 */
-	void free(void* b) {
+	void freeReceivebuffer(void* b) {
+		get_Mempool()->free(b);
+	}
+	void freeSendbuffer(void* b) {
 		get_Mempool()->free(b);
 	}
 	
+	/**
+	 * Copies a receivebuffer memory content to the memory of this socket.
+	 * This may be intercepted by aspects for directly processing the packet
+	 * without copying the content before and by the IPv4 fragmentation
+	 * reassamle aspect.
+	 */
+    bool addToReceiveQueue(ReceiveBuffer& receivebuffer) {
+		ReceiveBuffer* socket_receive_buffer;
+		if (is_packetbuffer_full() || !(socket_receive_buffer=receivebuffer.clone(this))) {
+			return false;
+		}
+		packetbuffer->put(socket_receive_buffer);
+		return true;
+	}
 };

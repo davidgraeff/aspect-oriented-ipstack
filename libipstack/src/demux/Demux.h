@@ -23,10 +23,24 @@ namespace ipstack {
 	 * Public demux API: Route incoming traffic of your hardware to the demux(...)
 	 * method.
 	 */
+	class ReceiveBuffer;
 	class Demux {  
 	public:
 		static Demux& Inst() { return inst_; } //get singleton
 		void demux(const void* data, unsigned len, Interface* interface);
+		
+		/**
+		* Call this if the receiving queue is full
+		*/
+		void error_receiving_queue_full(ReceiveBuffer* buffer) {
+			//Aspects to be weaved here!
+		}
+		/**
+		* Call this if the received packet does not fit into one of the available memory blocks
+		*/
+		void error_receiving_memory_too_small(ReceiveBuffer* buffer) {
+			//Aspects to be weaved here!
+		}
 	private:
 		//singleton design pattern
 		static Demux inst_;

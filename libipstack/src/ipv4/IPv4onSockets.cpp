@@ -7,16 +7,35 @@ namespace ipstack {
 	
 IPV4::IPV4() : interface(0), dst_ipv4_addr(0), id(0) {}
 
+Interface* IPV4::find_route(uint32_t ipv4_dstaddr) {
+	Router& router = Router::Inst(); //short name
+	//search for local interface. check ip addr AND subnet masks
+	Interface* interface = router.head_interface;
+	while (interface != 0) {
+		if (interface->isIPv4Up()) {
+			if ((interface->getIPv4Addr() & interface->getIPv4Subnetmask()) == (ipv4_dstaddr & interface->getIPv4Subnetmask())) {
+				if (interface->getIPv4Addr() != ipv4_dstaddr) { //addresses MUST NOT be equal
+					//valid route found
+					return interface;
+				}
+			}
+		}
+		interface = interface->getNext();
+	}
+	return 0;
+}
+	
 void IPV4::resolveRoute()
 {
-	Router& router = Router::Inst(); //short name
-	interface = router.ipv4_find_route(dst_ipv4_addr);
+	
+	interface = find_route(dst_ipv4_addr);
 	using_gateway = false;
 	if (interface != 0)
 		return;
 
 	//use default gateway
-	interface = router.ipv4_find_route(router.ipv4_get_gateway_addr());
+	Router& router = Router::Inst(); //short name
+	interface = find_route(router.ipv4_get_gateway_addr());
 	using_gateway = true;
 }
 void IPV4::setupHeader(IPv4_Packet* packet, unsigned int datasize)

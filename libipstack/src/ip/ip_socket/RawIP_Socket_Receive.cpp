@@ -30,16 +30,6 @@
 namespace ipstack {
 	void RawIP_Socket::block() {}
 	
-    bool RawIP_Socket_Private::addToReceiveQueue ( ReceiveBuffer& receivebuffer) {
-		ReceiveBuffer* socket_receive_buffer;
-		if (static_cast<RawIP_Socket*>(this)->is_packetbuffer_full() ||
-			!(socket_receive_buffer=receivebuffer.clone(this))) {
-			return false;
-		}
-		static_cast<RawIP_Socket*>(this)->get_packetbuffer()->put(socket_receive_buffer);
-		return true;
-	}
-	
 	SmartReceiveBufferPtr RawIP_Socket::receive(){
 		return SmartReceiveBufferPtr((ReceiveBuffer*)packetbuffer->get(), this);
 	}

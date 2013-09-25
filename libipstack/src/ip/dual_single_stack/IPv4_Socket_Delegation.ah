@@ -17,6 +17,7 @@
 
 #pragma once
 #include "IPv4_Singlestack_Slice.ah"
+#include "ipv4/IPv4onSockets.h"
 
 using namespace ipstack;
 

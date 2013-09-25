@@ -38,15 +38,6 @@ namespace ipstack {
 		Demux::Inst().unbind ( &socket );
 	}
 
-    bool UDP_Socket::addToReceiveQueue ( ReceiveBuffer& receivebuffer) {
-		ReceiveBuffer* socket_receive_buffer;
-		if (is_packetbuffer_full() || !(socket_receive_buffer=receivebuffer.clone(this))) {
-			return false;
-		}
-		packetbuffer->put(socket_receive_buffer);
-		return true;
-	}
-	
 	void UDP_Socket::block() {}
 	
 	SmartReceiveBufferPtr UDP_Socket::receive(){

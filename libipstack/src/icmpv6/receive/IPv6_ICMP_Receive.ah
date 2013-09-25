@@ -59,7 +59,7 @@ advice "ipstack::Demux" :
 			return;
 		}
 
-		ManagementTask::Inst().get_socket_icmpv6().addToReceiveQueue();
+		ManagementTask::Inst().get_socket_icmpv6().a_ddToReceiveQueue();
 		demux.icmpv6_demux(packet, icmpv6, payload_length, interface);
 	}
 };

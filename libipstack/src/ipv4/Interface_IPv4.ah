@@ -21,42 +21,43 @@
 
 using namespace ipstack;
 
-
-slice class Interface_IPv4_Slice {
-  private:
-  uint32_t ipv4_addr; //endian??
-  uint32_t ipv4_subnetmask;
-  //uint32_t ipv4_broadcast_addr;
-  bool ipv4_up;
-  
-  public:
-  void setIPv4Addr(uint32_t addr){
-    ipv4_addr = addr;
-  }
-  void setIPv4Addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
-    setIPv4Addr(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
-  }
-  
-  uint32_t getIPv4Addr(){
-    return ipv4_addr;
-  }
-  
-  void setIPv4Subnetmask(uint32_t subnetmask){
-    ipv4_subnetmask = subnetmask;
-  }
-  void setIPv4Subnetmask(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
-    setIPv4Subnetmask(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
-  }
-  
-  uint32_t getIPv4Subnetmask(){
-    return ipv4_subnetmask;
-  }
-  
-  void setIPv4Up(bool up){
-    ipv4_up = up;
-  }
-  
-  bool isIPv4Up(){
-    return ipv4_up;
-  }
+aspect IPv4_Interface {
+	advice "ipstack::Interface" : slice class {
+	private:
+		uint32_t ipv4_addr; //endian??
+		uint32_t ipv4_subnetmask;
+		//uint32_t ipv4_broadcast_addr;
+		bool ipv4_up;
+		
+		public:
+		void setIPv4Addr(uint32_t addr){
+			ipv4_addr = addr;
+		}
+		void setIPv4Addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
+			setIPv4Addr(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
+		}
+		
+		uint32_t getIPv4Addr(){
+			return ipv4_addr;
+		}
+		
+		void setIPv4Subnetmask(uint32_t subnetmask){
+			ipv4_subnetmask = subnetmask;
+		}
+		void setIPv4Subnetmask(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
+			setIPv4Subnetmask(IPv4_Packet::convert_ipv4_addr(a,b,c,d));
+		}
+		
+		uint32_t getIPv4Subnetmask(){
+			return ipv4_subnetmask;
+		}
+		
+		void setIPv4Up(bool up){
+			ipv4_up = up;
+		}
+		
+		bool isIPv4Up(){
+			return ipv4_up;
+		}
+	};
 };

@@ -21,47 +21,66 @@
 
 using namespace ipstack;
 
-
 slice class Demux_IPv4_Slice {
 private:
-	void ipv4_demux(IPv4_Packet* packet, unsigned len, Interface* interface){
-		//Aspects to be weaved here!
-		// If no protocol handler intercepted this method, call the error handler.
-		error_no_protocol_handler(packet, interface);
+	void ipv4_demux(ReceiveBuffer& buffer){
+		//is the receiving interface running ipv4?
+		Interface* interface = buffer.get_interface();
+		if (interface->isIPv4Up() == false) {
+			//discard packets on down interfaces
+			return;
+		}
+
+		IPv4_Packet* packet = (IPv4_Packet*)buffer.get_payload_data();
+		unsigned len = packet->validPacketLength(len); //strip packet (e.g. ethernet padding)
+		if (len == 0) {
+			//invalid packet length
+			return;
+		}
+
+		if (packet->get_version() != IPv4_Packet::IPV4_VERSION) {
+			//no ipv4 packet
+			return;
+		}
+
+		if (packet->get_ttl() == 0) {
+			error_ttl(buffer);
+			return;
+		}
+
+		//verify IPv4 header checksum:
+		if (packet->validPacketChecksum(interface) == false) {
+			return;
+		}
+		
+		//IPv4 packet has passed all verification check so far ...
+		if (packet->get_dst_ipaddr() == interface->ipv4_addr) {
+			//this packet is destined for this local host
+			buffer.p.ip_packet = packet;
+			buffer.setPayload(packet, len);
+			if (!ip_payload_demux(buffer, packet->get_protocol()))
+				error_no_protocol_handler_v4(buffer);
+		} else {
+			// No routing possible, ttl over
+			if (packet->get_ttl() <= 1) {
+				error_ttl(buffer);
+				return;
+			}
+
+			//this packet has to be routed elsewhere
+			ipv4_forward(buffer);
+		}
 	}
-    void ipv4_forward ( IPv4_Packet *packet, unsigned len, Interface *interface ) {
+	
+    void ipv4_forward (ReceiveBuffer& buffer) {
         //Aspects to be weaved here!
-    }
-    bool ipv4_reassemble ( IPv4_Packet* &packet, unsigned &len, Interface *interface, uint16_t fragment_offset ) {
-        //Aspects to be weaved here!
-        return false; // Packet not completely reassembled, yet. This is not the last fragment!
     }
     
-    /**
-	 * Call this method if the ipv4 ttl is 0
-	 */
-	void error_ttl(IPv4_Packet* packet, Interface* interface) {
+	void error_ttl(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
-	
-	/**
-	 * Call this method if there is no protocol handler for the given protocol
-	 */
-	void error_no_protocol_handler(IPv4_Packet* packet, Interface* interface) {
+
+	void error_no_protocol_handler_v4(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
-	
-	/**
-	 * Call this if the receiving queue is full
-	 */
-	void error_receiving_queue_full(IPv4_Packet* ipv4_packet, const Interface* interface) {
-		//Aspects to be weaved here!
-	}
-	/**
-	 * Call this if the received packet does not fit into one of the available memory blocks
-	 */
-	void error_receiving_memory_too_small(IPv4_Packet* ipv4_packet, const Interface* interface) {
-		//Aspects to be weaved here!
-	}
-	
 };

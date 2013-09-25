@@ -4,32 +4,27 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// 
+// Copyright (C) 2013 David Gräff
 
-#pragma once
-#include <string.h>
 
-namespace ipstack
-{
+#include "ReceiveCallback.h"
 
-class ReceiveBuffer;
-/**
- * Some private members
- */
-class RawIP_Socket_Private
-{
-	public:
-		// Not implemented, if receive is disabled
-		bool addToReceiveQueue(ReceiveBuffer& receivebuffer);
-};
+namespace ipstack {
+	ReceiveCallback::ReceiveCallback(SocketMemory* socketmemory) : socketmemory(socketmemory) {}
+	
+	void ReceiveCallback::checkReceived() {
+		if (!socketmemory->get_packetbuffer()->isEmpty()) {
+			receiveCallback(*(socketmemory->get_packetbuffer()->get()));
+		}
+	}
+} // namespace ipstack
 
-} //namespace ipstack

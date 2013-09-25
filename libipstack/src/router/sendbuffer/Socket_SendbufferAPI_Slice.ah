@@ -76,7 +76,7 @@ public:
 	
 	/**
 	 * Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
-	 * invalid after sending it and may be freed by calling socket->free(sendbuffer).
+	 * invalid after sending it and may be freed by calling socket->freeSendbuffer(sendbuffer).
 	 */
 	bool send(SendBuffer* dataToSend) {
 		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.

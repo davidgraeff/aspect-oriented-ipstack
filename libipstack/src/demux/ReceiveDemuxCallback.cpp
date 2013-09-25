@@ -13,20 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2013 David Gräff
 
-#pragma once
+
+#include "ReceiveDemuxCallback.h"
+
 namespace ipstack {
 
-class PolymorphRingbufferBase {
-public:
-  virtual void put(void* val) volatile = 0;
-  virtual void* get() volatile = 0;
-  virtual bool isFull() volatile const = 0;
-};
+	ReceiveDemuxCallback* ReceiveDemuxCallback::receivedFrame = 0;
 
-class EmptyRingbufferBase {};
-
-} //namespace ipstack
-
+	ReceiveDemuxCallback::ReceiveDemuxCallback(SocketMemory* socketmemory) : ReceiveCallback(socketmemory) {
+		// Add to linked list of ReceiveDemuxCallback objects
+		if (!receivedFrame)
+			receivedFrame = this;
+		else {
+			this->setNext(receivedFrame->getNext());
+			receivedFrame->setNext(this);
+		}
+	}
+} // namespace ipstack
 

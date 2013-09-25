@@ -13,13 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
 
-#include "util/ipstack_inttypes.h"
+#include "Half_Open_Requests.h"
+#include "memory_management/Mempool_Config.h"
 
-slice class IP_Dualstack_IPVx_Slice {
-public:
-	uint8_t* m_useipversionPtr;
+using namespace ipstack;
+
+aspect tcphalfopen_DerivedSocket_Mem {
+	advice "ipstack::Management_Task" : slice class {
+	private:
+		static MemoryInterface& get_mem_tcphalfopen() {
+			static ManagementSocketMemory mem;
+			return mem;
+		}
+	public:
+		Half_Open_Requests& get_socket_tcphalfopen() {
+			static Half_Open_Requests socket(get_mem_tcphalfopen());
+			return socket;
+		}
+	};
 };

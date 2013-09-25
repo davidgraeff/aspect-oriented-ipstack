@@ -17,23 +17,20 @@
 
 #pragma once
 #include "util/ipstack_inttypes.h"
-
-#include "RingbufferBase.h"
-#include "IPStack_Config.h"
+#include "Mempool_Config.h"
+#include "memory_management/MemoryInterface.h"
 
 namespace ipstack {
 
-template<typename tBASE, unsigned tBUFFERSIZE>
-class BasicRingbuffer : public tBASE {
+template<typename tIndexType, unsigned tBUFFERSIZE>
+class BasicRingbuffer : public RingbufferInterface {
 
-	// limit actual buffer size to [2...255] (8 bit)
-	enum { BUFFERSIZE = (tBUFFERSIZE < 2) ? 2 :
-	                    ((tBUFFERSIZE > 255) ? 255 : tBUFFERSIZE) };
+	enum { BUFFERSIZE};
 
 	void* buffer[BUFFERSIZE];
 
-	uint8_t inpos_;
-	uint8_t outpos_;
+	tIndexType inpos_;
+	tIndexType outpos_;
 
 public:
 	BasicRingbuffer() : inpos_(0), outpos_(0) {}
@@ -57,32 +54,25 @@ public:
 			return 0;
 		}
 	}
-
-	/*bool isEmpty() volatile const {
+	
+	bool isEmpty() volatile const __attribute__ ((noinline)) {
 		return outpos_ == inpos_ ? true : false;
-	}*/
+	}
 
 	bool isFull() volatile const __attribute__ ((noinline)) {
 		return ((inpos_ + 1) % BUFFERSIZE) != outpos_ ? false : true;
 	}
-
 };
 
 
-template<unsigned tGENERIC=0>
+template<>
 class RingbufferType {
   public:
-  typedef BasicRingbuffer<EmptyRingbufferBase, PACKET_LIMIT> Packetbuffer;
-};
-
-template<> // template specialization for '1'
-class RingbufferType<1> {
-  public:
-  typedef PolymorphRingbufferBase Packetbuffer;
+  typedef BasicRingbuffer<PACKET_LIMIT> Packetbuffer;
 };
 
 // The 'Packetbuffer' type used everywhere
-typedef RingbufferType<MEMORY_GENERIC>::Packetbuffer Packetbuffer;
+typedef RingbufferType::Packetbuffer Packetbuffer;
 
 
 // only used for the API
@@ -95,7 +85,7 @@ class PacketbufferAPI {
 template<uint8_t tBUFFERSIZE>
 class PacketbufferAPI<tBUFFERSIZE, 1> {
   public:
-  typedef BasicRingbuffer<PolymorphRingbufferBase, tBUFFERSIZE> Type;
+  typedef BasicRingbuffer<tBUFFERSIZE> Type;
 };
 
 } //namespace ipstack

@@ -16,24 +16,29 @@
 // Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
 
 #pragma once
-
 #include "util/ipstack_inttypes.h"
+#include "ip/ip_socket/RawIP_Socket.h"
+#include "demux/ReceiveDemuxCallback.h"
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 
 namespace ipstack
 {
-
-/**
- * Allows TCP Management Services like half-open tcp request responding.
- */
-class SendBuffer;
-class TCP_Segment;
-class Half_Open_Requests
-{
-	public:
 	/**
-	* Prepare a sendbuffer for answering half-open tcp requests
+	* Allows TCP Management Services like half-open tcp request responding.
 	*/
-	static void prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, uint_fast16_t payload_len);
-};
+	class SendBuffer;
+	class TCP_Segment;
+	class Half_Open_Requests: public RawIP_Socket, public ReceiveDemuxCallback {
+	private:
+		// no copies
+		Half_Open_Requests(const Half_Open_Requests& sp) {}
+	public:
+		Half_Open_Requests(const SocketMemory& memory) : RawIP_Socket(memory), ReceiveCallback(&memory) {}
+		/**
+		* Prepare a sendbuffer for answering half-open tcp requests
+		*/
+		void receiveCallback(SmartReceiveBufferPtr& b);
+	};
+}
 
 } //namespace ipstack

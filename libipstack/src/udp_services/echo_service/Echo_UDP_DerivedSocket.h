@@ -17,7 +17,7 @@
 
 #pragma once
 #include "udp/UDP_Socket.h"
-#include "demux/SystemReceiveCallback.h"
+#include "demux/ReceiveDemuxCallback.h"
 #include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 
 namespace ipstack
@@ -26,25 +26,23 @@ namespace ipstack
 	 * We do need to call this socket _DerivedSocket otherwise aspects for sending/receiving
 	 * would try to extend this class.
 	 */
-	class Echo_UDP_DerivedSocket: public UDP_Socket, public SystemReceiveCallback {
+	class Echo_UDP_DerivedSocket: public UDP_Socket, public ReceiveDemuxCallback {
 	private:
 		// no copies
 		Echo_UDP_DerivedSocket(const Echo_UDP_DerivedSocket& sp) {}
 	public:
-		Echo_UDP_DerivedSocket(const SocketMemory& memory) : UDP_Socket(memory) {
+		Echo_UDP_DerivedSocket(const SocketMemory& memory) : UDP_Socket(memory), ReceiveDemuxCallback(&memory) {
 			// UDP Echo is on port 7
 			set_sport(7);
 			bind();
 		}
 		
-		void receiveCallback() {
-			while(SmartReceiveBufferPtr b = receive()) {
-				uint16_t maxlen = getMaxPayloadLength(b->get_interface());
-				if (b->get_payload_size() < maxlen) {
-					maxlen = b->get_payload_size();
-				}
-				send(b->get_payload_data(), maxlen, b->receivebuffer_pointer());
+		void receiveCallback(SmartReceiveBufferPtr& b) {
+			uint16_t maxlen = getMaxPayloadLength(b->get_interface());
+			if (b->get_payload_size() < maxlen) {
+				maxlen = b->get_payload_size();
 			}
+			send(b->get_payload_data(), maxlen, b->receivebuffer_pointer());
 		}
 	};
 }

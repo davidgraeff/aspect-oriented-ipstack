@@ -38,21 +38,21 @@ aspect IPv4_ICMP_Echo_Reply {
 		tjp->proceed();
 	}
 		
-	advice execution("void ipstack::ICMPv4_DerivedSocket::handleIncomingPacket(ipstack::SmartReceiveBufferPtr&)") &&
+	advice execution("void ipstack::ICMPv4_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
 	args(b) : around(SmartReceiveBufferPtr& b) {
 		
-		ICMPv4_Packet* icmp_packet = static_cast<ICMPv4_Packet*>(buffer->get_payload_data());
+		ICMPv4_Packet* icmp_packet = static_cast<ICMPv4_Packet*>(b.get_payload_data());
 		if ((icmp_packet->get_type() == ICMPv4_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 			(icmp_packet->get_code() == ICMPv4_Packet::ICMP_CODE_ECHO)) {
 			
 			ICMPv4_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
-			uint16_t maxlen = socket.getMaxPayloadLength(b->get_interface());
-			uint16_t payloadlen = b->get_payload_size();
+			uint16_t maxlen = socket.getMaxPayloadLength(b.get_interface());
+			uint16_t payloadlen = b.get_payload_size();
 			if (payloadlen < maxlen) {
 				maxlen = payloadlen;
 			}
 			
-			SendBuffer* sbi = socket.requestSendBuffer(buffer->get_interface(), maxlen, buffer->receivebuffer_pointer());
+			SendBuffer* sbi = socket.requestSendBuffer(b.get_interface(), maxlen, b.receivebuffer_pointer());
 			//we have an echo request packet for IPv4
 			if (sbi) {
 				ICMPv4_Packet* reply_icmp = (ICMPv4_Packet*)sbi->getDataPointer();

@@ -44,7 +44,7 @@ namespace ipstack
 	{
 		public:
 			explicit SmartReceiveBufferPtr(ReceiveBuffer* b, SocketMemory* socket) : pData(b), socket(socket) {}
-			~SmartReceiveBufferPtr() { if (pData) socket->free(pData); }
+			~SmartReceiveBufferPtr() { if (pData) socket->freeReceivebuffer(pData); }
 			inline ReceiveBuffer& operator* () { return *pData; }
 			inline ReceiveBuffer* operator-> () { return pData; }
 			inline ReceiveBuffer* receivebuffer_pointer() { return pData; }

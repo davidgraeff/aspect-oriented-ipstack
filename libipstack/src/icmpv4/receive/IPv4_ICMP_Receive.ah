@@ -28,7 +28,7 @@
 using namespace ipstack;
 
 aspect IPv4_ICMP_Receive {
-	advice execution("void ipstack::Demux::ipv4_payload_demux(ipstack::ReceiveBuffer&,%)") && args(buffer,payload_protocol) : around(ReceiveBuffer& buffer, uint8_t payload_protocol){
+	advice execution("bool ipstack::Demux::ip_payload_demux(ipstack::ReceiveBuffer&,%)") && args(buffer,payload_protocol) : around(ReceiveBuffer& buffer, uint8_t payload_protocol){
 
 		if (payload_protocol==ICMPv4_Packet::IPV4_TYPE_ICMP) {
 			//we have an icmp packet
@@ -44,11 +44,15 @@ aspect IPv4_ICMP_Receive {
 				return;
 			}
 			
+			buffer.p.transport_packet = icmp;
+			buffer.setPayload(icmp, payloadlen-ICMPv4_Packet::ICMP_HEADER_SIZE);
+			
 			ICMPv4_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
 			if (socket->acceptedData(icmp->get_type(), icmp->get_code())) {
 				socket->addToReceiveQueue(buffer);
 			}
 			
+			*(tjp->result()) = true;
 			return; //icmpv4 packet dispatched now
 		}
 		tjp->proceed(); //try another 'ipv4_demux'-aspect

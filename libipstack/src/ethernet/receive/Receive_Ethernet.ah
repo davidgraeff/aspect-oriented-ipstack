@@ -20,6 +20,7 @@
 #include "Demux_Ethernet_Slice.ah"
 #include "demux/Demux.h"
 #include "router/Interface.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
 
 using namespace ipstack;
 
@@ -41,7 +42,7 @@ aspect Ethernet_Receive {
 			// If it is interesting for a socket, it is cloned to the socket memory.
 			ReceiveBuffer buffer(interface, data, len);
 			buffer.p.ethernet_frame = data;
-			buffer.setPayloadPointer(data);
+			buffer.setPayload(data, len);
 			demux.ethernet_demux(buffer);
 		} else {
 			// only go on with demuxing if it is not an ethernet packet

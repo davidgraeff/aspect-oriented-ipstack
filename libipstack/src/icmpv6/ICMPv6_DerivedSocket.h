@@ -17,6 +17,8 @@
 
 #pragma once
 #include "ip/ip_socket/RawIP_Socket.h"
+#include "demux/ReceiveDemuxCallback.h"
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 
 namespace ipstack
 {
@@ -26,11 +28,19 @@ namespace ipstack
 	 * socket _DerivedSocket otherwise aspects for sending/receiving would try extend this
 	 * class.
 	 */
-	class ICMPv6_DerivedSocket: public RawIP_Socket {
+	class ICMPv6_DerivedSocket: public RawIP_Socket, public ReceiveDemuxCallback {
 	private:
 		// no copies
 		ICMPv6_DerivedSocket(const ICMPv6_DerivedSocket&) {}
 	public:
-		ICMPv6_DerivedSocket(const SocketMemory& memory) : RawIP_Socket(memory) {}
+		ICMPv6_DerivedSocket(const SocketMemory& memory) : RawIP_Socket(memory), ReceiveDemuxCallback(&memory) {}
+		
+		void receiveCallback(SmartReceiveBufferPtr& b) {
+			// aspects weave in here
+		}
+		bool acceptedData(uint8_t type, uint8_t code) {
+			// aspects weave in here
+			return false;
+		}
 	};
 }

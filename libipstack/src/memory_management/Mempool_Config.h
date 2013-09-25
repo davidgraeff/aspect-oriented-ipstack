@@ -17,8 +17,6 @@
 
 #pragma once
 #include "IPStack_Config.h"
-#include "HeapMemory.h"
-#include "Mempool.h"
 
 /**
  * Some variables for the entire ip-stack. They are either provided
@@ -75,28 +73,4 @@ namespace ipstack {
 		IPSTACK_MANAGEMENT_COUNT_SMALL = 4 //a power of 2 is most efficient
 		};
 	#endif
-
-	// Management Sockets Memory Type
-	#ifdef kconfig_ipstack_memory_stack_bigsmall // from kconfig
-		// two types of slots (big/small) in a mempool
-		typedef ManagementSocketMemory BiSizeMempool<IPSTACK_MANAGEMENT_BLOCKSIZE_BIG,IPSTACK_MANAGEMENT_COUNT_BIG,
-		IPSTACK_MANAGEMENT_BLOCKSIZE_SMALL,IPSTACK_MANAGEMENT_COUNT_SMALL>;
-		#define ipstack_memory_defined
-	#endif
-	#ifdef kconfig_ipstack_memory_stack_bigonly // from kconfig
-		// one type of slots in a mempool
-		typedef ManagementSocketMemory UniSizeMempool<IPSTACK_MANAGEMENT_BLOCKSIZE_BIG,IPSTACK_MANAGEMENT_COUNT_BIG>;
-		#define ipstack_memory_defined
-	#endif
-	#ifdef kconfig_ipstack_memory_heap // from kconfig
-		// heap memory
-		typedef ManagementSocketMemory HeapMemory;
-		#define ipstack_memory_defined
-	#endif
-	#ifndef ipstack_memory_defined
-		// default for non-kconfig setups
-		typedef ManagementSocketMemory BiSizeMempool<IPSTACK_MANAGEMENT_BLOCKSIZE_BIG,IPSTACK_MANAGEMENT_COUNT_BIG,
-		IPSTACK_MANAGEMENT_BLOCKSIZE_SMALL,IPSTACK_MANAGEMENT_COUNT_SMALL>;
-	#endif
-
 } //namespace ipstack

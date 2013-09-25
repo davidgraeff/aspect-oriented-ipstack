@@ -13,23 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011-2012 Christoph Borchert, David Graeff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "ipv4/IPv4_Packet.h"
-#include "demux/Demux.h"
-#include "router/Interface.h"
-#include "Demux_IPv4_Slice.ah"
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 
-using namespace ipstack;
+namespace ipstack {
+	/**
+	 * Inherit from this class to get an abstract method receiveCallback.
+	 */
+	class ReceiveCallback {  
+	public:
+		ReceiveCallback(SocketMemory* socketmemory);
+		
+		// We rely on the compilers optimazion capabilities here to
+		// not generate a vtable for this linear inheritance situation.
+		void receiveCallback(SmartReceiveBufferPtr& b) = 0;
 
-aspect IPv4_Receive_Raw {
-  advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
-         args(data, len, interface) && that(demux) :
-         after(const void* data, unsigned len, Interface* interface, Demux& demux){
-    
-    //try to demux raw ipv4 packet (without any additional link-layer headers)
-    demux.ipv4_demux((IPv4_Packet*) data, len, interface);
-  }
-   
-};
+		void checkReceived();
+	private:
+		SocketMemory* socketmemory;
+	};
+
+} // namespace ipstack

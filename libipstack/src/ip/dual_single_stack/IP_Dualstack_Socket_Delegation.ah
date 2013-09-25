@@ -19,6 +19,7 @@
 
 #include "IP_Dualstack_Slice.ah"
 #include "IP_Dualstack_IPVx_Slice.ah"
+#include "get_ip_version.h"
 #include "ipv4/IPv4onSockets.h"
 #include "ipv6/IPv6onSockets.h"
 
@@ -31,21 +32,12 @@
  */
 aspect IP_Dualstack_Socket_Delegation {
 	/**
-	 * Every socket gets an m_useipversion variable
-	 * for deciding at runtime which ip version to use, if the
-	 * generic api is used.
-	 */
-	advice "ipstack::IPV%" : slice IP_Dualstack_IPVx_Slice;
-	
-	advice "ipstack::%_Socket" : slice IP_Dualstack_Slice;
-	
-	/**
 	  * The IPv4 and IPv6 ip-layer classes have to change the to-be-used ip
 	  * version and therefore need a pointer to the m_useipversion variable of
 	  * the socket. 
 	  */
 	advice construction("ipstack::%_Socket") : after() {
-		tjp->that()->m_useipversion = 4;
+		tjp->that()->m_useipversion = 4; // initial version is IPv4
 		tjp->that()->ipv4.m_useipversionPtr = &tjp->that()->m_useipversion;
 		tjp->that()->ipv6.m_useipversionPtr = &tjp->that()->m_useipversion;
 	}
@@ -58,6 +50,19 @@ aspect IP_Dualstack_Socket_Delegation {
 	}
 	advice execution("% ipstack::IPV6::set_dst_addr(...)") : after() {
 		*(tjp->that()->m_useipversionPtr) = 6;
+	}
+	
+	/**
+	 * SET IP VERSION IF WE INTEND TO SEND A RESPONSE
+	 */
+	// we have to set the ip version, before IP-related aspects try to add any IP header
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("IP_Dualstack_Socket_Delegation", "Sendbuffer_IPv%");
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+			if (use_as_response) {
+				tjp->that()->m_useipversion = get_ip_version(use_as_response->p.ip_packet);
+			}
+			tjp->proceed();
 	}
 	
 	/**

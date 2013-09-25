@@ -23,9 +23,8 @@
 #include "ipv6/IPv6_Packet.h"
 #include "ipv4/IPv4_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "ip_management_memory/SharedMemory.h"
-#include "Sendbuffer_DebugInfo_Slice.ah"
 #define MARK_MSG_LEN 100
+#define MARK_MSG_SLOTS 100
 using namespace ipstack;
 
 aspect sendbuffer_debug {
@@ -34,7 +33,7 @@ aspect sendbuffer_debug {
 		char msg[MARK_MSG_LEN];
 	};
 
-	mark_msg_struct messages[SharedMemory::SLOTS];
+	mark_msg_struct messages[MARK_MSG_SLOTS];
 	unsigned nextMsg;
 	
 	advice execution( "void ipstack::System::init()" ) : after() {
@@ -46,12 +45,12 @@ aspect sendbuffer_debug {
 		if (b != 0) {
 			std::cout << "SendBuffer: Allocated " << b << std::endl;
 			// clear messages with same SendBuffer pointer.
-			for (int i=0;i<SharedMemory::SLOTS;++i) {
+			for (int i=0;i<MARK_MSG_SLOTS;++i) {
 				if (messages[i].ptr == b)
 					messages[i].ptr = 0;
 			}
 			// add somewhere in the messages array
-			++nextMsg; if (nextMsg>=SharedMemory::SLOTS) nextMsg = 0;
+			++nextMsg; if (nextMsg>=MARK_MSG_SLOTS) nextMsg = 0;
 			memset( &(messages[nextMsg]), 0, sizeof(mark_msg_struct) );
 			messages[nextMsg].ptr = b;
 		}
@@ -75,7 +74,7 @@ aspect sendbuffer_debug {
 		unsigned len = strlen(str);
 		len = ((len > MARK_MSG_LEN-1) ? MARK_MSG_LEN-1 : len);
 		
-		for (int i=0;i<SharedMemory::SLOTS;++i) {
+		for (int i=0;i<MARK_MSG_SLOTS;++i) {
 			if (messages[i].ptr == &sendbuffer) {
 				strncpy(&(messages[i].msg[0]), str, len);
 				break;

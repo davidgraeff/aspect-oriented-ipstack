@@ -13,23 +13,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "IPv4onSockets.h"
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
+#include "ReceiveCallback.h"
 
 namespace ipstack {
 	/**
-	 * Adds IPv4 functionality to a socket.
+	 * Inherit from this class to get an abstract method receiveCallback that is
+	 * called after demux processing if your socket object got new data via addToReceiveQueue.
+	 * 
+	 * If managed sockets live in a seperate task receiveCallback is not called after
+	 * demux processing but from the Management_Task class.
 	 */
-	slice class Socket_IPv4_Slice {
+	class ReceiveDemuxCallback :public ReceiveCallback, public DemuxLinkedList<ReceiveDemuxCallback*> {  
 	public:
+		ReceiveDemuxCallback(SocketMemory* socketmemory);
+
 		/**
-		 * Add a member ipv4 to a socket. ipv4 is able to send and receive ipv4 packets.
-		 * A wrapper api is added by an aspect to use socket.send(..) etc.
-		 * This is neccessary to implement a dual-stack with a common api one one hand
-		 * and a specialised api for the different transport layer methods respectively.
+		 * This is used by the ReceiveDemuxCallback-Aspect to get all objetcs that are derived
+		 * from this class.
 		 */
-		IPV4 ipv4;
-	}; // slice class
-} //namespace ipstack
+		static ReceiveDemuxCallback* receivedFrame;
+	
+	};
+
+} // namespace ipstack

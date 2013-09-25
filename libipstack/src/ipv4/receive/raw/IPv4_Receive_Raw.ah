@@ -1,0 +1,44 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert, 2013-2013 David Graeff
+
+#pragma once
+#include "ipv4/IPv4_Packet.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "Demux_IPv4_Slice.ah"
+
+using namespace ipstack;
+
+aspect IPv4_Receive_Raw {   
+	advice execution("void ipstack::Demux::demux(const void*, unsigned, ipstack::Interface*)") &&
+	args(data, len, interface) && that(demux) :
+		around(const void* data, unsigned len, Interface* interface, Demux& demux) {
+
+		if (interface->getType() == Interface::RAWIPv4) {
+			// This receiveBuffer object is used in the entire demux hierarchie.
+			// If it is interesting for a socket, it is cloned to the socket memory.
+			ReceiveBuffer buffer(interface, data, len);
+			buffer.p.ip_packet = data;
+			buffer.setPayload(data, len);
+			//try to demux raw ipv4 packet (without any additional link-layer headers)
+			demux.ipv4_demux(buffer);
+		} else {
+			// only go on with demuxing if it is not an raw IPv4 packet
+			tjp->proceed();
+		}
+	}
+};

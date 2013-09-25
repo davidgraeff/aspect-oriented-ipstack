@@ -17,11 +17,10 @@
 
 #pragma once
 #include "ipv4/IPv4_Packet.h"
-#include "ipv4/InternetChecksum.h"
+#include "icmpv4/ICMPv4_Packet.h"
+#include "icmpv4/ICMPv4_DerivedSocket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "icmpv4/ICMPv4_Packet.h"
-#include "ICMPv4_DerivedSocket.h"
 #include "demux/receivebuffer/ReceiveBuffer.h"
 
 namespace ipstack
@@ -37,6 +36,7 @@ namespace ipstack
 													echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE,
 													buffer->receivebuffer_pointer());
 			if (sbi) {
+				sbi->mark("ICMPv4_ErrorReply");
 				ICMPv4_Packet* icmp_error_reply = (ICMPv4_Packet*)sbi->getDataPointer();
 
 				icmp_error_reply->set_type(type);

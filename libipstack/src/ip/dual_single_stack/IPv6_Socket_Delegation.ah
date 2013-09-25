@@ -17,6 +17,7 @@
 
 #pragma once
 #include "IPv6_Singlestack_Slice.ah"
+#include "ipv6/IPv6onSockets.h"
 
 using namespace ipstack;
 
@@ -25,12 +26,12 @@ aspect IPv6_Singlestack_Socket_aspect {
 	
 	//SendBuffer getUsedInterface() {}
 	advice execution("% ipstack::%_Socket::getUsedInterface()") : around() {
-		*tjp->result() = tjp->that()->ipv6.interface;
+		*(tjp->result()) = tjp->that()->ipv6.interface;
 	}
 	
 	//bool hasValidSrcDestAddresses() {}
 	advice execution("% ipstack::%_Socket::hasValidSrcDestAddresses()") : around() {
-		*tjp->result() = tjp->that()->ipv6.hasValidSrcDestAddresses();
+		*(tjp->result()) = tjp->that()->ipv6.hasValidSrcDestAddresses();
 	}
 };
 

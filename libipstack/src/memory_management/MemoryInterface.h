@@ -21,10 +21,17 @@ namespace ipstack {
 	 */
 	class MemoryInterface {
 		public:
-		void* alloc(unsigned size);
-		void free(void* chunk);
-		unsigned getMaxFreeBlockSize();
+		virtual void* alloc(unsigned size) = 0;
+		virtual void free(void* chunk) = 0;
+		virtual unsigned getMaxFreeBlockSize() = 0;
 	};
 
+class RingbufferInterface {
+public:
+	virtual void put(void* val) = 0;
+	virtual void* get() = 0;
+	virtual bool isEmpty() = 0;
+	virtual bool isFull() = 0;
+};
 } //namespace ipstack
 

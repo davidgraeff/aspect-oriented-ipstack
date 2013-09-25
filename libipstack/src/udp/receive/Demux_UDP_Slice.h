@@ -30,66 +30,72 @@ using namespace ipstack;
 slice class Demux_UDP_Slice
 {
 	private:
-		uint16_t udp_last_default_port;
-		UDP_Socket* udp_head_socket;
+	/**
+	* This method should be called if the udp port of the given socket is not assigned on the given
+	* interface.
+	*/
+	void error_port_not_reachable(ReceiveBuffer& buffer) {}
+	
+	uint16_t udp_last_default_port;
+	UDP_Socket* udp_head_socket;
 
-		bool bind(UDP_Socket* socket) {
-			uint16_t sport = socket->get_sport();
-			if (sport == UDP_Packet::UNUSED_PORT) {
-				//choose 'random' source port number
-				socket->set_sport(udp_get_free_port());
-			} else {
-				//verify if sport is not used already
-				UDP_Socket* current = udp_head_socket;
-				while (current != 0) {
-					if (current->get_sport() == sport) {
-						//error, sport already in use
-						return false;
-					}
-					current = current->getNext();
-				}
-			}
-			//insert at front
-			socket->setNext(udp_head_socket);
-			udp_head_socket = socket;
-			return true;
-		}
-
-		void unbind(UDP_Socket* socket) {
-			if (socket == udp_head_socket) {
-				udp_head_socket = socket->getNext();
-			} else {
-				UDP_Socket* current = udp_head_socket;
-				UDP_Socket* next = current->getNext();
-				while (next != 0) {
-					if (next == socket) {
-						current->setNext(next->getNext());
-						return;
-					}
-					current = next;
-					next = current->getNext();
-				}
-			}
-		}
-
-
-		uint16_t udp_get_free_port() {
-			udp_last_default_port++;
-			if (udp_last_default_port < 1024U) {
-				udp_last_default_port = 1024U;
-			}
+	bool bind(UDP_Socket* socket) {
+		uint16_t sport = socket->get_sport();
+		if (sport == UDP_Packet::UNUSED_PORT) {
+			//choose 'random' source port number
+			socket->set_sport(udp_get_free_port());
+		} else {
+			//verify if sport is not used already
 			UDP_Socket* current = udp_head_socket;
 			while (current != 0) {
-				if (current->get_sport() == udp_last_default_port) {
-					udp_last_default_port++;
-					if (udp_last_default_port < 1024U) {
-						udp_last_default_port = 1024U;
-					}
-					current = udp_head_socket; //start once again
-				} else {
-					current = current->getNext();
+				if (current->get_sport() == sport) {
+					//error, sport already in use
+					return false;
 				}
+				current = current->getNext();
 			}
-			return udp_last_default_port;
 		}
+		//insert at front
+		socket->setNext(udp_head_socket);
+		udp_head_socket = socket;
+		return true;
+	}
+
+	void unbind(UDP_Socket* socket) {
+		if (socket == udp_head_socket) {
+			udp_head_socket = socket->getNext();
+		} else {
+			UDP_Socket* current = udp_head_socket;
+			UDP_Socket* next = current->getNext();
+			while (next != 0) {
+				if (next == socket) {
+					current->setNext(next->getNext());
+					return;
+				}
+				current = next;
+				next = current->getNext();
+			}
+		}
+	}
+
+
+	uint16_t udp_get_free_port() {
+		udp_last_default_port++;
+		if (udp_last_default_port < 1024U) {
+			udp_last_default_port = 1024U;
+		}
+		UDP_Socket* current = udp_head_socket;
+		while (current != 0) {
+			if (current->get_sport() == udp_last_default_port) {
+				udp_last_default_port++;
+				if (udp_last_default_port < 1024U) {
+					udp_last_default_port = 1024U;
+				}
+				current = udp_head_socket; //start once again
+			} else {
+				current = current->getNext();
+			}
+		}
+		return udp_last_default_port;
+	}
 };

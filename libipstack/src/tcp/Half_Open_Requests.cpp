@@ -4,8 +4,11 @@
 
 namespace ipstack
 {
-	void Half_Open_Requests::prepareResponse(SendBuffer* sendbuffer, TCP_Segment* incoming_segment, uint_fast16_t payload_len)
-	{
+	void Half_Open_Requests::receiveCallback(SmartReceiveBufferPtr& b) {
+		TCP_Segment* incoming_segment = static_cast<TCP_Segment*>(b.get_payload_data());
+		uint_fast16_t payload_len = b.get_payload_size();
+		SendBuffer* sendbuffer = socket.requestSendBuffer(b.get_interface(), maxlen, b.receivebuffer_pointer());
+
 		TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 		segment->set_dport(incoming_segment->get_sport());
 		segment->set_sport(incoming_segment->get_dport());
@@ -37,5 +40,7 @@ namespace ipstack
 		}
 
 		sendbuffer->writtenToDataPointer(TCP_Segment::TCP_MIN_HEADER_SIZE);
+		
+		send(sendbuffer);
 	}
 }

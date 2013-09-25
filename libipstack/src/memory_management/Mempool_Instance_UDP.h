@@ -45,7 +45,7 @@ namespace ipstack {
 	private:
 		
 		//create the type for the following mempool instantiation
-		typedef typename ipstack::MempoolAPI<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2, ipstack::MEMORY_GENERIC>::Type UDP_Mempool;
+		typedef typename ipstack::Mempool<tBLOCKSIZE_1, tCOUNT_1, tBLOCKSIZE_2, tCOUNT_2> UDP_Mempool;
 		
 		//static assertion: check whether at least 1 buffer is available for this UDP Socket. If not, throw a compile-time error.
 		typedef typename UDP_Buffer_Count_Assertion<UDP_Mempool::COUNT_BIG+UDP_Mempool::COUNT_SMALL>::CONFIGURATION_ERROR_FOR_UDP__Count_of_buffer_must_not_be_0 buf_cnt_assert;
@@ -57,8 +57,8 @@ namespace ipstack {
 		//the mempool attribute
 		UDP_Mempool pool;
 		
-		//size of ringbuffer: tCOUNT_1+tCOUNT_2 (if generic api is enabled, else PACKET_LIMIT)
-		typename ipstack::PacketbufferAPI<tCOUNT_1+tCOUNT_2, ipstack::MEMORY_GENERIC>::Type buf;
+		//size of ringbuffer: tCOUNT_1+tCOUNT_2
+		typename ipstack::PacketbufferAPI<tCOUNT_1+tCOUNT_2>::Type buf;
 		
 	public:
 		Mempool_Instance_UDP() : SocketMemory(&pool, &buf) {}

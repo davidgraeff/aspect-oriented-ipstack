@@ -37,16 +37,6 @@ class SendBufferPrivate
 		  * added member variables.
 		  */
 		void initStartPointer();
-		
-		/**
-		  * For debugging purposes you may associate a string with this sendbuffer. You have to enable
-		  * the SendBuffer Debuging feature for an actual output. If not enabled all mark methods in the
-		  * code should be optimised out by the compiler (only use const char strings!).
-		  * @param str The string to be used for debug messages.
-		  */
-		inline void mark(const char* str) {
-			
-		}
 
 		/**
 		  * After allocating a SendBuffer it is in the
@@ -56,7 +46,7 @@ class SendBufferPrivate
 		  *
 		  * You may only write to a buffer if it is in the "Writing-State". Calling
 		  * send(..) is also only a valid action in this state. A buffer should never
-		  * be free'd while in the "Transmitted-State" without calling interface->hasBeenSend()
+		  * be free'd while in the "Transmitted-State" without calling interface->hasBeenSent()
 		  * before. Use the socket API for correct usage (socket::free)!
 		  *
 		  * If you write an aspect that intercept send(..) (to delay packets etc), you

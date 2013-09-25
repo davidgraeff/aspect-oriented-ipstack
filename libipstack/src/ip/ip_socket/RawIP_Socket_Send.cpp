@@ -26,7 +26,7 @@ namespace ipstack {
 			return false;
 		dataToSend->write(data, len);
 		send(dataToSend);
-		free(dataToSend);
+		freeSendbuffer(dataToSend);
 		return true;
 	}
 }

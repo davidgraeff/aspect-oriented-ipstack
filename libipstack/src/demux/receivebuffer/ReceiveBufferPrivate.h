@@ -45,7 +45,10 @@ namespace ipstack
 			ReceiveBuffer* clone(SocketMemory& socket_mem, void* start_mem = 0);
 			
 			inline Interface* get_interface() { return m_interface; }
-			inline void setPayloadPointer(char* payload) { this->payload = payload; }
+			inline void setPayload(char*& payload, uint16_t& payloadSize) {
+				this->payload = payload;
+				this->m_payloadSize = payloadSize;
+			}
 			
 		protected:
 			// We have to know the interface if we want to use this ReceiveBuffer for
@@ -53,6 +56,7 @@ namespace ipstack
 			Interface* m_interface;
 			// The complete size of the contained data (not just the payload data)
 			uint16_t m_receivedSize;
+			uint16_t m_payloadSize;
 			// This is either a pointer to the network hardwares receive buffer, or if you have used
 			// ::clone() it is a pointer to a memory block of a socket (and points to m_cloned_data).
 			char* m_data;

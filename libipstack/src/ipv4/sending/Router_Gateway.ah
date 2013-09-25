@@ -1,0 +1,36 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert, 2013 David Gräff
+#pragma once
+#include "router/Interface.h"
+using namespace ipstack;
+
+aspect IPv4_Router {
+	advice "ipstack::Router" : slice class {
+	private:
+		uint32_t ipv4_gateway_addr; //IP Address of default gateway
+	public:
+
+		uint32_t ipv4_get_gateway_addr() {
+			return ipv4_gateway_addr;
+		}
+
+		void ipv4_set_gateway_addr(uint32_t ipv4_addr) {
+			ipv4_gateway_addr = ipv4_addr;
+		}
+	};
+};
+

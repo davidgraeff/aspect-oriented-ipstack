@@ -55,7 +55,7 @@ namespace ipstack
 	 * some conditions.
 	 * 
 	 * Always free a SendBuffer after sending it (if you do not want to recycle it).
-	 * Call socket.free(sendBuffer);
+	 * Call socket.freeSendbuffer(sendBuffer);
 	 * 
 	 */
 class SendBuffer : public SendBufferPrivate
@@ -107,10 +107,18 @@ class SendBuffer : public SendBufferPrivate
 		uint_fast16_t getSize();
 		
 		/**
+		  * For debugging purposes you may associate a string with this sendbuffer. You have to enable
+		  * the SendBuffer Debugging feature for an actual output. If not enabled all mark methods in the
+		  * code should be optimised out by the compiler (only use const char strings!).
+		  * @param str The string to be used for debug messages.
+		  */
+		inline void mark(const char* str) {}
+		
+		/**
 		 * Contains pointer to protocols. Example:
 		 * SendBuffer b;
 		 * // b is filled somehow
-		 * b.p.ipv4_packet->get_dest_ip();
+		 * ((IPv4_Packet*)b.p.ip_packet)->get_dest_ip();
 		 */
 		class protocol_layers {} p;
 	private:

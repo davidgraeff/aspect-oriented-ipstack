@@ -19,16 +19,13 @@
 
 #include "demux/Demux.h"
 #include "router/Interface.h"
-#include "ipv6/IPv6_Packet.h"
-#include "ICMPv6_Packet.h"
-#include "ICMPv6_Socket.h"
 
 using namespace ipstack;
 
 /**
-  * Protocol not available: Send icmp error message
+  * Header option unknown: Send icmp error message
   */
-aspect IPv6_ICMP_Protocol_Unreachable {
+aspect IPv6_ICMP_Option_Unknown {
 	struct ICMPv6Unrechable {
 		uint8_t type;
 		uint8_t code;
@@ -37,7 +34,7 @@ aspect IPv6_ICMP_Protocol_Unreachable {
 		uint8_t original_packet[];
 	} __attribute__((packed));
 	
-	advice execution("void ipstack::Demux::error_no_protocol_handler_v6(ipstack::IPv6_Packet*, ipstack::Interface*)") &&
+	advice execution("void ipstack::Demux::error_option_unknown_v6(ipstack::IPv6_Packet*, ipstack::Interface*)") &&
 	args(packet, interface) && that(demux) :
 	around(IPv6_Packet* packet, Interface* interface, Demux& demux) {
 		
@@ -48,13 +45,12 @@ aspect IPv6_ICMP_Protocol_Unreachable {
 		demux.setDirectResponse(true);
 		SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, ICMPv6_Packet::ICMP_MAX_DATA_SIZE);
 		if (sbi) {
-			sbi->mark("IPv6_ICMP_Protocol_Unreachable");
+			sbi->mark("IPv6_ICMP_Option_Unknown");
 			ICMPv6Unrechable* reply = (ICMPv6Unrechable*)sbi->getDataPointer();
 
 			reply->type = (ICMPv6_Packet::ICMP_TYPE_PARAMETER_PROBLEM);
-			reply->code = (ICMPv6_Packet::ICMP_CODE_PARAMETER_PROBLEM_UNKNOWN_NEXTHEADER);
-			reply->failure_pointer = 0;
-			((uint8_t*)&(reply->failure_pointer))[3] = 7; // point to the next header field (cast to bytes to circumvent byte order problems)
+			reply->code = (ICMPv6_Packet::ICMP_CODE_PARAMETER_PROBLEM_UNKNOWN_OPTION);
+			reply->failure_pointer = 0; // todo: set to 0, should point to the option
 			
 			sbi->writtenToDataPointer(sizeof(ICMPv6Unrechable));
 

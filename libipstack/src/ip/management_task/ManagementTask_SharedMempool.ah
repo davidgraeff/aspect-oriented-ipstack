@@ -19,6 +19,14 @@
 
 using namespace ipstack;
 
+/**
+ * Intercept all Management_Task::get_mem_%()-calls and return always the same
+ * instance of a memory object.
+ */
 aspect management_sockets_sharedmem  {
-
+	ManagementSocketMemory sharedMem;
+	
+	advice execution("% ipstack::Management_Task::get_mem_%()") : around() {
+		tjp->result() = sharedMem;
+	}
 };

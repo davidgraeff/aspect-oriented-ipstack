@@ -64,11 +64,19 @@ aspect sendbuffer_protect {
 		}
 	}
 
-	advice execution("% ipstack::SendBuffer::hasBeenSent(...)") && that(sendbuffer) : after(SendBuffer& sendbuffer) {
-		if (sendbuffer.hasBeenTransmitted == false) {
-			std::cout << "SendBuffer: You have to transmit the buffer to the NIC before calling hasBeenSent!" << std::endl;
-			System::haltsystem();
+	advice execution("% ipstack::Interface::hasBeenSent(...)") && that(frame) : after(void* frame) {
+		// compute address of the senbuffer that is around the raw data
+		SendBuffer* buffer = (SendBuffer*) (((char*)*tjp->arg<0>()) - sizeof(SendBuffer));
+		// if it is a sendbuffer and the computation above is correct, we can read out the interface
+		// and can compare it to the current one
+		if (buffer->getInterface() == tjp->target()) {
+			std::cout << "SendBuffer: hasBeenSent " << std::endl;
+			if (buffer->hasBeenTransmitted == false) {
+				std::cout << "SendBuffer: You have to transmit the buffer to the NIC before calling hasBeenSent!" << std::endl;
+				System::haltsystem();
+			}
 		}
+
 	}
 	
 	advice execution("% ipstack::SendBuffer::getDataPointer()") && that(sendbuffer) : after(SendBuffer& sendbuffer) {

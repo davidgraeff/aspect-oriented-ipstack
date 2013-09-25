@@ -4,32 +4,29 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2013 David Gräff
+
 #pragma once
-#include "router/sendbuffer/Router_IPv4_Slice.ah"
-#include "Interface_IPv4_Slice.ah"
-#include "Socket_IPv4_Slice.ah"
+#include "util/ipstack_inttypes.h"
+#include "router/sendbuffer/SendBuffer.h"
 
 using namespace ipstack;
 
-
-aspect IPv4 {
-  /* Affect class: Interface */
-  advice "ipstack::Interface" : slice Interface_IPv4_Slice;
-
-  /* Affect class: Router */
-  advice "ipstack::Router" : slice Router_IPv4_Slice;
-  
-  /* Affect class: _Socket */
-  advice "ipstack::%_Socket" : slice Socket_IPv4_Slice;
+class SocketMemory;
+slice class SendBuffer_Free_DMA_Slice {
+public:
+	static SendBuffer* free_first;
+	SendBuffer* free_next;
+	SocketMemory* free_socket;
 };
 
+SendBuffer* SendBuffer_Free_DMA_Slice::free_first = 0;
