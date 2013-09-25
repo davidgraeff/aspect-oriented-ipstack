@@ -13,32 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2011 Christoph Borchert, 2012-2013 David Gräff
 
 #pragma once
 
-#include "ipv6/IPv6_Packet.h"
-#include "../InternetChecksum.h"
+#include "ip/InternetChecksum.h"
 #include "tcp/TCP_Segment.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "router/Interface.h"
 
 using namespace ipstack;
 
-aspect IPv6_TCP_Tx_Checksumming {
+aspect TCP_Tx_Checksumming {
 	advice execution("% ipstack::%TCP_Socket::send(...)") && args(dataToSend) :
 		before(SendBuffer* dataToSend) {
-		if (tjp->that()->m_useipversion != 6) {
-			return;
-		}
 
-		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->p.ip_packet;
 		TCP_Segment* tcp = (TCP_Segment*) dataToSend->p.transport_packet;
 
 		Interface* interface = dataToSend->getInterface();
 		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		tcp->set_checksum(0);
-		tcp->set_checksum(tcp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
+		tcp->set_checksum(tcp->calc_checksum(InternetChecksum::computePseudoHeader(dataToSend->p.ip_packet, payloadsize, TCP_Segment::IP_TYPE_TCP), payloadsize, interface));
 
 	}
 };

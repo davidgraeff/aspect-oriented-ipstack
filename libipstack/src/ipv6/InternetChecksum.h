@@ -26,33 +26,31 @@ namespace ipstack
 class InternetChecksumV6
 {
 	public:
-		static inline uint16_t byteswap16(uint16_t val) {
-			return val; //((val & 0xFF) << 8) | ((val & 0xFF00) >> 8);
-		}
-		static uint32_t computePseudoHeader(IPv6_Packet* packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+		static uint32_t computePseudoHeader(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+			IPv6_Packet* packet (IPv6_Packet*)ip_packet;
 			uint32_t csum = payloadlen; //length of (udp, tcp) frame (without IPv6 additional headers)
 
 			// Source ip
 			ipv6addr ipaddr = packet->get_src_ipaddr();
-			csum += byteswap16(ipaddr.ipaddrB8[ 1] + (uint16_t)(ipaddr.ipaddrB8[ 0] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 3] + (uint16_t)(ipaddr.ipaddrB8[ 2] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 5] + (uint16_t)(ipaddr.ipaddrB8[ 4] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 7] + (uint16_t)(ipaddr.ipaddrB8[ 6] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 9] + (uint16_t)(ipaddr.ipaddrB8[ 8] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[11] + (uint16_t)(ipaddr.ipaddrB8[10] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[13] + (uint16_t)(ipaddr.ipaddrB8[12] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[15] + (uint16_t)(ipaddr.ipaddrB8[14] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 1] + (uint16_t)(ipaddr.ipaddrB8[ 0] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 3] + (uint16_t)(ipaddr.ipaddrB8[ 2] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 5] + (uint16_t)(ipaddr.ipaddrB8[ 4] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 7] + (uint16_t)(ipaddr.ipaddrB8[ 6] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 9] + (uint16_t)(ipaddr.ipaddrB8[ 8] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[11] + (uint16_t)(ipaddr.ipaddrB8[10] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[13] + (uint16_t)(ipaddr.ipaddrB8[12] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[15] + (uint16_t)(ipaddr.ipaddrB8[14] << 8));
 			
 			// Dest ip
 			ipaddr = packet->get_dst_ipaddr();
-			csum += byteswap16(ipaddr.ipaddrB8[ 1] + (uint16_t)(ipaddr.ipaddrB8[ 0] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 3] + (uint16_t)(ipaddr.ipaddrB8[ 2] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 5] + (uint16_t)(ipaddr.ipaddrB8[ 4] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 7] + (uint16_t)(ipaddr.ipaddrB8[ 6] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[ 9] + (uint16_t)(ipaddr.ipaddrB8[ 8] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[11] + (uint16_t)(ipaddr.ipaddrB8[10] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[13] + (uint16_t)(ipaddr.ipaddrB8[12] << 8));
-			csum += byteswap16(ipaddr.ipaddrB8[15] + (uint16_t)(ipaddr.ipaddrB8[14] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 1] + (uint16_t)(ipaddr.ipaddrB8[ 0] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 3] + (uint16_t)(ipaddr.ipaddrB8[ 2] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 5] + (uint16_t)(ipaddr.ipaddrB8[ 4] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 7] + (uint16_t)(ipaddr.ipaddrB8[ 6] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[ 9] + (uint16_t)(ipaddr.ipaddrB8[ 8] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[11] + (uint16_t)(ipaddr.ipaddrB8[10] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[13] + (uint16_t)(ipaddr.ipaddrB8[12] << 8));
+			csum += uint16_t(ipaddr.ipaddrB8[15] + (uint16_t)(ipaddr.ipaddrB8[14] << 8));
 			
 			csum += upper_layer_nextheader; // we do not use packet->get_nextheader() because we want the upper layer
 			// next header and not the ipv6 next header (may be an ipv6 header extension)

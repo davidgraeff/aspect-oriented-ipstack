@@ -22,11 +22,8 @@
 using namespace ipstack;
 
 class SocketMemory;
-slice class SendBuffer_Free_DMA_Slice {
+slice class SendBuffer_Free_Socket_Slice {
 public:
-	static SendBuffer* free_first;
-	SendBuffer* free_next;
 	SocketMemory* free_socket;
 };
-
-SendBuffer* SendBuffer_Free_DMA_Slice::free_first = 0;
+;

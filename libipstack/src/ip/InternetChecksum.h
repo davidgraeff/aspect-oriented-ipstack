@@ -60,6 +60,10 @@ public:
 		uint32_t csum = computePayload(payloaddata, payloadlen);
 		return (~accumulateCarryBits(csum)); // one's complement
 	}
+	
+	static uint32_t computePseudoHeader(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+		// weave in checksum calculation for ip header
+	}
 };
 
 } //namespace ipstack

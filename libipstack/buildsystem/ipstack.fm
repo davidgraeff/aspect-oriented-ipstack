@@ -891,9 +891,9 @@ menuconfig ipstack
 			choice
 				prompt "Sendbuffer freeing"
 				depends on ipstack
-				default ipstack_memory_sendbuffer_free
+				default ipstack_memory_sendbuffer_free_immediately
 
-				config ipstack_memory_sendbuffer_free
+				config ipstack_memory_sendbuffer_free_immediately
 					bool "Immediately freeing"
 					help
 						Sendbuffers are immediately freed if free() is called.
@@ -901,6 +901,13 @@ menuconfig ipstack
 						%_Socket::free() yourself and delay the freeing until your
 						hardware has actually send the packet.
 
+				config ipstack_memory_sendbuffer_free_no
+					bool "No freeing"
+					help
+						Sendbuffers are not freed at all. This option is recommend if
+						your hardware has a feedback mechanism to tell you about finished
+						DMAs so that you can call %_Socket::free() yourself.
+						
 				config ipstack_memory_sendbuffer_free_garbagecollection
 					bool "Garbage collection before every alloc"
 					help

@@ -3,7 +3,7 @@
 
 namespace ipstack {
 	UDP_Socket::UDP_Socket(const SocketMemory& memory) :
-		SocketMemory(memory), dport(UDP_Packet::UNUSED_PORT),	sport(UDP_Packet::UNUSED_PORT) {}
+		SocketMemory(memory), dport(UDP_Packet::UNUSED_PORT), sport(UDP_Packet::UNUSED_PORT) {}
 
 	UDP_Socket::~UDP_Socket() {}
 	

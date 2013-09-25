@@ -19,8 +19,9 @@
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack
-	// the lower 4 bits of the first byte are for the version information of an IP packet
-	inline uint8_t get_ip_version(char* packet) {
-		return *(packet) & 0x0f;
+	// Return true if the src and destination
+	bool is_src_dest_addr_matching(char* packet) {
+		// weave in //TODO: add to IP_Socket
+		return false;
 	}
 }

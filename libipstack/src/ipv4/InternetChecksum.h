@@ -26,7 +26,8 @@ class InternetChecksumV4 {
 	static inline uint16_t byteswap16(uint16_t val) {
 		return ((val & 0xFF) << 8) | ((val & 0xFF00) >> 8);
 	}
-	static uint32_t computePseudoHeader(IPv4_Packet* packet, uint16_t payloadlen, uint8_t upper_layer_nextheader){
+	static uint32_t computePseudoHeader(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader){
+		IPv4_Packet* packet (IPv4_Packet*)ip_packet;
 		uint32_t csum = payloadlen; //length of (udp, tcp) frame
 	
 		csum += upper_layer_nextheader; // protocol

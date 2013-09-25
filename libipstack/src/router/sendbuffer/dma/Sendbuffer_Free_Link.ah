@@ -21,7 +21,8 @@
 #include "router/Router.h"
 #include "router/Interface.h"
 #include "memory_management/SocketMemory.h"
-#include "SendBuffer_Free_DMA_Slice.h"
+#include "SendBuffer_Free_Linked_Slice.h"
+#include "SendBuffer_Free_Socket_Slice.h"
 
 using namespace ipstack;
 
@@ -30,8 +31,13 @@ using namespace ipstack;
   * with socket::free we just add those sendbuffers to the linked list.
   */
 aspect SendBuffer_Free_DMA {
-	advice "ipstack::Sendbuffer" : slice SendBuffer_Free_DMA_Slice;
+	advice "ipstack::Sendbuffer" : slice SendBuffer_Free_Linked_Slice;
 	
+	// First execute the SendBuffer_Free_Add_Socket aspect that sets up the socket of
+	// this sendbuffer, before executing this aspect
+	advice execution("% ipstack::SocketMemory::freeSendbuffer(void*)") :
+		order("SendBuffer_Free_Add_Socket", "SendBuffer_Free_DMA");
+		
 	/**
 	 * Instead of freeing, we add the buffer to a linked list (the head of the list
 	 * is stored in Sendbuffer::free_first).
@@ -48,7 +54,6 @@ aspect SendBuffer_Free_DMA {
 			return;
 		}
 		
-		sendbuffer->free_socket = socketmemory;
 		if (Sendbuffer::free_first) {
 			sendbuffer->free_next = Sendbuffer::free_first;
 			Sendbuffer::free_first = sendbuffer;

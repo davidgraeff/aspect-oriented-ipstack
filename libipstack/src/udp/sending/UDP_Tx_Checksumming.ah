@@ -13,33 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// Copyright (C) 2011 Christoph Borchert, 2012-2013 David Gräff
 
 #pragma once
 
 #include "udp/UDP_Packet.h"
-#include "ipv6/IPv6_Packet.h"
-#include "../InternetChecksum.h"
+#include "ip/InternetChecksum.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "router/Interface.h"
 
 using namespace ipstack;
 
-aspect IPv6_UDP_Tx_Checksumming {
+aspect UDP_Tx_Checksumming {
 	advice execution("% ipstack::%UDP_Socket::send(...)") && args(dataToSend) :
 		before(SendBuffer* dataToSend) {
 
-		if (tjp->that()->m_useipversion != 6) {
-			return;
-		}
-		
-		IPv6_Packet* packet = (IPv6_Packet*)dataToSend->p.ip_packet;
 		UDP_Packet* udp = (UDP_Packet*) dataToSend->p.transport_packet;
 
 		Interface* interface = dataToSend->getInterface();
 		uint16_t payloadsize = ((char*)dataToSend->data - (char*)dataToSend->p.transport_packet);
 		udp->set_checksum(0);
-		udp->set_checksum(udp->calc_checksum(InternetChecksumV6::computePseudoHeader(packet, payloadsize, UDP_Packet::IP_TYPE_UDP), payloadsize, interface));
+		udp->set_checksum(udp->calc_checksum(InternetChecksum::computePseudoHeader(dataToSend->p.ip_packet, payloadsize, UDP_Packet::IP_TYPE_UDP), payloadsize, interface));
 	}
 
 };

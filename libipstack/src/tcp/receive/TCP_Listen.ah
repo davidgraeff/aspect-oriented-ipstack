@@ -27,7 +27,7 @@ using namespace ipstack;
 
 aspect TCP_Listen_aspect {
 	// *** Affect class: Demux
-advice "ipstack::Demux" : slice Demux_TCP_Listen_Slice;
+	advice "ipstack::Demux" : slice Demux_TCP_Listen_Slice;
 
 	advice execution("bool ipstack::TCP_Socket::listen()") && that(socket) :
 		around(TCP_Socket& socket) {
@@ -67,3 +67,113 @@ advice "ipstack::Demux" : slice Demux_TCP_Listen_Slice;
 	}
 };
 
+
+#pragma once
+
+#include "ipv4/IPv4_Packet.h"
+#include "tcp/TCP_Segment.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+
+using namespace ipstack;
+
+aspect IPv4_TCP_Listen {
+	//try to find fully qualified socket first. after that, search for listen sockts.
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
+		order("IPv4_TCP_Receive", "IPv4_TCP_Listen");
+
+	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, len, interface) && that(demux) :
+		around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
+
+		if (packet->get_protocol() == TCP_Segment::IP_TYPE_TCP) {
+			//Length and checksum is already verified by "IPv4_TCP_Receive.ah"
+
+			TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
+
+			//only process SYN packets:
+			if (tcp_segment->has_SYN() == true) {
+				uint16_t tcp_segment_dport = tcp_segment->get_dport();
+
+				TCP_Socket* socket = demux.tcp_head_listen_socket;
+
+				// preprocessing length: subtract the ipv4 header size
+				len -= packet->get_ihl() * 4;
+
+				while (socket != 0) {
+					if (socket->get_sport() == tcp_segment_dport) {
+						//dport match found
+						if (socket->is_packetbuffer_full()) {
+							demux.error_receiving_queue_full(packet, interface);
+						} else if (!socket->addToReceiveQueue(tcp_segment, len)) {
+							demux.error_receiving_memory_too_small(packet, interface);
+						} else {
+							demux.deaf(socket); //remove socket's 'listening' state
+							//add remote ipv4 addr
+							socket->ipv4.set_dst_addr(packet->get_src_ipaddr());
+						}
+						return;
+					}
+					socket = socket->getNext(); //try next socket
+				}
+			}
+		}
+		tjp->proceed(); //try another 'ipv4_demux'-aspect
+	}
+
+};
+#pragma once
+
+#include "ipv6/IPv6_Packet.h"
+#include "tcp/TCP_Segment.h"
+#include "tcp/TCP_Socket.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+
+using namespace ipstack;
+
+aspect IPv6_TCP_Listen {
+	//try to find fully qualified socket first. after that, search for listen sockts.
+	advice execution("void ipstack::Demux::ipv6_demux(ipstack::IPv6_Packet*, unsigned, ipstack::Interface*)") :
+		order("IPv6_TCP_Receive", "IPv6_TCP_Listen");
+
+	advice execution("% ipstack::Demux::ipv6_payload_demux(ipstack::Interface*, ipstack::IPv6_Packet*, void*&, unsigned&, unsigned char& )") &&
+	args(interface, packet, payload, payload_length, nextHeader) && that(demux) :
+		around(Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader, Demux& demux) {
+
+
+		if (nextHeader == TCP_Segment::IP_TYPE_TCP) {
+			//Length and checksum is already verified by "IPv6_TCP_Receive.ah"
+
+			TCP_Segment* tcp_segment = (TCP_Segment*) payload;
+
+			//only process SYN packets:
+			if (tcp_segment->has_SYN() == true) {
+				uint16_t tcp_segment_dport = tcp_segment->get_dport();
+
+				TCP_Socket* socket = demux.tcp_head_listen_socket;
+
+				while (socket != 0) {
+					if (socket->get_sport() == tcp_segment_dport) {
+						*(tjp->result()) = true; // end of ipv6 packet parsing
+						//dport match found
+						if (socket->is_packetbuffer_full()) {
+							demux.error_receiving_queue_full_v6(packet, interface);
+						} else if (!socket->addToReceiveQueue(tcp_segment, payload_length)) {
+							demux.error_receiving_memory_too_small_v6(packet, interface);
+						} else {
+							demux.deaf(socket); //remove socket's 'listening' state
+							//add remote ipv6 addr
+							socket->ipv6.set_dst_addr(packet->get_src_ipaddr());
+						}
+						*(tjp->result()) = true;
+						return;
+					}
+					socket = socket->getNext(); //try next socket
+				}
+			}
+		}
+		tjp->proceed(); //try another 'ipv6_demux'-aspect
+	}
+
+};
