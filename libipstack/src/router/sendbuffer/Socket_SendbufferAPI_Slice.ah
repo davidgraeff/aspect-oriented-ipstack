@@ -39,10 +39,7 @@ slice class Socket_SendbufferAPI_Slice {
 
 public:
 	SendBuffer* requestSendBuffer(uint_fast16_t requestSize, ReceiveBuffer* use_as_response = 0) {
-		return requestSendBuffer(getUsedInterface(), requestSize, use_as_response);
-	}
-	SendBuffer* requestSendBuffer(Interface* interface, uint_fast16_t requestSize, ReceiveBuffer* use_as_response = 0)
-	{
+		Interface* interface = (use_as_response) ? buffer->get_interface() : getUsedInterface();
 		SendBuffer* sendbuffer = SendBuffer::createInstance(get_Mempool(), estimateSendBufferMinSize() + requestSize, interface);
 		if (!sendbuffer) return 0;
 		prepareSendBuffer(sendbuffer,use_as_response);

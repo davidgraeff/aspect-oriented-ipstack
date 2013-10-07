@@ -47,4 +47,8 @@ namespace ipstack {
 	#else
 		enum {TCP_HISTORY_MAX_PACKETS=1};
 	#endif
+
+	//the default (6 sec) 'retransmission timeout'
+	enum { DEFAULT_RTO = 6000U };
+
 }

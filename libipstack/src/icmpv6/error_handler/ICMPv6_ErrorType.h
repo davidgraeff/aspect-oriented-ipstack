@@ -17,8 +17,8 @@
 
 #pragma once
 #include "ipv6/IPv6_Packet.h"
-#include "icvmpv6/ICMPv6_Packet.h"
-#include "icvmpv6/ICMPv6_DerivedSocket.h"
+#include "icmpv6/ICMPv6_Packet.h"
+#include "icmpv6/ICMPv6_DerivedSocket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "demux/receivebuffer/ReceiveBuffer.h"
@@ -35,13 +35,12 @@ namespace ipstack
 			uint8_t original_packet[];
 		} __attribute__((packed));
 		
-		static void send(ReceiveBuffer* buffer, uint8_t type, uint8_t code, uint32_t failure_pointer) {
+		static void send(ReceiveBuffer& buffer, uint8_t type, uint8_t code, uint32_t failure_pointer) {
 			ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
 			
 			// As of ICMPv6 RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
-			SendBuffer* sbi = socket.requestSendBuffer(buffer->get_interface(),
-													ICMPv6_Packet::ICMP_MAX_DATA_SIZE,
-													buffer->receivebuffer_pointer());
+			SendBuffer* sbi = socket.requestSendBuffer(ICMPv6_Packet::ICMP_MAX_DATA_SIZE,
+													buffer.receivebuffer_pointer());
 			if (sbi) {
 				sbi->mark("ICMPv6_ErrorReply");
 				ICMPv6Unrechable* reply = (ICMPv6Unrechable*)sbi->getDataPointer();

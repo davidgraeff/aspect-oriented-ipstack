@@ -30,9 +30,8 @@ private:
 	T* next;
 public:
 	DemuxLinkedList() : next(0) {}
-	T* getNext() { return next; }
-	void setNext(T* sock) { next = sock; }
-	
+	inline T* getNext() { return next; }
+	inline void setNext(T* sock) { next = sock; }
 };
 
 } // namespace ipstack

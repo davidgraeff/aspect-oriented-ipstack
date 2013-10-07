@@ -30,7 +30,7 @@ namespace ipstack
  * This type of socket can be used if you want to send raw IP data, like ICMP or want to add
  * your own transport header, for instance for a tcp half-open-request response.
  */
-class RawIP_Socket : public SocketMemory
+class RawIP_Socket : public SocketMemory, public SendBufferAPI, public IP
 {
 	public:
 		// Construct with socket memory
@@ -49,45 +49,12 @@ class RawIP_Socket : public SocketMemory
 		* @return Returns true if the packet could be delivered to the network hardware. If no
 		* free memory is available or len is to big for allocation false is returned.
 		* 
-		* This method is not implemented, if you have disabled udp send support.
+		* This method is not implemented, if you have disabled IP send support.
 		* 
 		* Example usage:
 		* ip_socket->send("test", 4);
 		*/
 		bool send(char* data, int len, ReceiveBuffer* use_as_response = 0);
-	
-		/**
-		* Return a smart pointer to a ReceiveBuffer. You can access the payload by using
-		* the get_payload_data() method and get the size by get_payload_size().
-		* 
-		* @return This method will return an invalid smart pointer (=0)
-		* if no received data is available and will never block.
-		* 
-		* This method is not implemented, if you have disabled udp receive support.
-		* 
-		* Example usage:
-		* SmartReceiveBufferPtr b = socket->receive();
-		* prinft(b->getData());
-		*/
-		SmartReceiveBufferPtr receive();
-		
-		/**
-		* Convenience method: Block until a packet is available or a timeout is reached.
-		* This API is only functional if not build with ONE_TASK!
-		* This method is not implemented, if you have disabled udp receive support.
-		*/
-		SmartReceiveBufferPtr receive(uint64_t waitForPacketTimeoutMS);
-		
-		/**
-		* Convenience method: Block until a packet is available.
-		* This API is only functional if not build with ONE_TASK!
-		* This method is not implemented, if you have disabled udp receive support.
-		*/
-		SmartReceiveBufferPtr receiveBlock();
-	protected:
-		// block until receive event
-		// Not implemented, if receive is disabled
-		void block();
 };
 
 } //namespace ipstack

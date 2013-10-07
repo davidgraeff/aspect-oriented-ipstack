@@ -23,48 +23,67 @@
 #include "os_integration/Clock.h"
 
 /**
- * Purspose: add bind/unbind to the socket for demux delegated methods.
- * Delegate convenience API methods for receiving. The real implementations
- * are in the IP(v4/v6) receiving slices.
+ * Purspose: add bind/unbind to the socket.
  */
 
 namespace ipstack {
+	static uint16_t udp_last_default_port = 1024U;
 
-	bool UDP_Socket::bind() {
-		return Demux::Inst().bind ( &socket );
-	}
-	
-	void UDP_Socket::unbind() {
-		Demux::Inst().unbind ( &socket );
-	}
-
-	void UDP_Socket::block() {}
-	
-	SmartReceiveBufferPtr UDP_Socket::receive(){
-		return SmartReceiveBufferPtr((ReceiveBuffer*)packetbuffer->get(), this);
-	}
-
-	SmartReceiveBufferPtr UDP_Socket::receive(uint64_t waitForPacketTimeoutMS) {
-		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
-		if (!recv) {
-			if (!waitForPacketTimeoutMS )
-				return 0;
-			uint64_t timeout = Clock::now() + Clock::ms_to_ticks(waitForPacketTimeoutMS);
-			while(timeout < Clock::now()){
-				recv = (ReceiveBuffer*)packetbuffer->get();
-				if (recv)
+	bool UDP_Socket::bind(UDP_Socket* socket) {
+		uint16_t sport = socket->get_sport();
+		UDP_Socket* current = Demux::Inst().udp_head_socket;
+		
+		if (sport == UDP_Packet::UNUSED_PORT) {
+			//choose 'random' source port number
+			while (udp_last_default_port < 65000) {
+				bool foundUnusedPort = true;
+				while (current != 0) {
+					if (current->get_sport() == udp_last_default_port) {
+						++udp_last_default_port;
+						foundUnusedPort = false;
+						break;
+					}
+					current = current->getNext();
+				}
+				if (foundUnusedPort) {
+					socket->set_sport(udp_last_default_port);
+					++udp_last_default_port; // increase for next bind()
 					break;
+				}
+			}
+			// no free port in range 1024..65000 found!
+			return false;
+		} else {
+			//verify if sport is not used already
+			while (current != 0) {
+				if (current->get_sport() == sport) {
+					//error, sport already in use
+					return false;
+				}
+				current = current->getNext();
 			}
 		}
-		return SmartReceiveBufferPtr(recv, this);
+		//insert at front
+		socket->setNext(Demux::Inst().udp_head_socket);
+		Demux::Inst().udp_head_socket = socket;
+		return true;
 	}
-	
-	SmartReceiveBufferPtr UDP_Socket::receiveBlock(){
-		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
-		while(recv == 0){
-			block();
-			recv = (ReceiveBuffer*)packetbuffer->get();
+
+	void UDP_Socket::unbind(UDP_Socket* socket) {
+		if (socket == Demux::Inst().udp_head_socket) {
+			Demux::Inst().udp_head_socket = socket->getNext();
+		} else {
+			UDP_Socket* current = Demux::Inst().udp_head_socket;
+			UDP_Socket* next = current->getNext();
+			while (next != 0) {
+				if (next == socket) {
+					current->setNext(next->getNext());
+					return;
+				}
+				current = next;
+				next = current->getNext();
+			}
 		}
-		return SmartReceiveBufferPtr(recv, this);
+		udp_last_default_port = 1024U;
 	}
 }

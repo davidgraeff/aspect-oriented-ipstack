@@ -15,27 +15,15 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
+#include "tcp/TCP_Socket_Private.h"
+#include "demux/Demux.h"
+#include "router/sendbuffer/SendBuffer.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
+#include "os_integration/Clock.h"
 
-#ifndef __TCP_SYNSENT_DUMMY_AH
-#define __TCP_SYNSENT_DUMMY_AH
-
-#include "../TCP_Socket.h"
-
-using namespace ipstack;
-
-
-aspect TCP_Synsent_Dummy {
-  
-  advice call("void ipstack::TCP_Socket::synsent(ipstack::TCP_Segment*, unsigned)") &&
-         within("void ipstack::TCP_Socket::input(...)") &&
-         target(socket) &&
-         args(segment, len) :
-         around(TCP_Socket& socket, TCP_Segment* segment, unsigned len) {
-
-    socket.closed(segment, len);
-  }
-  
-};
-
-#endif // __TCP_SYNSENT_DUMMY_AH
-
+namespace ipstack
+{
+	void TCP_Socket_Private::listen(TCP_Segment* segment, unsigned len) {
+		socket.closed(segment, len);
+	}
+}

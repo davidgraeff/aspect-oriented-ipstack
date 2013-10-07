@@ -16,9 +16,7 @@
 // Copyright (C) 2012 David Gräff
 
 #pragma once
-
 #include "ICMPv6_ErrorType.h"
-#include "icmpv6/ICMPv6_Packet.h"
 
 using namespace ipstack;
 
@@ -29,7 +27,7 @@ aspect IPv6_ICMP_Protocol_Unreachable {
 	advice execution("void ipstack::Demux::error_no_protocol_handler_v6(ipstack::ReceiveBuffer&)") &&
 	args(buffer) : around(ReceiveBuffer& buffer) {
 		
-		uint32_t f;
+		uint32_t f = 0;
 		((uint8_t*)&(f))[3] = 7; // point to the next header field (cast to bytes to circumvent byte order problems)
 		ICMPv6_ErrorReply::send(ICMPv6_Packet::ICMP_TYPE_PARAMETER_PROBLEM,
 			ICMPv6_Packet::ICMP_CODE_PARAMETER_PROBLEM_UNKNOWN_NEXTHEADER, f);

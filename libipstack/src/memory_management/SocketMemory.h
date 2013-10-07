@@ -21,48 +21,71 @@
 
 #include "memory_management/MemoryInterface.h"
 
-/**
- * Interface for beeing used in a socket class
- * to include memory management.
- */
-class SocketMemory
+namespace ipstack
 {
-protected:
-	MemoryInterface* mempool;
-	RingbufferInterface* packetbuffer;
-public:
-	SocketMemory(MemoryInterface* m, RingbufferInterface* pb=0) : mempool(m), packetbuffer(pb) {}
-	
-	// Ringbuffer
-	inline RingbufferInterface* get_packetbuffer() { return packetbuffer; }
-	inline bool is_packetbuffer_full() {return packetbuffer->isFull();}
-	inline void set_packetbuffer(RingbufferInterface* pb) { packetbuffer = pb; }
-	// Memory pool
-	inline void set_Mempool(MemoryInterface* m) { mempool = m; }
-	inline MemoryInterface* get_Mempool() { return mempool; }
-	
 	/**
-	 * Free a Sendbuffer or Receivebuffer by using these methods. 
-	 */
-	void freeReceivebuffer(void* b) {
-		get_Mempool()->free(b);
-	}
-	void freeSendbuffer(void* b) {
-		get_Mempool()->free(b);
-	}
-	
-	/**
-	 * Copies a receivebuffer memory content to the memory of this socket.
-	 * This may be intercepted by aspects for directly processing the packet
-	 * without copying the content before and by the IPv4 fragmentation
-	 * reassamle aspect.
-	 */
-    bool addToReceiveQueue(ReceiveBuffer& receivebuffer) {
-		ReceiveBuffer* socket_receive_buffer;
-		if (is_packetbuffer_full() || !(socket_receive_buffer=receivebuffer.clone(this))) {
-			return false;
-		}
-		packetbuffer->put(socket_receive_buffer);
-		return true;
-	}
-};
+	* Interface for beeing used in a socket class
+	* to include memory management.
+	*/
+	class SocketMemory
+	{
+	public:
+		SocketMemory(MemoryInterface* m, RingbufferInterface* pb=0);
+		
+		// Ringbuffer getter/setter
+		inline RingbufferInterface* get_packetbuffer() { return packetbuffer; }
+		inline bool is_packetbuffer_full() {return packetbuffer->isFull();}
+		inline void set_packetbuffer(RingbufferInterface* pb) { packetbuffer = pb; }
+		// Memory pool getter/setter
+		inline void set_Mempool(MemoryInterface* m) { mempool = m; }
+		inline MemoryInterface* get_Mempool() { return mempool; }
+		
+		/**
+		* Free a Sendbuffer or Receivebuffer by using these methods. 
+		*/
+		void freeReceivebuffer(void* b);
+		void freeSendbuffer(void* b);
+		
+		/**
+		* Copies a receivebuffer memory content to the memory of this socket.
+		* This may be intercepted by aspects for directly processing the packet
+		* without copying the content before and by the IPv4 fragmentation
+		* reassamle aspect.
+		*/
+		bool addToReceiveQueue(ReceiveBuffer& receivebuffer);
+		
+		/**
+		* Return a smart pointer to a ReceiveBuffer. You can access the payload by using
+		* the get_payload_data() method and get the size by get_payload_size().
+		* 
+		* @return This method will return an invalid smart pointer (=0)
+		* if no received data is available and will never block.
+		* 
+		* This method is not implemented, if you have disabled receive support.
+		* 
+		* Example usage:
+		* SmartReceiveBufferPtr b = socket->receive();
+		* printf(b->getData());
+		*/
+		SmartReceiveBufferPtr receive() /*C++11: override*/;
+		
+		/**
+		* Convenience method: Block until a packet is available or a timeout is reached.
+		* This API is only functional if not build with ONE_TASK!
+		* This method is not implemented, if you have disabled receive support.
+		*/
+		SmartReceiveBufferPtr receive(uint64_t waitForPacketTimeoutMS);
+		
+		/**
+		* Convenience method: Block until a packet is available.
+		* This API is only functional if not build with ONE_TASK!
+		* This method is not implemented, if you have disabled receive support.
+		*/
+		SmartReceiveBufferPtr receiveBlock();
+		void block();
+
+	protected:
+		MemoryInterface* mempool;
+		RingbufferInterface* packetbuffer;
+	};
+}

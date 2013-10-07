@@ -19,19 +19,24 @@
 
 #include "memory_management/SocketMemory.h"
 #include "demux/DemuxLinkedListContainer.h"
-#include "util/ipstack_inttypes.h"
-#include "udp/UDP_Socket_Private.h"
 #include "demux/receivebuffer/SmartReceiveBufferPtr.h"
+#include "router/sendbuffer/sendbufferAPI.h"
+#include "util/ipstack_inttypes.h"
+#include "ip/IP.h"
 
 namespace ipstack
 {
 
 class UDP_Packet;
 /**
- * UDP Socket. Depending on your feature selection some of the methods may not be available. You will
- * find more information in the description of each method.
+ * UDP Socket. Receiving API is made available by the SocketMemory class (receive()/receiveBlock())
+ * and DemuxLinkedList class (bind()/unbind()) (if receiving is enabled!).
+ * For sending you may either use the convenience API (send(char* data, int len)) or the SendBuffer
+ * API directly.
+ * 
+ * TODO AspectC++2: Use templates for IP version instead of inherit IP
  */
-class UDP_Socket : public UDP_Socket_Private, public DemuxLinkedList<UDP_Socket>, public SocketMemory
+class UDP_Socket: public DemuxLinkedList<UDP_Socket>, public SocketMemory, public SendBufferAPI, public IP
 {
 	public:
 		// Construct with socket memory
@@ -48,8 +53,8 @@ class UDP_Socket : public UDP_Socket_Private, public DemuxLinkedList<UDP_Socket>
 
 		/**
 		* Internally creates a sendbuffer with len bytes and copies all content of data to that one.
-		* If you first would have to concatanate your data, look at the SendBuffer API that is also
-		* available on this socket.
+		* If you first would have to concatenate your data, look at the SendBuffer API that is also
+		* available on this socket and is more efficient for those scenarios.
 		* 
 		* @param use_as_response If you provide a receiveBuffer as input, the @data is send
 		* to the referred source/remote host. Warning: This ignores all set_ip and set_port methods
@@ -63,36 +68,7 @@ class UDP_Socket : public UDP_Socket_Private, public DemuxLinkedList<UDP_Socket>
 		* udp_socket->send("test", 4);
 		*/
 		bool send(char* data, int len, ReceiveBuffer* use_as_response = 0);
-	
-		/**
-		* Return a smart pointer to a ReceiveBuffer. You can access the payload by using
-		* the get_payload_data() method and get the size by get_payload_size().
-		* 
-		* @return This method will return an invalid smart pointer (=0)
-		* if no received data is available and will never block.
-		* 
-		* This method is not implemented, if you have disabled udp receive support.
-		* 
-		* Example usage:
-		* SmartReceiveBufferPtr b = socket->receive();
-		* prinft(b->getData());
-		*/
-		SmartReceiveBufferPtr receive();
-		
-		/**
-		* Convenience method: Block until a packet is available or a timeout is reached.
-		* This API is only functional if not build with ONE_TASK!
-		* This method is not implemented, if you have disabled udp receive support.
-		*/
-		SmartReceiveBufferPtr receive(uint64_t waitForPacketTimeoutMS);
-		
-		/**
-		* Convenience method: Block until a packet is available.
-		* This API is only functional if not build with ONE_TASK!
-		* This method is not implemented, if you have disabled udp receive support.
-		*/
-		SmartReceiveBufferPtr receiveBlock();
-		
+
 		/**
 		 * Bind this socket to the source port you have set before. Without binding
 		 * the socket, receive will not work as expected.
@@ -105,6 +81,10 @@ class UDP_Socket : public UDP_Socket_Private, public DemuxLinkedList<UDP_Socket>
 		 * You do not need to call unbind/bind to set a new source port.
 		 */
 		void unbind();
+	protected:
+		void setupHeader(UDP_Packet* packet, unsigned datasize) ;
+		uint16_t dport;
+		uint16_t sport;
 };
 
 } //namespace ipstack

@@ -52,7 +52,7 @@ aspect IPv4_ICMP_Echo_Reply {
 				maxlen = payloadlen;
 			}
 			
-			SendBuffer* sbi = socket.requestSendBuffer(b.get_interface(), maxlen, b.receivebuffer_pointer());
+			SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
 			//we have an echo request packet for IPv4
 			if (sbi) {
 				ICMPv4_Packet* reply_icmp = (ICMPv4_Packet*)sbi->getDataPointer();

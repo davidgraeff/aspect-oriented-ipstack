@@ -27,23 +27,17 @@
 using namespace ipstack;
 
 aspect IPv6_ICMP_Too_Big {
-	advice execution("void ipstack::Demux::error_receiving_memory_too_small(ipstack::IPv6_Packet*, ipstack::Interface*)") &&
-	args(packet, interface) && that(demux) :
-	around(IPv6_Packet* packet, Interface* interface, Demux& demux) {
-		
-		// we will respond with a packet-too-big message to allow path mtu detection for other hosts
-		ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-		icmpv6instance.ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
-		icmpv6instance.ipv6.set_src_addr(packet->get_dst_ipaddr());
-		
-		demux.setDirectResponse(true);
-		SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, ICMPv6_Packet::ICMP_MAX_DATA_SIZE);
+	advice execution("void ipstack::Demux::error_receiving_memory_too_small(ipstack::ReceiveBuffer&)") &&
+	args(buffer) : around(ReceiveBuffer& buffer) {
+		ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
+		SendBuffer* sbi = socket.requestSendBuffer(ICMPv6_Packet::ICMP_MAX_DATA_SIZE,
+												buffer.receivebuffer_pointer());
 		if (sbi) {
 			sbi->mark("IPv6_ICMP_Too_Big");
-			ICMPv6_Packet* icmp_error_reply = (ICMPv6_Packet*)sbi->getDataPointer();
-			
-			icmp_error_reply->set_type(ICMPv6_Packet::ICMP_TYPE_PACKET_TOO_BIG);
-			icmp_error_reply->set_code(ICMPv6_Packet::ICMP_CODE_PACKET_TOO_BIG);
+			ICMPv6_Packet* reply = (ICMPv6_Packet*)sbi->getDataPointer();
+
+			reply->set_type(ICMPv6_Packet::ICMP_TYPE_PACKET_TOO_BIG);
+			reply->set_code(ICMPv6_Packet::ICMP_CODE_PACKET_TOO_BIG);
 			// Byte wise copy of the network mtu (4 byte) to the icmp packet -> to handle different byte orders
 			char* mtu = (char*)icmp_error_reply->get_data(); // mtu is 4 bytes
 			uint32_t interface_mtu = interface->getMTU();
@@ -54,9 +48,10 @@ aspect IPv6_ICMP_Too_Big {
 			mtu[3] = (interface_mtu>>24) & 0xff;
 			
 			sbi->writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE+4);
+			// ICMPv6 RFC: Append at least the errornous ipv6 packet + 8 byte payload to the responding icmp packet
 			sbi->write(packet, ICMPv6_Packet::ICMP_MAX_DATA_SIZE-ICMPv6_Packet::ICMP_HEADER_SIZE-4);
-			
-			icmpv6instance.send(sbi);
+
+			socket.send(sbi);
 		}
 	}
 	

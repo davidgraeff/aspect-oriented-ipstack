@@ -15,28 +15,15 @@
 // 
 // Copyright (C) 2011 Christoph Borchert
 
+#include "tcp/TCP_Socket_Private.h"
+#include "demux/Demux.h"
+#include "router/sendbuffer/SendBuffer.h"
+#include "demux/receivebuffer/ReceiveBuffer.h"
+#include "os_integration/Clock.h"
 
-#ifndef __TCP_STATE_CLOSED_AH__
-#define __TCP_STATE_CLOSED_AH__
-
-using namespace ipstack;
-  
-slice class TCP_State_Closed {
-private:
-  void closed(TCP_Segment* segment, unsigned len) {
-    if(segment != 0){
-      // new tcp segment received:
-      //printf("ERROR: TCP Segment in CLOSED state arrived\n");
-      //printf("-> forgot to 'unbind()' ?\n");
-      freeReceivedSegment(segment);
-    }
-    else{
-      // there are no more segments in the input buffer
-      // nothing to do here
-    }
-    waiting = false; // no more segments to wait for
-  }
-
-};
-
-#endif // __TCP_STATE_CLOSED_AH__
+namespace ipstack
+{
+	void TCP_Socket_Private::synsent(TCP_Segment* segment, unsigned len) {
+		closed(segment, len);
+	}
+}

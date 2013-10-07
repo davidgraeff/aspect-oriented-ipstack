@@ -18,13 +18,18 @@
 
 #include "memory_management/SocketMemory.h"
 #include "demux/DemuxLinkedListContainer.h"
+#include "TCP_Socket_Private.h"
+#include "router/sendbuffer/sendbufferAPI.h"
+#include "util/ipstack_inttypes.h"
+#include "ip/IP.h"
 
 namespace ipstack
 {
 	/**
 	 * Public API for a TCP Socket
 	 */
-	class TCP_Socket : public TCP_Socket_Private, public DemuxLinkedList<TCP_Socket>, public SocketMemory
+	class TCP_Socket : public TCP_Socket_Private, public DemuxLinkedList<TCP_Socket>,
+		public SocketMemory, public SendBufferAPI, public IP
 	{
 		public:
 			// **************************************************************************
@@ -33,74 +38,88 @@ namespace ipstack
 			
 			// Construct with socket memory
 			TCP_Socket(const SocketMemory& memory);
-			
+			~TCP_Socket();
+
 			/**
-			* Bind this socket to the source port you have set before.
-			* You do not need to call unbind/bind to set a new source port, but you have to
-			* close the TCP connection before chanching the port.
-			*/
-			bool bind();
-			
-			/**
-			* Unbind this socket from the source port you have set before.
-			* This is called automatically on destruction of the socket. 
-			* You do not need to call unbind/bind to set a new source port.
-			*/
-			void unbind();
-			
-			/**
-			* Listen on the source port for incoming traffic.
-			*/
+			 * Change to listen state. An incoming connection can be established now.
+			 * This will only work if the tcp socket is not connected so far and a
+			 * source port is set up.
+			 * @return Return true if socket changed to listen state successfully
+			 */
 			bool listen();
 			
 			/**
-			* Use this method to write data over this tcp connection.
-			* Another way is to use the streaming operator. Usage example:
-			* TCP_Socket t;
-			* t << "some data" << "another data" << 11;
-			*/
+			 * Connect to the destination port and ip. You do not have to explicitly
+			 * set up a source port, a free one will be choosen for you.
+			 * This will only work if the tcp socket is not connected so far.
+			 * @return Return true if the connection could be established.
+			 * 
+			 * This method will block.
+			 */
+			bool connect();
+
+			/**
+			 * Use this method to write data over this tcp connection.
+			 * Another way is to use the streaming operator. Usage example:
+			 * TCP_Socket t;
+			 * t << "some data" << "another data" << 11;
+			 */
 			bool write(const void* data, unsigned datasize);
 			
 			/**
-			* Use this api to receive data over this tcp connection.
-			*/
+			 * Use this api to receive data over this tcp connection.
+			 * This method will block indefinitely until data is received.
+			 * Use poll(msec) before if you need timeout behaviour.
+			 * @return The number of received bytes or -1 if no connection
+			 * is established so far or -2 if the remote host requests to close
+			 * the connection.
+			 */
 			int receive(void* buffer, unsigned buffer_len);
 			
 			/**
-			* wait for msec for a new packet to arive. If yyou do not
-			* specify a waiting time the method will return immediately.
-			*/
+			 * wait for msec for a new packet to arive. If you do not
+			 * specify a waiting time the method will return immediately.
+			 */
 			int poll(unsigned msec=0);
 			
 			/**
-			* close a tcp connection
-			*/
+			 * Full close a tcp connection (half-close/receiving-only not supported)
+			 * @return Return true if the socket is in close state.
+			 * 
+			 * This method will block.
+			 */
 			bool close();
 			
-			/// Destination port
+			/// Destination port. Do not change this if connected!
 			void set_dport(uint16_t d) ;
 			uint16_t get_dport() ;
 			
-			/// Source port
+			/// Source port. Do not change this if connected!
 			void set_sport(uint16_t s) ;
 			uint16_t get_sport() ;
 			
-			void setMaxReceiveWindow(unsigned max);
+			// **************************************************************************
+			// *** Advanced Public API ***
+			// **************************************************************************
+			
+			/**
+			 * Close a connection by freeing up all resources without requesting
+			 * a close from the remote host. The state after this operation is "close".
+			 * 
+			 * Please be gentle to the remote host and do not use this method!
+			 * A remote host may not detect the broken connection for a long period.
+			 */
+			void abort();
 
-			~TCP_Socket();
+			/**
+			 * Window size for receiving
+			 * @param max_mss Receive window size, 1 means you can receive 1 tcp segment
+			 * and have to fetch the data with receive(...) before another segment can be
+			 * received.
+			 */
+			void setMaxReceiveWindow(unsigned max_mss);
 		private:
 			TCP_Socket(const TCP_Socket& copy); //prevent copying
 	};
-
-	/**
-	* Streaming operator for the TCP_Socket.
-	* Usage example:
-	* TCP_Socket t;
-	* t << "some data" << "another data" << 11;
-	*/
-	template<class T> inline TCP_Socket &operator <<(TCP_Socket &obj, T arg) { obj.write(arg,sizeof(arg)); return obj; }
-	template<> inline TCP_Socket &operator <<(TCP_Socket &obj, const char* arg) { obj.write(arg,strlen(arg)); return obj; }
-
-
 } //namespace ipstack
 
