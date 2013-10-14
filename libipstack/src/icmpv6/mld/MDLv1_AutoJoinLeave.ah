@@ -40,8 +40,8 @@ aspect MDLv1_Autojoinleave {
 	advice execution("void ipstack::Interface::leave_multicastGroup(const ipstack::ipv6addr&)") && args(multicast_addr) && that(interface) :
 		after(const ipstack::ipv6addr& multicast_addr, Interface& interface) {
 
-		ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-		IPV6& ipv6 = icmpv6instance.ipv6;
+		ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
+		IPV6& ipv6 = socket.ipv6;
 		ipstack::ipv6addr addr = {{0}};
 		addr.ipaddrB8[0] = 0xff;
 		addr.ipaddrB8[1] = 0x02;
@@ -56,13 +56,14 @@ aspect MDLv1_Autojoinleave {
 			get_unspecified_ipv6_address(addr);
 			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 		}
-		Demux::Inst().setDirectResponse(true);
-		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, sizeof(MLDMessages::mldv1_listener_done));
+		
+		socket.setInterface(&interface);
+		SendBuffer* sbi = socket.requestSendBuffer(sizeof(MLDMessages::mldv1_listener_done));
 		if (sbi) {
 			sbi->mark("leave_multicastGroup v1");
 			MLDMessages::write_mldv1_listener_done((char*)sbi->getDataPointer(), multicast_addr);
 			sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_done));
-			icmpv6instance.send(sbi);
+			socket.send(sbi);
 		}
 		ipv6.restoreDefaultSendingConfiguration();
 	}
@@ -74,8 +75,8 @@ aspect MDLv1_Autojoinleave {
 			if (!registerToRouters || !*tjp->result())
 				return;
 			
-			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-			IPV6& ipv6 = icmpv6instance.ipv6;
+			ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
+			IPV6& ipv6 = socket.ipv6;
 			ipstack::ipv6addr addr = {{0}};
 			addr.ipaddrB8[0] = 0xff;
 			addr.ipaddrB8[1] = 0x02;
@@ -90,8 +91,8 @@ aspect MDLv1_Autojoinleave {
 				get_unspecified_ipv6_address(addr);
 				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 			}
-			Demux::Inst().setDirectResponse(true);
-			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, sizeof(MLDMessages::mldv1_listener_report));
+			socket.setInterface(&interface);
+		SendBuffer* sbi = socket.requestSendBuffer(sizeof(MLDMessages::mldv1_listener_report));
 			if (sbi) {
 				sbi->mark("join_multicastGroup v1");
 				MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), multicast_addr);

@@ -22,37 +22,36 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "ICMPv6_Packet.h"
-#include "ICMPv6_Socket.h"
+#include "ICMPv6_DerivedSocket.h"
 
 using namespace ipstack;
 
-
 aspect IPv6_ICMP_Echo_Reply {
+	advice execution("bool ipstack::ICMPv6_DerivedSocket::acceptedData(%,%)") &&
+	args(type, code) : around(uint8_t type, uint8_t code) {
+		if ((type == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
+			(code == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
+			tjp->result() = true;
+			return;
+		}
+		tjp->proceed();
+	}
+		
+	advice execution("void ipstack::ICMPv6_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	args(b) : around(SmartReceiveBufferPtr& b) {
 
-	// *** Affect class: Demux
-	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
-	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
-		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
-
+		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
 		if ((icmp_packet->get_type() == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 		(icmp_packet->get_code() == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
 
-			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-			
-			// set destination address: this is necessary before calling getMaxPayloadLength() to take the MTU of
-			// the destination interface into account
-			icmpv6instance.ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
-			uint_fast16_t maxlen = icmpv6instance.getMaxPayloadLength();
-
-			if (payloadlen > maxlen) {
-				payloadlen = maxlen;
+			ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
+			uint16_t maxlen = socket.getMaxPayloadLength(b.get_interface());
+			uint16_t payloadlen = b.get_payload_size();
+			if (payloadlen < maxlen) {
+				maxlen = payloadlen;
 			}
-			if (!payloadlen) return;
-
-			demux.setDirectResponse(true);
-			SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, payloadlen);
-			//we have an echo request packet for IPv6
 			
+			SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
 			if (sbi) {
 				sbi->mark("IPv6_ICMP_Echo_Reply");
 				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->getDataPointer();
@@ -63,7 +62,7 @@ aspect IPv6_ICMP_Echo_Reply {
 				// append original payload of the source icmp packet
 				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv6_Packet::ICMP_HEADER_SIZE);
 
-				icmpv6instance.send(sbi);
+				socket.send(sbi);
 			}
 		} else {
 			tjp->proceed();

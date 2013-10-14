@@ -39,18 +39,18 @@ class ReceiveBuffer : public ReceiveBufferPrivate
 		/**
 		 * Return a pointer to the payload data.
 		 */
-		inline void* get_payload_data() {return payload;}
+		inline void* get_payload_data() const {return payload;}
 
 		/**
 		 * Return the size in bytes of the payload, according to the length information
 		 * that was stored together with the payload.
 		 */
-		inline uint16_t get_payload_size() {return m_payloadSize;}
+		inline uint16_t get_payload_size() const {return m_payloadSize;}
 
 		/**
 		 * Return the size in bytes of the remaining storage
 		 */
-		inline uint16_t get_remaining_size() {return m_receivedSize-(payload-m_data);}
+		inline uint16_t get_remaining_size() const {return m_receivedSize-(payload-m_data);}
 		
 		/**
 		 * Contains pointer to protocols. Example:

@@ -23,17 +23,10 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::closed(TCP_Segment* segment, unsigned len) {
-		if(segment != 0){
-		// new tcp segment received:
-		//printf("ERROR: TCP Segment in CLOSED state arrived\n");
-		//printf("-> forgot to 'unbind()' ?\n");
-		freeReceivedSegment(segment);
-		}
-		else{
-		// there are no more segments in the input buffer
-		// nothing to do here
-		}
+	void TCP_Socket_Private::closed(ReceiveBuffer* receiveB) {
+		// Testcase: receiveB should be 0 here always, otherwise unbinding
+		// didn't work
+		freeReceiveBuffer(receiveB);
 		waiting = false; // no more segments to wait for
 	}
 }

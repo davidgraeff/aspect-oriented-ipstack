@@ -23,11 +23,13 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::closewait(TCP_Segment* segment, unsigned len) {
-		if(segment != 0){
+	void TCP_Socket_Private::closewait(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			
 			// new tcp segment received:
-			if(handleRST(segment)){ return; }
-			if(handleSYN_final(segment)){ return; }
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
+			if(segment->has_SYN()) {handleSYN_final(receiveB); return; } 
 			
 			uint32_t seqnum = segment->get_seqnum();
 			uint32_t acknum = segment->get_acknum();
@@ -43,7 +45,7 @@ namespace ipstack
 			}
 			
 			updateSendWindow(segment, seqnum, acknum);
-			freeReceivedSegment(segment);
+			freeReceivebuffer(receiveB);
 		}
 		else{
 			// there are no more segments in the input buffer

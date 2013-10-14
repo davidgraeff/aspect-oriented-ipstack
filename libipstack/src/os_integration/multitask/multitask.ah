@@ -16,11 +16,15 @@
 // Copyright (C) 2013 David Gräff
 
 #pragma once
-#include "util/ipstack_inttypes.h"
 
-namespace ipstack
-	// the lower 4 bits of the first byte are for the version information of an IP packet
-	inline uint8_t get_ip_version(char* packet) {
-		return *(packet) & 0x0f;
-	}
-}
+using namespace ipstack;
+
+/**
+ * Override empty methods and delegate to aspectless ipstack_app classes
+ */
+aspect NoMultitask_Aspect {
+// 	advice execution("void ipstack::NoMultitask::wait_for_input()"): around() {
+// 		ipstack_app::NoMultitask::wait_for_input();
+// 	}
+};
+

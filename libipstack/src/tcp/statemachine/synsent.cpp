@@ -23,9 +23,10 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::synsent(TCP_Segment* segment, unsigned len) {
-		if (segment != 0) {
-			// new tcp segment received:
+	void TCP_Socket_Private::synsent(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+
 			// waiting for SYN+ACK
 
 			//extract everything we will need later
@@ -35,7 +36,7 @@ namespace ipstack
 			bool segment_has_ACK = segment->has_ACK();
 			bool segment_has_SYN = segment->has_SYN();
 			bool segment_has_RST = segment->has_RST();
-			freeReceivedSegment(segment); //and delete this packet
+			freeReceivebuffer(receiveB); //and delete this packet
 
 			if (segment_has_ACK) {
 				if (segment_has_SYN) {

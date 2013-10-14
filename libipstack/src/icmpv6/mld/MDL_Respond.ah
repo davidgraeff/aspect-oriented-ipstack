@@ -32,13 +32,23 @@
  * start up at the same time after a power shortage etc.
  */
 aspect NDP_MDL_Respond {
+	advice execution("bool ipstack::ICMPv6_DerivedSocket::acceptedData(%,%)") &&
+	args(type, code) : around(uint8_t type, uint8_t code) {
+		if ((type == 130)) {
+			tjp->result() = true;
+			return;
+		}
+		tjp->proceed();
+	}
+	
 	/**
 	  * Respond to multicast Query (This is a version 1 response, but should work with version 2 implementations, too)
 	  */
-	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
-	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
-		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
 
+	advice execution("void ipstack::ICMPv6_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	args(b) : around(SmartReceiveBufferPtr& b) {
+
+		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
 		MLDMessages::mld_multicast_listener_query* query = (MLDMessages::mld_multicast_listener_query*)icmp_packet;
 		if (query->type == 130) {
 			bool need_response = false;
@@ -46,39 +56,25 @@ aspect NDP_MDL_Respond {
 			if (!is_not_unspecified_ipv6_address(query->addr)) { // multicast_addr == ::
 				// is a General Query
 				need_response = true;
-// 			} else if (number_sources == 0) { // version 2 only
-// 				// is a Multicast Address Specific Query
-// 				if (interface->hasIPv6Address(multicast_addr))
-// 					need_response = true;
 			} else {
 				// is a Multicast Address Specific Query: Check each address if it is one ouf ours
-// 				if (interface->hasIPv6Address(query->addr)) {
-// 					while (number_sources--) {
-
-// 						nulladdr.ipaddrB8 = data;
-				if (interface->hasIPv6Address(query->addr)) {
+				if (b.get_interface()->hasIPv6Address(query->addr)) {
 					need_response = true;
-// 					break;
 				}
-// 						data += 16;
-// 					}
-// 				}
 			}
 
 			if (need_response) {
-				ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-				IPV6& ipv6 = icmpv6instance.ipv6;
-				ipv6.set_dst_addr(packet->get_src_ipaddr(), interface);
-				ipv6.set_src_addr(packet->get_dst_ipaddr());
+				ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
+				IPV6& ipv6 = socket.ipv6;
 				ipv6.setHoplimit(1);
 				
-				demux.setDirectResponse(true);
-				SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, sizeof(MLDMessages::mldv1_listener_report));
+				const unsigned maxlen = sizeof(MLDMessages::mldv1_listener_report);
+				SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
 				if (sbi) {
 					sbi->mark("NDP_MDL_Respond");
 					MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), query->addr);
 					sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
-					icmpv6instance.send(sbi);
+					socket.send(sbi);
 				}
 				ipv6.restoreDefaultSendingConfiguration(); // Reset hop limit etc
 			}

@@ -23,28 +23,25 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::lastack(TCP_Segment* segment, unsigned len) {
-		if(segment != 0){
-			// new tcp segment received:
-			if(handleRST(segment)){ return; }
-			if(handleSYN_final(segment)){ return; }
+	void TCP_Socket_Private::lastack(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
 			
-			if(segment->has_ACK()){
-			handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
-			}
+			//Just wait for an ACK (for our FIN)
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
+			if(segment->has_SYN()) {handleSYN_final(receiveB); return; } 
+			if(segment->has_ACK()){ handleACK(segment->get_acknum()); }
 			
-			freeReceivedSegment(segment);
-		}
-		else{
+			freeReceivebuffer(receiveB);
+		} else {
 			// there are no more segments in the input buffer
 			updateHistory(); //cleanup packets which are not used anymore (and trigger retransmissions)
 			if(history.isEmpty()){
-			// Our FIN got ack'ed --> connection fully terminated now
-			abort(); //kill connection
-			}
-			else{
-			//resend FIN(+ACK) after a timeout
-			block(history.getNextTimeout());
+				// Our FIN got ack'ed --> connection fully terminated now
+				abort(); //kill connection
+			} else {
+				//resend FIN(+ACK) after a timeout
+				block(history.getNextTimeout());
 			}
 		}
 	}

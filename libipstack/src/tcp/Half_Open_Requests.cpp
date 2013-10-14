@@ -4,7 +4,7 @@
 
 namespace ipstack
 {
-	void Half_Open_Requests::receiveCallback(SmartReceiveBufferPtr& b) {
+	void Half_Open_Requests::respond(ReceiveBuffer& b) {
 		TCP_Segment* incoming_segment = static_cast<TCP_Segment*>(b.get_payload_data());
 		uint_fast16_t payload_len = b.get_payload_size();
 		SendBuffer* sendbuffer = socket.requestSendBuffer(b.get_interface(), maxlen, b.receivebuffer_pointer());

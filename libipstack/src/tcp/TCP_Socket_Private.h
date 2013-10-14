@@ -32,7 +32,7 @@ namespace ipstack
 
 	class TCP_Socket_Private
 	{
-		protected:
+		public:
 			// **************************************************************************
 			// *** TCP State ***
 			// **************************************************************************
@@ -43,22 +43,22 @@ namespace ipstack
 			inline bool isClosed() { return state == CLOSED; }
 			inline bool isSynRcvd() { return state == SYNRCVD; }
 			inline bool isSynSend() { return state == SYNSENT; }
-			bool waiting;
+			volatile bool waiting;
 			inline bool waiting_for_input() { return waiting; }
-
+		protected:
 			// *THE* state machine switch
-			void input(TCP_Segment* segment, unsigned len);
-			void closed(TCP_Segment* segment, unsigned len);
-			void closewait(TCP_Segment* segment, unsigned len);
-			void closing(TCP_Segment* segment, unsigned len);
-			void timewait(TCP_Segment* segment, unsigned len);
-			void synrcvd(TCP_Segment* segment, unsigned len);
-			void synsent(TCP_Segment* segment, unsigned len);
-			void finwait1(TCP_Segment* segment, unsigned len);
-			void finwait2(TCP_Segment* segment, unsigned len);
-			void listen(TCP_Segment* segment, unsigned len);
-			void lastack(TCP_Segment* segment, unsigned len);
-			void established(TCP_Segment* segment, unsigned len);
+			void input(ReceiveBuffer* receiveB);
+			void closed(ReceiveBuffer* receiveB);
+			void closewait(ReceiveBuffer* receiveB);
+			void closing(ReceiveBuffer* receiveB);
+			void timewait(ReceiveBuffer* receiveB);
+			void synrcvd(ReceiveBuffer* receiveB);
+			void synsent(ReceiveBuffer* receiveB);
+			void finwait1(ReceiveBuffer* receiveB);
+			void finwait2(ReceiveBuffer* receiveB);
+			void listen(ReceiveBuffer* receiveB);
+			void lastack(ReceiveBuffer* receiveB);
+			void established(ReceiveBuffer* receiveB);
 
 			// **************************************************************************
 			// *** TCP Receiving ***
@@ -67,11 +67,12 @@ namespace ipstack
 			unsigned application_recv_len; //actual length that has been read
 
 			TCP_ReceiveBuffer receiveBuffer;
-			friend class TCP_ReceiveBuffer; //allow TCP_ReceiveBuffer to use our freeReceivedSegment(...) function
 
 			unsigned maxReceiveWindow_MSS; //in units of mss
 			unsigned maxReceiveWindow_Bytes; //in bytes (ie. maxReceiveWindow_MSS * mss)
 			unsigned mss; // maximum segment size
+			uint16_t getReceiveWindow();
+			
 			/**
 			 * Set the maximum number of bytes for receiving/sending per tcp segment.
 			 * Congestion control may reduce this value.
@@ -79,19 +80,14 @@ namespace ipstack
 			 */
 			void setMSS(unsigned max_segment_size);
 
-			bool handleData(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len);
-
-			uint16_t getReceiveWindow();
-
-            void recv_loop();
+			bool insertPayloadIntoReceivebuffer(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len);
 
 			/**
-			* This is a hack: Because the state machine works on segments instead
-			* of ReceiveBuffers we need an extra free method for those segments.
-			* These are always received segements from packetbuffer and therefore
-			* are encapsulated into a ReceiveBuffer.
-			*/
-			void freeReceivedSegment(TCP_Segment* segment) ;
+			 * Busy loops until a packet is received and as long as waiting_for_input()
+			 * is true.
+			 */
+			inline void recv_loop() {while (waiting_for_input()) {processOneReceivedPacket();} }
+			void processOneReceivedPacket();
 			
 			//returns actual length that has been read
             inline unsigned get_application_recv_len() { return application_recv_len; }
@@ -101,6 +97,10 @@ namespace ipstack
 
 			/**
 			 * Bind this socket to the source port you have set before.
+			 * 
+			 * Implementation detail:
+			 * If the socket is in listening state it is checked for a connection match
+			 * after all established sockets.
 			 */
 			bool bind();
 			
@@ -116,10 +116,13 @@ namespace ipstack
 			uint32_t seqnum_unacked;
 			uint32_t seqnum_next;
             void set_seqnum_unacked(uint32_t acknum) { seqnum_unacked = acknum; }
+			void gen_initial_seqnum();
 
+			// Retransmission timeout
 			// Cannot be inlined! Overwritten by "RTT estimation"
 			uint32_t getRTO() { return DEFAULT_RTO; }
 
+			/// send window
             uint16_t sendWindow; //advertised window of remote peer
             uint32_t lwack, lwseq; //Acknum and Seqnum of last window update (sendWindow)
             void initSendWindow(uint16_t window, uint32_t seqnum, uint32_t acknum);
@@ -127,6 +130,7 @@ namespace ipstack
             uint16_t getSendWindow() { return sendWindow; }
             inline void lowerSendWindow(uint16_t subtract) { sendWindow -= subtract; }
 
+            /// History
             TCP_History history;
 			void clearHistory();
             void updateHistory(bool do_retransmit = true);
@@ -153,36 +157,20 @@ namespace ipstack
 			bool FIN_received;
 			uint32_t FIN_seqnum;
 
-			void handleFIN(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len) {
-				if (segment->has_FIN() && (FIN_received == false)) {
-					FIN_seqnum = seqnum + payload_len;
-					FIN_received = true;
-				}
-			}
-
-			bool FIN_complete();
-
-			bool handleSYN(TCP_Segment* segment);
-
-			bool handleSYN_final(TCP_Segment* segment);
-
-			bool handleRST(TCP_Segment* segment);
-
+			void handleFIN(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len);
+			void handleSYN(ReceiveBuffer* receiveB);
+			void handleSYN_final(ReceiveBuffer* receiveB);
+			void handleRST(ReceiveBuffer* receiveB);
+			bool isFinFlag_and_complete();
 
 			// **************************************************************************
 			// *** TCP Acknowledgements ***
 			// **************************************************************************
 			bool ACK_triggered;
-
-			void triggerACK() {
-				ACK_triggered = true;
-			}
-
+			inline void triggerACK() { ACK_triggered = true; }
+			
 			bool sendACK(uint32_t ackNum);
-			bool sendACK() {
-				ACK_triggered = false;
-				return sendACK(receiveBuffer.getAckNum());
-			}
+			inline bool sendACK() { ACK_triggered = false; return sendACK(receiveBuffer.getAckNum()); }
 
 			void handleACK(uint32_t acknum);
 			void processACK();
@@ -192,25 +180,34 @@ namespace ipstack
 			// *** Common ***
 			// **************************************************************************
 
+			/// Ports
 			uint16_t dport;
 			uint16_t sport;
 
-			void* application_buf; //pointer to application read/write buffer
-			unsigned application_buflen; //length of above to be read/written
+			/// Pointer to application read/write buffer and length
+			void* application_buf; 
+			unsigned application_buflen;
 
 			/** 
-			* To be influenced by header expanding options.
-			* Is used for the header-size field in the tcp header and for reserving fitting
-			* memory blocks.
-			*/
+			 * To be influenced by header expanding options.
+			 * Is used for the header-size field in the tcp header and for reserving fitting
+			 * memory blocks.
+			 */
 			uint8_t getSpecificTCPHeaderSize(){ return TCP_Segment::TCP_MIN_HEADER_SIZE; }
-			void gen_initial_seqnum();
 
-			//wait for incoming packet for a given time (timeout)
-			//false := packet arrived, true := timeout reached
+			/**
+			 * Wait for incoming packet for a given time (timeout)
+			 * @return false := packet arrived, true := timeout reached
+			 */
 			bool block(uint32_t timeout);
-
+		public:
+			/**
+			 * Reset state, ack number but does not reset port numbers or unbind().
+			 */
 			void resetSocketState();
+			/**
+			 * Hard reset a connection and unbind it.
+			 */
 			void abort();
 	};
 	

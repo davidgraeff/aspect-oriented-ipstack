@@ -34,6 +34,6 @@ slice class Demux_UDP_Slice
 	* This method should be called if the udp port of the given socket is not assigned on the given
 	* interface.
 	*/
-	void error_port_not_reachable(ReceiveBuffer& buffer) {}	
+	void error_port_not_reachable(ReceiveBuffer& buffer) {}
 	UDP_Socket* udp_head_socket;
 };

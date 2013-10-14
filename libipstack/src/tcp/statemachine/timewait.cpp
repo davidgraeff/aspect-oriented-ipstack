@@ -23,21 +23,19 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::timewait(TCP_Segment* segment, unsigned len) {
-		if (segment != 0) {
-			// new tcp segment received:
-			if (handleRST(segment)) {
-				return;
-			}
-			if (handleSYN_final(segment)) {
-				return;
-			}
+	void TCP_Socket_Private::timewait(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			unsigned len = receiveB->getSize();
+			
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
+			if(segment->has_SYN()) {handleSYN_final(receiveB); return; } 
 
 			if (segment->has_FIN()) {
 				//Our ACK from laste state (FINWAIT1, FINWAIT2) got lost -> retransmit
 				sendACK(FIN_seqnum + 1U);
 			}
-			freeReceivedSegment(segment);
+			freeReceivebuffer(receiveB);
 		} else {
 			// there are no more segments in the input buffer
 			updateHistory(); //cleanup packets which are not used anymore (and trigger retransmissions)

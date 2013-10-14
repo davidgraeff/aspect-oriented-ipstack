@@ -25,7 +25,5 @@ using namespace ipstack;
 
 slice class IPv6_Singlestack_Slice {
 public:
-	// #define m_useipversion 6
-	//const uint8_t m_useipversion = 6;
 	enum {m_useipversion = 6};
 };

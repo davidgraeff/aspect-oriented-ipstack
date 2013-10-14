@@ -44,9 +44,18 @@ namespace ipstack
 			 * Change to listen state. An incoming connection can be established now.
 			 * This will only work if the tcp socket is not connected so far and a
 			 * source port is set up.
-			 * @return Return true if socket changed to listen state successfully
+			 * @return Return true if socket changed to listen state successfully.
+			 * Call abort() to finish listening.
 			 */
 			bool listen();
+			
+			/**
+			 * If the socket is in listen state you may call this method to block
+			 * until a connection is established.
+			 * @return Return true if in established state. Return false if establishing
+			 * a connection failed. The socket will remain in listen state in this case.
+			 */
+			bool accept();
 			
 			/**
 			 * Connect to the destination port and ip. You do not have to explicitly
@@ -77,8 +86,11 @@ namespace ipstack
 			int receive(void* buffer, unsigned buffer_len);
 			
 			/**
-			 * wait for msec for a new packet to arive. If you do not
+			 * Wait for a new packet to arive. If you do not
 			 * specify a waiting time the method will return immediately.
+			 * @param msec Milliseconds to wait for incoming packets
+			 * @return Return number of bytes received or -1 if no connection established
+			 * or -2 if the function returns because of the timeout.
 			 */
 			int poll(unsigned msec=0);
 			
@@ -104,12 +116,14 @@ namespace ipstack
 			
 			/**
 			 * Close a connection by freeing up all resources without requesting
-			 * a close from the remote host. The state after this operation is "close".
+			 * a close from the remote host. The state after this operation is "close"
+			 * and the socket is not binded. Use this method to abort the listen state.
 			 * 
 			 * Please be gentle to the remote host and do not use this method!
-			 * A remote host may not detect the broken connection for a long period.
+			 * A remote host may not detect the broken connection for a long period
+			 * ("half-open connection").
 			 */
-			void abort();
+			inline void abort() {TCP_Socket_Private::abort();}
 
 			/**
 			 * Window size for receiving

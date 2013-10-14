@@ -28,7 +28,7 @@ namespace ipstack
 	*/
 	class SendBuffer;
 	class TCP_Segment;
-	class Half_Open_Requests: public RawIP_Socket, public ReceiveDemuxCallback {
+	class Half_Open_Requests: public RawIP_Socket {
 	private:
 		// no copies
 		Half_Open_Requests(const Half_Open_Requests& sp) {}
@@ -37,7 +37,7 @@ namespace ipstack
 		/**
 		* Prepare a sendbuffer for answering half-open tcp requests
 		*/
-		void receiveCallback(SmartReceiveBufferPtr& b);
+		void respond(const ReceiveBuffer& b);
 	};
 }
 

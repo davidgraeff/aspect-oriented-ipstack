@@ -1,5 +1,5 @@
 This application is for testing ICMPv4/v6, udp send/receive, tcp reset
-You can ping CiAO IP now by using
+You can ping libipstack by using
 * ping 10.0.3.2 (for icmp ping)
 * ping6 fe80::6655:44ff:fe33:2211%tap0 (for icmp ping with ipv6 on tap0 device)
 * echoping -u 10.0.3.2 (for udp ping; use ipv4 addresses, ipv6 is not supported by echoping for udp)

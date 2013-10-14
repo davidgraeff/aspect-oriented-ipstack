@@ -24,7 +24,7 @@ aspect IP_Dualstack_Socket_Delegation {
 	 * for deciding at runtime which ip version to use, if the
 	 * generic api is used.
 	 */
-	advice "ipstack::%_Socket" : slice class {
+	advice "ipstack::IP" : slice class {
 	public:
 		uint8_t m_useipversion;
 	};

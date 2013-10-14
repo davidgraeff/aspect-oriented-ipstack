@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include "memory_management/SocketMemory.h"
-#include "util/ipstack_inttypes.h"
 #include "demux/receivebuffer/SmartReceiveBufferPtr.h"
-
+#include "memory_management/SocketMemory.h"
+#include "router/sendbuffer/sendbufferAPI.h"
+#include "ip/IP.h"
+#include "util/ipstack_inttypes.h"
 namespace ipstack
 {
 

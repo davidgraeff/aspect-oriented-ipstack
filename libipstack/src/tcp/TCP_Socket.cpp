@@ -37,16 +37,29 @@ namespace ipstack
 		unbind();
 	}
 
-	bool TCP_Socket::listen()
-	{
-		if (isClosed()) {
+	bool TCP_Socket::listen() {
+		if (isClosed() && get_sport() != TCP_Segment::UNUSED_PORT) {
 			gen_initial_seqnum();
 			sendWindow = 0;
 			state = LISTEN; // next state
+			if (!bind()) return false;
 			waiting = true;
 			return true;
 		}
 		return false;
+	}
+	
+	bool TCP_Socket::accept() {
+		if (!isListening())
+			return false;
+
+		//Wait for SYN packet
+		while (isListening()) {
+			ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
+			input(receiveB); 
+		}
+		recv_loop();
+		return socket.isEstablished();
 	}
 
 	bool TCP_Socket::connect()
@@ -58,32 +71,25 @@ namespace ipstack
 			//only allow connecting in CLOSED state
 			set_sport(TCP_Segment::UNUSED_PORT); //reset source port
 			if (bind()) {
-				if (isClosed()) {
-					gen_initial_seqnum();
-					sendWindow = 0;
+				gen_initial_seqnum();
+				sendWindow = 0;
 
-					SendBuffer* b = requestSendBufferTCP_syn();
-					if (b != 0) {
-						TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
-						writeHeader(b);
-						segment->set_SYN();
-						seqnum_next++; // 1 seqnum consumed
-						state = SYNSENT; // next state
-						send(b);
-						waiting = true;
-						history.add(b, getRTO());
-					}
+				SendBuffer* b = requestSendBufferTCP_syn();
+				if (b != 0) {
+					TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
+					writeHeader(b);
+					segment->set_SYN();
+					seqnum_next++; // 1 seqnum consumed
+					state = SYNSENT; // next state
+					send(b);
+					waiting = true;
+					history.add(b, getRTO());
 				}
 				recv_loop();
 				return isEstablished();
 			}
 		}
 		return false;
-	}
-
-	void TCP_Socket::abort()
-	{
-		TCP_Socket_Private::abort();
 	}
 
 	//full close (no half-close supported)
@@ -142,8 +148,10 @@ namespace ipstack
 			if (receiveB == 0) {
 				//no gratuitous packets received, yet
 				bool timeout_reached = (msec==0) ? false : block((uint32_t)msec); //wait for max. msec
-				if (timeout_reached == false) {
+				if (!timeout_reached) {
 					receiveB = (ReceiveBuffer*)packetbuffer->get(); //check for new packet, since timeout was not reached
+				} else {
+					return -2;
 				}
 			}
 			if (receiveB != 0) {

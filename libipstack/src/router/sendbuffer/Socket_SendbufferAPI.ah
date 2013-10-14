@@ -22,9 +22,9 @@
 using namespace ipstack;
 
 /**
- * Add sending functionality to all sockets
+ * Add SendBuffer API to all sockets
  */
 aspect Socket_Send_aspect {
-	advice "ipstack::%_Socket" : slice Socket_SendbufferAPI_Slice;
+	advice "ipstack::%_Socket" && derived("ipstack::SendBufferAPI") : slice Socket_SendbufferAPI_Slice;
 };
 

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ICMPv4_ErrorType.h"
-#include "ip/dual_single_stack/get_ip_version.h"
+#include "ip/IP.h"
 
 using namespace ipstack;
 

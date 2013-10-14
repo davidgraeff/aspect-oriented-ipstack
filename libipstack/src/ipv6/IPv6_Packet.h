@@ -14,7 +14,7 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright (C) 2011 Christoph Borchert
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2012-2013 David Gräff
 
 #pragma once
 
@@ -62,42 +62,42 @@ class IPv6_Packet
 			traffic_class1 = 0;
 			version = IPV6_VERSION;
 		}
-		uint16_t get_payload_len() {
+		uint16_t get_payload_len() const {
 			return payload_length;
 		}
 		void set_payload_len(uint16_t len) {
 			payload_length = len;
 		}
 
-		uint8_t get_version() {
+		uint8_t get_version() const {
 			return version;
 		}
 		
-		uint8_t get_hoplimit() {
+		uint8_t get_hoplimit() const {
 			return hoplimit;
 		}
 		void set_hoplimit(uint8_t t) {
 			hoplimit = t;
 		}
 
-		uint8_t get_nextheader() {
+		uint8_t get_nextheader() const {
 			return nextheader;
 		}
 		void set_nextheader(uint8_t i) {
 			nextheader = i;
 		}
-		char* get_nextheaderPointer() {
+		char* get_nextheaderPointer() const {
 			return (char*)&nextheader;
 		}
 
-		ipv6addr get_src_ipaddr() {
+		const ipv6addr &get_src_ipaddr() const {
 			return src_ipaddr;
 		}
 		void set_src_ipaddr(const ipv6addr& addr) {
 			copy_ipv6_addr(addr, src_ipaddr);
 		}
 
-		ipv6addr get_dst_ipaddr() {
+		const ipv6addr &get_dst_ipaddr() const {
 			return dst_ipaddr;
 		}
 		
@@ -105,12 +105,12 @@ class IPv6_Packet
 			copy_ipv6_addr(addr, dst_ipaddr);
 		}
 
-		uint8_t* get_payload() {
+		uint8_t* get_payload() const {
 			// return pointer to payload
 			return (uint8_t*)(payload);
 		}
 
-		unsigned validPacketLength(unsigned packet_len_in_bytes) {
+		unsigned validPacketLength(unsigned packet_len_in_bytes) const {
 			//returns 0 if packet length is invalid
 			//returns the valid ipv6 packet length otherwise
 

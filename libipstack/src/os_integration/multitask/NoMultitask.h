@@ -18,10 +18,19 @@
 #pragma once
 #include "util/ipstack_inttypes.h"
 
-namespace ipstack
-	// Return true if the src and destination
-	bool is_src_dest_addr_matching(char* packet) {
-		// weave in //TODO: add to IP_Socket
-		return false;
-	}
-}
+/**
+ * You have to implement the following classes
+ */
+namespace ipstack {
+	class NoMultitask {
+	public:
+		/**
+		 * Some libipstack functionalities like arp, ndp and tcp are using
+		 * busy waiting. If you have configured libipstack to be single tasked,
+		 * the wait_for_input method is called in the busy loops to provide you
+		 * a mean to receive data from the network and provide it to the ipstack.
+		 * 
+		 */
+		static void wait_for_input() {}
+	};
+} // ipstack

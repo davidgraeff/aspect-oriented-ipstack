@@ -23,7 +23,7 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::synsent(TCP_Segment* segment, unsigned len) {
-		closed(segment, len);
+	void TCP_Socket_Private::synsent(ReceiveBuffer* receiveB) {
+		closed(receiveB);
 	}
 }

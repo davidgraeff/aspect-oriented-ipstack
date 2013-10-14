@@ -1,13 +1,9 @@
 Things to do:
 =============
- * Memory allocation safety
-   -> Incoming packets should not be able to steal buffers for acknowledgements in TCP
- * Routing
- * TCP: Timewait state: Do we need to wait for closing/aborting a connection after fin
-   packet? (Half open requests support should handle this, although not rfc conform)
- * TCP: Document all tcp internal methods and consolidate if possible
- * TCP: receive/listen: may be specific to IPv4/IPv6 or the IP class interface has to
-        provide a is_src_dest_addr_matching(Packet*) method or a tcp connection stores
-        ip src/dest addr bytes and addrs length and compares to bytes of ip_packet
- * TCP: Get rid of freeReceivedSegment (State machine should use ReceiveBuffer instead
-        of segment+len)
+ * Simple Routing for IPv4/v6 if multiple interfaces
+ * IPv4: kein tcp/udp erlauben, wenn noch keine src addresse. Wie bei ipv6 sollte beim
+         interface->up() eine adresse zugewiesen werden oder up() verhindert werden.
+         (DHCP)
+ * TCP: Incoming packets should not be able to steal buffers for acknowledgements in TCP
+ * TCP: NODELAY ausschalten/einschalten des Nagle Algorithmus zur Verhinderung von zu kleinen
+        Paketen beim absenden.

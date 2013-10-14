@@ -27,7 +27,5 @@ using namespace ipstack;
 
 slice class IPv4_Singlestack_Slice {
 public:
-	//#define m_useipversion 4
-	//const uint8_t m_useipversion = 4;
 	enum {m_useipversion = 4};
 };

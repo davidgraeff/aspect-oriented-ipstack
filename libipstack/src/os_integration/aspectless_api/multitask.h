@@ -4,32 +4,27 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Copyright (C) 2011 Christoph Borchert, 2012 David Gräff
+// 
+// Copyright (C) 2013 David Gräff
 
 #pragma once
+#include "util/ipstack_inttypes.h"
 
-#include "ICMPv4_ErrorType.h"
-#include "ip/IP.h"
-
-using namespace ipstack;
-
-aspect IPv4_ICMP_Port_Unreachable {
-	advice execution("void ipstack::Demux::error_port_not_reachable(ipstack::ReceiveBuffer&)") &&
-	args(buffer) : around(ReceiveBuffer& buffer) {
-		if (IP::get_ip_version(buffer.p.ip_packet) != 4) {
-			tjp->proceed();
-			return;
-		}
-		ICMPv4_ErrorReply::send(&buffer, ICMPv4_Packet::ICMP_TYPE_DESTINATION_UNREACHABLE,
-			ICMPv4_Packet::ICMP_CODE_PORT_UNREACHABLE);
-	}
-};
+/**
+ * You have to implement the following classes
+ */
+namespace ipstack_app {
+	class Multitask {
+	public:
+		static void lockCritical();
+		static void unlockCritical();
+	};
+} // ipstack

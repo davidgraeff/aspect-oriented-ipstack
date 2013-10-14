@@ -25,5 +25,9 @@ using namespace ipstack;
 slice class Demux_TCP_Slice {
 	private:
 		TCP_Socket* tcp_head_socket;
-
+		/**
+		* This method should be called if the tcp port of the given socket is not assigned on the given
+		* interface.
+		*/
+		void tcp_no_connection(ReceiveBuffer& buffer) {}
 };

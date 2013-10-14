@@ -49,8 +49,17 @@ public:
 		return sendbuffer;
 	}
 
-	Interface* getUsedInterface() {
-		return 0;
+	/**
+	* Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
+	* invalid after sending it and may be freed by calling socket->freeSendbuffer(sendbuffer).
+	*/
+	bool send(SendBuffer* dataToSend) {
+		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.
+			return false;
+		}
+		dataToSend->setState(SendBuffer::TransmittedState);
+		dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
+		return true;
 	}
 	
 	/**
@@ -60,9 +69,7 @@ public:
 	 * increase the size by its own header and all IPv6 extension headers it
 	 * plan to add at its current state.
 	 */
-	unsigned estimateSendBufferMinSize() {
-		return 0;
-	}
+	unsigned estimateSendBufferMinSize() { return 0; }
 	
 	/**
 	 * Influenced by aspects of all network-stack layers to add their own headers.
@@ -70,19 +77,6 @@ public:
 	 * add its own header + IPv6 extension headers depending on its current state.
 	 */
 	void prepareSendBuffer(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {}
-	
-	/**
-	 * Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
-	 * invalid after sending it and may be freed by calling socket->freeSendbuffer(sendbuffer).
-	 */
-	bool send(SendBuffer* dataToSend) {
-		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.
-			return false;
-		}
-		dataToSend->setState(SendBuffer::TransmittedState);
-		dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
-		return true;
-	}
 	
 	/**
 	 * A convenience method to get the maximum transmission unit for the used interface.
@@ -109,10 +103,4 @@ public:
 		if (memsize<mtusize) return memsize-headersize;
 		return mtusize-headersize;
 	}
-	
-	/**
-	 * Return true if src and dest address are set up in the
-	 * used ip version.
-	 */
-	bool hasValidSrcDestAddresses() const {return false;}
 };

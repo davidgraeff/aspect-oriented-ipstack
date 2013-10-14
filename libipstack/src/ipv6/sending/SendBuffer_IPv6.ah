@@ -29,7 +29,8 @@ using namespace ipstack;
  * Set the IPv6 header
  */
 aspect Sendbuffer_IPv6 {
-	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
+	advice execution("% ipstack::%::estimateSendBufferMinSize()" && derived("ipstack::SendBufferAPI")
+		&& derived("ipstack::IP")) && result(v) :
 		after(unsigned v) {
 		// check ip version
 		if (tjp->that()->m_useipversion == IPV6_VERSION) {
@@ -37,7 +38,8 @@ aspect Sendbuffer_IPv6 {
 		}
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+	advice execution("% ipstack::%::prepareSendBuffer(...)" && derived("ipstack::SendBufferAPI")
+		&& derived("ipstack::IP")) && args(sendbuffer, use_as_response) :
 		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
 		// check ip version

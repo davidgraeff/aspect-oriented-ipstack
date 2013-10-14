@@ -39,29 +39,32 @@ namespace ipstack
 
 	void TCP_Socket_Private::abort()
 	{
-		clearHistory(); //free all pending packets
-		// clear receive buffer
+		// Free all pending packets
+		clearHistory();
+		// Clear receive buffer
 		while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
 			ReceiveBuffer::free(t);
 		}
+		// Unbind and reset socket state
+		unbind();
 		resetSocketState();
 	}
 
-	void TCP_Socket_Private::input(TCP_Segment* segment, unsigned len)
+	void TCP_Socket_Private::input(ReceiveBuffer* receiveB)
 	{
 		// *THE* state machine switch
 		switch (state) {
-			case CLOSED: closed(segment, len); break;
-			case LISTEN: listen(segment, len); break;
-			case SYNSENT: synsent(segment, len); break;
-			case SYNRCVD: synrcvd(segment, len); break;
-			case ESTABLISHED: established(segment, len); break;
-			case FINWAIT1: finwait1(segment, len); break;
-			case FINWAIT2: finwait2(segment, len); break;
-			case CLOSEWAIT: closewait(segment, len); break;
-			case LASTACK: lastack(segment, len); break;
-			case CLOSING: closing(segment, len); break;
-			case TIMEWAIT: timewait(segment, len); break;
+			case CLOSED: closed(receiveB); break;
+			case LISTEN: listen(receiveB); break;
+			case SYNSENT: synsent(receiveB); break;
+			case SYNRCVD: synrcvd(receiveB); break;
+			case ESTABLISHED: established(receiveB); break;
+			case FINWAIT1: finwait1(receiveB); break;
+			case FINWAIT2: finwait2(receiveB); break;
+			case CLOSEWAIT: closewait(receiveB); break;
+			case LASTACK: lastack(receiveB); break;
+			case CLOSING: closing(receiveB); break;
+			case TIMEWAIT: timewait(receiveB); break;
 		}
 	}
 
@@ -100,7 +103,7 @@ namespace ipstack
 		return false;
 	}
 
-	bool TCP_Socket_Private::FIN_complete()
+	bool TCP_Socket_Private::isFinFlag_and_complete()
 	{
 		//return true if a FIN was received and all data was received completely, too
 		if ((FIN_received == true) && (receiveBuffer.getAckNum() == FIN_seqnum)) {
@@ -110,44 +113,39 @@ namespace ipstack
 		return false;
 	}
 
-	bool TCP_Socket_Private::handleSYN(TCP_Segment* segment)
+	void TCP_Socket_Private::handleFIN(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len) {
+		if (segment->has_FIN() && (FIN_received == false)) {
+			FIN_seqnum = seqnum + payload_len;
+			FIN_received = true;
+		}
+	}
+		
+	void TCP_Socket_Private::handleSYN(ReceiveBuffer* receiveB)
 	{
 		//This function is called only at: ESTABLISHED
-		if (segment->has_SYN()) {
-			// 1) ACK of 'three way handshake' got lost! // && segment->has_ACK())
-			// 2) OR: //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
-			freeReceivedSegment(segment);
-			sendACK(); // 'retransmit'
-			return true;
-		}
-		return false;
+		// 1) ACK of 'three way handshake' got lost! // && segment->has_ACK())
+		// 2) OR: //rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
+		freeReceivebuffer(receiveB);
+		sendACK(); // 'retransmit'
 	}
 
-	bool TCP_Socket_Private::handleSYN_final(TCP_Segment* segment)
+	void TCP_Socket_Private::handleSYN_final(ReceiveBuffer* receiveB)
 	{
 		//call this function if a FIN was received
 		//This function is called at: CLOSEWAIT, LASTACK, CLOSING, TIMEWAIT
-		if (segment->has_SYN()) {
-			//rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
-			//TODO: "Internetworking with TCP/IP II page 202": answer a SYN with RST and abort()
-			freeReceivedSegment(segment);
-			sendACK(FIN_seqnum + 1U);
-			return true;
-		}
-		return false;
+		//rfc793 page 34 (Figure 10.) ("Half-Open Connection Discovery")
+		//TODO: "Internetworking with TCP/IP II page 202": answer a SYN with RST and abort()
+		freeReceivebuffer(receiveB);
+		sendACK(FIN_seqnum + 1U);
 	}
 
-	bool TCP_Socket_Private::handleRST(TCP_Segment* segment)
+	void TCP_Socket_Private::handleRST(ReceiveBuffer* receiveB)
 	{
-		if (segment->has_RST()) {
-			/*In all states except SYN-SENT, all reset (RST) segments are validated
-			by checking their SEQ-fields.  A reset is valid if its sequence number
-			is in the window. -> TODO */
-			freeReceivedSegment(segment);
-			abort(); //abort the connection
-			return true;
-		}
-		return false;
+		/*In all states except SYN-SENT, all reset (RST) segments are validated
+		by checking their SEQ-fields.  A reset is valid if its sequence number
+		is in the window. -> TODO */
+		freeReceivebuffer(receiveB);
+		abort(); //abort the connection
 	}
 
 	void TCP_Socket_Private::processACK()

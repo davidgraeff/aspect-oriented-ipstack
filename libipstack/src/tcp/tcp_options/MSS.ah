@@ -81,11 +81,13 @@ advice "ipstack::TCP_Socket" : slice MSS_TCP_Socket_Slice;
 						  "% ipstack::TCP_Socket::synsent%(ipstack::TCP_Segment* , unsigned)";
 
 
-	advice call("void ipstack::TCP_Socket::freeReceivedSegment(TCP_Segment*)") &&
+	advice call("void ipstack::TCP_Socket::freeReceivebuffer(%)") &&
 	within(SYN_free()) &&
 	that(socket) &&
-	args(segment) :
-		before(TCP_Socket& socket, TCP_Segment* segment) {
+	args(b) :
+		before(TCP_Socket& socket, void* b) {
+			
+		TCP_Segment* segment = (TCP_Segment*) ((ReceiveBuffer*)b)->getData();
 
 		// Compare received MSS with our 'mss' (MTU - headers) and choose the smaller one
 		// The smaller one guarantees that we have enough memory to receive a tcp packet

@@ -30,10 +30,6 @@ uint32_t TCP_ReceiveBuffer::getAckNum(){
   }
 }
 
-void TCP_ReceiveBuffer::socket_free(TCP_Segment* segment){
-	socket->freeReceivedSegment(segment);
-}
-
 void TCP_ReceiveBuffer::copyData(void* dst, unsigned len){
   //no len checks here. caller is responsible!
   read_firstSeqNum += len;
@@ -41,7 +37,7 @@ void TCP_ReceiveBuffer::copyData(void* dst, unsigned len){
   if(current_len == len){
     //consume head completely
     memcpy(dst, head->getData(), current_len);
-    socket_free(head->getSegmentPtr()); //free @ TCP_Socket
+	socket->freeReceivebuffer(head->getMemoryPtr());
     head = 0;
     pushFlag = false; // Receive Buffer is empty now
   }
@@ -60,7 +56,7 @@ bool TCP_ReceiveBuffer::insert(TCP_Segment* segment, uint32_t seqnum, unsigned l
     if(head == 0){
       //there is a free buffer slot (the only one)
       head = &elements[0];
-      head->setSegment(segment, len, seqnum);
+      head->setData(segment, len, seqnum);
       if(segment->has_PSH()) { pushFlag = true; }
       return true;
     }

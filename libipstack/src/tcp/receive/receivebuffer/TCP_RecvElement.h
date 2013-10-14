@@ -22,27 +22,26 @@
 
 namespace ipstack {
 
-  
+class ReceiveBuffer;
 class TCP_RecvElement{
   private:
   unsigned len;
   uint32_t seqNum;
   uint8_t* data;
-  TCP_Segment* segmentPtr;
+  ReceiveBuffer* memoryPtr;
   
   public:
-  void setSegment(TCP_Segment* segment, unsigned length, uint32_t sequenceNumber){
+  void setData(TCP_Segment* segment, unsigned length, uint32_t sequenceNumber){
     len = length;
     seqNum = sequenceNumber;
     data = segment->get_data();
-	segmentPtr = segment;
+	memoryPtr = (ReceiveBuffer*)((char*)segment - sizeof(ReceiveBuffer));
   }
   /**
-   * The associated segment for this data. This is neccessary to know for freeing this
-   * memory later on.
+   * The associated memory for this data. 
    */
-  TCP_Segment* getSegmentPtr() {return segmentPtr;}
-    
+  ReceiveBuffer* getMemoryPtr() {return segmentPtr;}
+
   void setLength(unsigned l) { len = l; }
   unsigned getLength() { return len; }
   

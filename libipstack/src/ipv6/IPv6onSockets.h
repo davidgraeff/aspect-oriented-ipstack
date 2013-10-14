@@ -31,6 +31,46 @@ class IPv6_Packet;
  */
 class IPV6 {
 public:
+	IPV6() ;
+	~IPV6() {}
+	
+	/**
+	 * Call this after a requestBuffer call to reset all configuration
+	 * you set like setting the hoplimit or activating special IPv6 headers.
+	 */
+	void restoreDefaultSendingConfiguration() ;
+
+	void setHoplimit(uint8_t h) ;
+
+	/**
+	 * Set the destination address. If
+	 * interface is set, src address and hoplimit are not determined automatically! You
+	 * should avoid setting the interface manually in most cases, but only if
+	 * you set the the src address and hoplimit manually, too.
+	 */
+	void set_dst_addr(const ipv6addr& dst, Interface* interface = 0) ;
+
+	/**
+	 * If you really want to set the src ip yourself,
+	 * instead of letting the interface choose one for you,
+	 * you have to call this method after set_dst_addr!
+	 */
+	void set_src_addr(const ipv6addr& src) ;
+
+	// Warning, this is a pointer to the address. Use memcpy
+	// to replicate the address.
+	const ipv6addr& get_dst_addr() const { return dst_ipv6_addr; }
+	const ipv6addr& get_src_addr() const { return src_ipv6_addr; }
+	
+	/**
+	 * Return the destination address as a next hop address in the basic implementation.
+	 * If you enable the destination cache it will return a real on-link destination
+	 * or the unspecified address if no on-link destination can be resolved.
+	 */
+	ipv6addr get_nexthop_ipaddr() ;
+
+	bool hasValidSrcDestAddresses() const;
+public:
 	// cache for fast sending
 	Interface* interface;
 	// this is a copy of the most matching assigned ip of the interface
@@ -75,45 +115,5 @@ private:
 	 */
 	unsigned getSpecificHeaderSize() ;
 
-public:
-	IPV6() ;
-	~IPV6() {}
-	
-	/**
-	 * Call this after a requestBuffer call to reset all configuration
-	 * you set like setting the hoplimit or activating special IPv6 headers.
-	 */
-	void restoreDefaultSendingConfiguration() ;
-
-	void setHoplimit(uint8_t h) ;
-
-	/**
-	 * Set the destination address. If
-	 * interface is set, src address and hoplimit are not determined automatically! You
-	 * should avoid setting the interface manually in most cases, but only if
-	 * you set the the src address and hoplimit manually, too.
-	 */
-	void set_dst_addr(const ipv6addr& dst, Interface* interface = 0) ;
-
-	/**
-	 * If you really want to set the src ip yourself,
-	 * instead of letting the interface choose one for you,
-	 * you have to call this method after set_dst_addr!
-	 */
-	void set_src_addr(const ipv6addr& src) ;
-
-	// Warning, this is a pointer to the address. Use memcpy
-	// to replicate the address.
-	const ipv6addr& get_dst_addr() const { return dst_ipv6_addr; }
-	const ipv6addr& get_src_addr() const { return src_ipv6_addr; }
-	
-	/**
-	 * Return the destination address as a next hop address in the basic implementation.
-	 * If you enable the destination cache it will return a real on-link destination
-	 * or the unspecified address if no on-link destination can be resolved.
-	 */
-	ipv6addr get_nexthop_ipaddr() ;
-
-	bool hasValidSrcDestAddresses() const;
 }; // end IPV6 class
 } //namespace ipstack

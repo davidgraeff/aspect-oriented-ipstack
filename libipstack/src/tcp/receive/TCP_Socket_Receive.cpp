@@ -24,11 +24,10 @@
 
 namespace ipstack
 {
-	static uint16_t TCP_Socket::tcp_last_default_port = 1024U;
+	static uint16_t TCP_Socket_Private::tcp_last_default_port = 1024U;
 
-	bool TCP_Socket::bind() {
-		uint16_t sport = get_sport();
-		if (sport == TCP_Segment::UNUSED_PORT) {
+	bool TCP_Socket_Private::bind() {
+		if (get_sport() == TCP_Segment::UNUSED_PORT) {
 			// Choose 'random' source port number
 			// Restriction: The port is unique across all ip interfaces
 			// instead unique to the current ip only.
@@ -51,30 +50,42 @@ namespace ipstack
 			// no free port in range 1024..65000 found!
 			return false;
 		} else {
-			//verify if connection is not used already
-			TCP_Socket* current = Demux::Inst().tcp_head_socket;
+			//verify if connection tupel (src port, dest port, src ip) is not used already
+			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
 			while (current != 0) {
-				if (current->get_sport() == sport) {
-					if (current->get_dport() == get_dport()) {
+				if (current->get_sport() == get_sport() && current->get_dport() == get_dport() &&
+					current->ip.is_ip_src_addr_matching(ip)) {
 						return false;
 					}
 				}
+				current = current->getNext();
 			}
-			current = current->getNext();
 		}
 
-		//insert at front
-		setNext(tcp_head_socket);
-		Demux::Inst().tcp_head_socket = this;
+		if (isListening()) {
+			//insert at end
+			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
+			while (current != 0) {
+				if (!current->getNext()) {
+					current->setNext(this);
+					break;
+				}
+				current = current->getNext();
+			}
+		} else {
+			//insert at front
+			setNext(tcp_head_socket);
+			Demux::Inst().tcp_head_socket = this;
+		}
 		return true;
 	}
 
-	void TCP_Socket::unbind() {
+	void TCP_Socket_Private::unbind() {
 		if (this == Demux::Inst().tcp_head_socket) {
 			Demux::Inst().tcp_head_socket = getNext();
 		} else {
-			TCP_Socket* current = Demux::Inst().tcp_head_socket;
-			TCP_Socket* next = current->getNext();
+			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
+			TCP_Socket_Private* next = current->getNext();
 			while (next != 0) {
 				if (next == this) {
 					current->setNext(next->getNext());
@@ -86,7 +97,7 @@ namespace ipstack
 		}
 	}
 
-	uint16_t TCP_Socket::getReceiveWindow()
+	uint16_t TCP_Socket_Private::getReceiveWindow()
 	{
 		if (isSynSend() || isClosed()) {
 			return (uint16_t)TCP_Segment::DEFAULT_MSS; //no mss negotiated so far
@@ -101,7 +112,7 @@ namespace ipstack
 		}
 	}
 
-	void TCP_Socket::setMSS(unsigned max_segment_size)
+	void TCP_Socket_Private::setMSS(unsigned max_segment_size)
 	{
 		mss = max_segment_size;
 
@@ -126,29 +137,17 @@ namespace ipstack
 		}
 	}
 
-	void TCP_Socket::setMaxReceiveWindow(unsigned max) {
+	void TCP_Socket_Private::setMaxReceiveWindow(unsigned max) {
 		maxReceiveWindow_MSS = max;
 	}
 
-	void TCP_Socket::recv_loop()
+	void TCP_Socket_Private::processOneReceivedPacket()
 	{
-		while (waiting_for_input()) {
-			ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
-			if (receiveB != 0) {
-				input((TCP_Segment*) receiveB->getData(), receiveB->getSize());
-			} else {
-				input(0, 0);
-			}
-		}
+		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
+		input(receiveB);
 	}
 
-	void TCP_Socket::freeReceivedSegment(TCP_Segment* segment)
-	{
-		ReceiveBuffer* receiveB = (ReceiveBuffer*)((char*)segment - sizeof(ReceiveBuffer));
-		ReceiveBuffer::free(receiveB);
-	}
-
-	bool TCP_Socket::handleData(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len)
+	bool TCP_Socket_Private::insertPayloadIntoReceivebuffer(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len)
 	{
 		bool needToFree = true; //caller must free this segment?
 		if (payload_len > 0) {

@@ -29,7 +29,7 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_IPv4_Checksum {
-	advice execution("% ipstack::%_Socket::send(ipstack::SendBuffer*)") && args(dataToSend) :
+	advice execution("% ipstack::%_Socket::send(ipstack::SendBuffer*)" && derived("ipstack::IP")) && args(dataToSend) :
 	before(SendBuffer* dataToSend) {
 		
 		if (tjp->that()->m_useipversion != 4) {

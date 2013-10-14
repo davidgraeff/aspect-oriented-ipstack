@@ -44,7 +44,7 @@ namespace ipstack
 			*/
 			ReceiveBuffer* clone(SocketMemory& socket_mem, void* start_mem = 0);
 			
-			inline Interface* get_interface() { return m_interface; }
+			inline Interface* get_interface() const { return m_interface; }
 			inline void setPayload(char*& payload, uint16_t& payloadSize) {
 				this->payload = payload;
 				this->m_payloadSize = payloadSize;

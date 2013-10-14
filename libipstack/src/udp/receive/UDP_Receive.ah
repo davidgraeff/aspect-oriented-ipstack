@@ -64,7 +64,8 @@ aspect UDP_Receive {
 		}
 		
 		buffer.p.transport_packet = udp_packet;
-		buffer.setPayload(udp_packet, payloadlen-UDP_Packet::UDP_HEADER_SIZE);
+		// The new payload of the buffer is the udp payload
+		buffer.setPayload(udp_packet->get_data(), payloadlen-UDP_Packet::UDP_HEADER_SIZE);
 		
 		uint16_t udp_packet_dport = udp_packet->get_dport();
 

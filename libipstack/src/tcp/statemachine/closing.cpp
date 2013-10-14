@@ -23,35 +23,37 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::closing(TCP_Segment* segment, unsigned len) {
-		if(segment != 0){
+	void TCP_Socket_Private::closing(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			
 			// new tcp segment received:
-			if(handleRST(segment)){ return; }
-			if(handleSYN_final(segment)){ return; }
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
+			if(segment->has_SYN()) {handleSYN_final(receiveB); return; } 
 			
 			if(segment->has_ACK()){
-			handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
+				handleACK(segment->get_acknum()); //Just wait for an ACK (for our FIN)
 			}
 			
 			if(segment->has_FIN()){
-			//Our ACK from state FINWAIT1 got lost. retransmit!
-			//updateHistory(false); // free unused segments stored in history //XXX: now done in alloc()
-			sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
+				//Our ACK from state FINWAIT1 got lost. retransmit!
+				//updateHistory(false); // free unused segments stored in history //XXX: now done in alloc()
+				sendACK(FIN_seqnum + 1U); // a FIN consumes one sequence number
 			}
 			
-			freeReceivedSegment(segment);
+			freeReceivebuffer(receiveB);
 		}
 		else{
 			// there are no more segments in the input buffer
 			updateHistory(); //cleanup packets which are not used anymore (and trigger retransmissions)
 			if(history.isEmpty()){
-			// Our FIN got ack'ed
-			//printf("ACK arrived: CLOSING --> TIMEWAIT\n");
-			state = TIMEWAIT;
+				// Our FIN got ack'ed
+				//printf("ACK arrived: CLOSING --> TIMEWAIT\n");
+				state = TIMEWAIT;
 			}
 			else{
-			//resend FIN (from close()) after timeout
-			block(history.getNextTimeout());
+				//resend FIN (from close()) after timeout
+				block(history.getNextTimeout());
 			}
 		}
 	}

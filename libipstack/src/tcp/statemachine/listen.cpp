@@ -23,18 +23,17 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::listen(TCP_Segment* segment, unsigned len) {
-		if (segment != 0) {
-			// new tcp segment received:
-			if (handleRST(segment)) {
-				return;
-			}
+	void TCP_Socket_Private::listen(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
 
 			//only SYN packet have come here.
 			//do not check for SYN flag (once again).
 			receiveBuffer.setFirstSeqNum(segment->get_seqnum() + 1U);
 
-			freeReceivedSegment(segment);
+			freeReceivebuffer(receiveB);
 
 			//send SYN+ACK:
 			SendBuffer* b = requestSendBufferTCP_syn();

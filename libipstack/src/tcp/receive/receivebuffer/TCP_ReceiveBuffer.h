@@ -58,8 +58,6 @@ class TCP_ReceiveBuffer{
 
   uint32_t getAckNum();
   
-  void socket_free(TCP_Segment* segment);
-  
   void copyData(void* dst, unsigned len);
   
   //insert returns 'true' if segment has been added successfully

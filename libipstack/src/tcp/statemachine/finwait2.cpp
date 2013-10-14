@@ -23,29 +23,30 @@
 
 namespace ipstack
 {
-	void TCP_Socket_Private::finwait2(TCP_Segment* segment, unsigned len) {
-		if(segment != 0){
-			// new tcp segment received:
+	void TCP_Socket_Private::finwait2(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			unsigned len = receiveB->getSize();
 			
-			if(handleRST(segment)){ return; }
-			if(handleSYN(segment)){ return; }
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
+			if(segment->has_SYN()) {handleSYN(receiveB); return; } 
 			
 			//calculate payload length
 			unsigned payload_len = len - (segment->get_header_len()*4);
 			uint32_t seqnum = segment->get_seqnum();
 			
 			handleFIN(segment, seqnum, payload_len);
-			bool needToFree = handleData(segment, seqnum, payload_len);
+			bool needToFree = insertPayloadIntoReceivebuffer(segment, seqnum, payload_len);
 			
 			if(needToFree == true){
-				freeReceivedSegment(segment);
+				freeReceivebuffer(receiveB);
 			}
 			
 			// **********************************************
-			if(FIN_complete()){
-			//we have received all data so far
-			//printf("FIN arrived: FINWAIT2 --> TIMEWAIT\n");
-			state = TIMEWAIT;
+			if(isFinFlag_and_complete()){
+				//we have received all data so far
+				//printf("FIN arrived: FINWAIT2 --> TIMEWAIT\n");
+				state = TIMEWAIT;
 			}
 			// **********************************************    
 		}

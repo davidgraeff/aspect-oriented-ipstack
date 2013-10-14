@@ -23,12 +23,11 @@
 
 namespace ipstack
 {
-	void synrcvd(TCP_Segment* segment, unsigned len) {
-		if (segment != 0) {
-			// new tcp segment received:
-			if (handleRST(segment)) {
-				return;
-			}
+	void TCP_Socket_Private::synrcvd(ReceiveBuffer* receiveB) {
+		if(receiveB){
+			TCP_Segment* segment = (TCP_Segment*) receiveB->getData();
+			
+			if(segment->has_RST()) {handleRST(receiveB); return; } 
 
 			if (segment->has_ACK()) {
 				uint32_t acknum = segment->get_acknum();
@@ -48,9 +47,11 @@ namespace ipstack
 					SendBuffer* b = record->getSendBuffer();
 					//retransmit first item of TCP_History (there should be only one!)
 					send(b);
+				} else {
+					//TODO: abort connection here?
 				}
 			}
-			freeReceivedSegment(segment);
+			freeReceivebuffer(receiveB);
 		} else {
 			// there are no more segments in the input buffer
 			//TODO: goto CLOSED after timeout (no R1, R2?)

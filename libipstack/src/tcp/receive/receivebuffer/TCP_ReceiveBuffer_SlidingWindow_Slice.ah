@@ -77,7 +77,7 @@ slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
 					recv_continuous = 0;
 				}
 				TCP_RecvElement* next = head->getNext();
-				socket_free(head->getSegmentPtr()); //free @ TCP_Socket
+				socket->freeReceivebuffer(head->getMemoryPtr());
 				free(head); //free TCP_RecvElement
 				head = next; //advance one TCP_RecvElement
 				if (next == 0) {
@@ -135,7 +135,7 @@ slice class TCP_ReceiveBuffer_SlidingWindow_Slice {
 			}
 		}
 		TCP_RecvElement* element = alloc();
-		element->setSegment(segment, len, seqnum);
+		element->setData(segment, len, seqnum);
 
 		if (prev == 0) {
 			//insert at front!

@@ -18,20 +18,33 @@
 #pragma once
 #include "IPv6_Singlestack_Slice.ah"
 #include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/IPv6AddressUtilities.h"
 
 using namespace ipstack;
 
 aspect IPv6_Singlestack_Socket_aspect {
-	advice "ipstack::%_Socket" : slice IPv6_Singlestack_Slice;
+	advice "ipstack::IP" : slice IPv6_Singlestack_Slice;
 	
-	//SendBuffer getUsedInterface() {}
-	advice execution("% ipstack::%_Socket::getUsedInterface()") : around() {
+	advice execution("ipstack::Interface* ipstack::IP::getUsedInterface()") : around() {
 		*(tjp->result()) = tjp->that()->ipv6.interface;
 	}
 	
-	//bool hasValidSrcDestAddresses() {}
-	advice execution("% ipstack::%_Socket::hasValidSrcDestAddresses()") : around() {
+	advice execution("bool ipstack::IP::hasValidSrcDestAddresses()") : around() {
 		*(tjp->result()) = tjp->that()->ipv6.hasValidSrcDestAddresses();
+	}
+	
+	advice execution("void ipstack::IP::set_dst_ip_addr_to_peer_addr(char*)") && args(ip_packet)
+		: around(char* ip_packet) {
+		tjp->that()->ipv6.set_dst_addr(((IPv6_Packet*)ip_packet)->get_src_ipaddr());
+	}
+
+	advice execution("bool ipstack::IP::is_ip_peer_addr_matching(char*)") && args(ip_packet) : around(char* ip_packet) {
+		*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_dst_addr(),((IPv6_Packet*)ip_packet)->get_src_ipaddr());
+	}
+	
+	advice execution("bool ipstack::IP::is_ip_src_addr_matching(ipstack::IP&)") && args(ip) : around(IP& ip) {
+		*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_src_addr(),ip.ipv6.get_src_addr());
 	}
 };
 

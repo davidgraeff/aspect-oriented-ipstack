@@ -18,157 +18,78 @@
 #pragma once
 
 #include "Demux_TCP_Slice.h"
+#include "ip/InternetChecksum.h"
+#include "tcp/TCP_Segment.h"
+#include "tcp/TCP_Socket.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
 
 aspect TCP_Receive {
 	// *** Affect class: Demux for registering a socket to be able to receive packets
 	advice "ipstack::Demux" : slice Demux_TCP_Slice;
-};
 
+	advice execution("void ipstack::Demux::ip_payload_demux(ipstack::ReceiveBuffer&,%)") &&
+	args(buffer,payload_protocol)  && that(demux) : around(ReceiveBuffer& buffer, uint8_t payload_protocol, Demux& demux) {
 
-#include "ipv6/IPv6_Packet.h"
-#include "ipv6/InternetChecksum.h"
-#include "tcp/TCP_Segment.h"
-#include "tcp/TCP_Socket.h"
-#include "demux/Demux.h"
-#include "router/Interface.h"
-#include "util/ipstack_inttypes.h"
-
-using namespace ipstack;
-
-aspect IPv6_TCP_Receive {
-	advice execution("% ipstack::Demux::ipv6_payload_demux(ipstack::Interface*, ipstack::IPv6_Packet*, void*&, unsigned&, unsigned char& )") &&
-	args(interface, packet, payload, payload_length, nextHeader) && that(demux) :
-	around(Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader, Demux& demux) {
-		
-		if (nextHeader != TCP_Segment::IP_TYPE_TCP) {
+		if (payload_protocol != TCP_Segment::IP_TYPE_TCP) {
 			tjp->proceed();
 			return;
 		}
 
-		*(tjp->result()) = true; // end of ipv6 packet parsing
 		
-		//we have a tcp packet
-		if (payload_length < TCP_Segment::TCP_MIN_HEADER_SIZE) {
+		uint16_t payloadlen = buffer.get_payload_size();
+		if (payloadlen < TCP_Segment::TCP_MIN_HEADER_SIZE) {
 			return; //len too small! Drop packet
 		}
 
-		TCP_Segment* tcp_segment = (TCP_Segment*) payload;
+		TCP_Segment* tcp_segment = static_cast<TCP_Segment*>(buffer.get_payload_data());
 		
 		//verify tcp checksum
-		if (!tcp_segment->checksum_valid(InternetChecksumV6::computePseudoHeader(packet, payload_length, TCP_Segment::IP_TYPE_TCP), payload_length, interface)) {
-			return; //wrong! Drop packet
+		if (!tcp_segment->checksum_valid(InternetChecksum::computePseudoHeader(packet, len, TCP_Segment::IP_TYPE_TCP), len, interface)) {
+			// checksum wrong: drop entire packet
+			return;
 		}
 
+		buffer.p.transport_packet = tcp_segment;
+		// The new payload of the buffer is NOT the tcp segment payload, that is extracted
+		// by the tcp socket class!
+		//buffer.setPayload(tcp_segment, payloadlen-TCP_Segment::TCP_MIN_HEADER_SIZE);
+		
 		TCP_Socket* socket = demux.tcp_head_socket;
 		
 		const uint16_t dport = tcp_segment->get_dport();
 		const uint16_t sport = tcp_segment->get_sport();
-		const ipv6addr sip = packet->get_src_ipaddr();
-		const ipv6addr dip = packet->get_dst_ipaddr();
 		
 		while (socket != 0) {
-			if (socket->get_sport() == dport) {
-				if (socket->get_dport() == sport) {
-					if (compare_ipv6_addr(socket->ipv6.get_dst_addr(),sip)) {
-						if (compare_ipv6_addr(socket->ipv6.get_src_addr(),dip)) {
-							//fully qualified socket found.
-							if (socket->is_packetbuffer_full()) {
-								demux.error_receiving_queue_full_v6(packet, interface);
-							}
-							else if (!socket->addToReceiveQueue(tcp_segment, payload_length)) {
-								demux.error_receiving_memory_too_small_v6(packet, interface);
-							}
-							return;
-						}
-					}
+			if (socket->get_sport() == dport && socket->get_dport() == sport && socket->ip.is_ip_peer_addr_matching(packet)) {
+				//fully qualified socket found.
+				if (!socket->addToReceiveQueue(buffer)) {
+					demux.error_receiving_queue_full(buffer);
 				}
-			}
-			socket = socket->getNext(); //try next socket
-		}
-
-		// try another TCP advice (e.g. listen, reset)
-		*(tjp->result()) = false; // continue ipv6 packet parsing
-		tjp->proceed();
-	}
-};
-
-
-#pragma once
-
-#include "ipv4/IPv4_Packet.h"
-#include "ipv4/InternetChecksum.h"
-#include "tcp/TCP_Segment.h"
-#include "tcp/TCP_Socket.h"
-#include "demux/Demux.h"
-#include "router/Interface.h"
-#include "util/ipstack_inttypes.h"
-
-using namespace ipstack;
-
-aspect IPv4_TCP_Receive {
-	// first, look at TCP
-	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") :
-		order("%TCP%", "%UDP%");
-
-	advice execution("void ipstack::Demux::ipv4_demux(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
-	args(packet, len, interface) && that(demux) :
-		around(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
-
-		if (packet->get_protocol() != TCP_Segment::IP_TYPE_TCP) {
-			tjp->proceed();
-			return;
-		}
-
-		if (interface->getIPv4Addr() == 0) {
-			// we do not accept tcp traffic if we do not have an ip address (yet).
-			return;
-		}
-		
-		//we have a tcp packet
-		if (len < TCP_Segment::TCP_MIN_HEADER_SIZE || len < packet->get_ihl() * 4) {
-			return; //len too small! Drop packet
-		}
-
-		// preprocessing length: subtract the ipv4 header size
-		len -= packet->get_ihl() * 4;
-
-		TCP_Segment* tcp_segment = (TCP_Segment*) packet->get_data();
-		
-		//verify tcp checksum
-		if (!tcp_segment->checksum_valid(InternetChecksumV4::computePseudoHeader(packet, len, TCP_Segment::IP_TYPE_TCP), len, interface)) {
-			return; //wrong! Drop packet
-		}
-
-		TCP_Socket* socket = demux.tcp_head_socket;
-		
-		const uint16_t dport = tcp_segment->get_dport();
-		const uint16_t sport = tcp_segment->get_sport();
-		const uint32_t sip = packet->get_src_ipaddr();
-		const uint32_t dip = packet->get_dst_ipaddr();
-		
-		while (socket != 0) {
-			if (socket->get_sport() == dport) {
-				if (socket->get_dport() == sport) {
-					if (socket->ipv4.get_dst_addr() == sip) {
-						if (socket->ipv4.get_src_addr() == dip) {
-							//fully qualified socket found.
-							if (socket->is_packetbuffer_full()) {
-								demux.error_receiving_queue_full(packet, interface);
-							}
-							else if (!socket->addToReceiveQueue(tcp_segment, len)) {
-								demux.error_receiving_memory_too_small(packet, interface);
-							}
-							return;
-						}
-					}
+				return;
+			} else if (socket->isListening() && socket->get_sport() == dport && tcp_segment->has_SYN()) {
+				// listener socket found
+				// 1) set ip address of peer as destination address
+				socket->ip.set_dst_ip_addr_to_peer_addr(buffer.p.ip_packet);
+				// 2) set destination port
+				socket->set_dport(tcp_segment->get_sport());
+				// put packet into socket buffer
+				if (!socket->addToReceiveQueue(buffer)) {
+					demux.error_receiving_queue_full(buffer);
 				}
+				return;
 			}
 			socket = socket->getNext(); //try next socket
 		}
 		
-		// try another TCP advice (e.g. listen, reset)
-		tjp->proceed();
+		//do not reply resets with resets
+		if (tcp_segment->has_RST()) {
+			return;
+		}
+		
+		demux.tcp_no_connection(buffer);
 	}
 };
