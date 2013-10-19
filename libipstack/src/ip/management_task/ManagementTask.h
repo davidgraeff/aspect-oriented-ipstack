@@ -37,7 +37,7 @@ namespace ipstack {
 	 * 
 	 *    Example:
 	 *    static MemoryInterface& get_mem_icmpv4() { static ManagementSocketMemory mem; return mem; }
-	 *    ICMPv4_DerivedSocket& get_socket_icmpv4() { static ICMPv4_DerivedSocket socket(get_mem_icmpv4()); return socket; }
+	 *    ICMPv4_Socket& get_socket_icmpv4() { static ICMPv4_Socket socket(get_mem_icmpv4()); return socket; }
 	 */
 	class Management_Task {
 		private:

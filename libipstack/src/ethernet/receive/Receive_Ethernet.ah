@@ -39,9 +39,11 @@ aspect Ethernet_Receive {
 			}
 
 			// This receiveBuffer object is used in the entire demux hierarchie.
-			// If it is interesting for a socket, it is cloned to the socket memory.
+			// If it is interesting for a socket, it is cloned to the socket memory
+			// (or processed directly)
 			ReceiveBuffer buffer(interface, data, len);
 			buffer.p.ethernet_frame = data;
+			// The payload on this level is the ethernet frame with the length of the entire frame
 			buffer.setPayload(data, len);
 			demux.ethernet_demux(buffer);
 		} else {

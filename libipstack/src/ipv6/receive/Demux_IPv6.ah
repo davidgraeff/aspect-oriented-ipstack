@@ -1,0 +1,65 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+#include "ipv6/IPv6_Packet.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "Demux_IPv6_Slice.ah"
+
+using namespace ipstack;
+
+aspect IPv6_Receive {
+	advice "ipstack::Demux" : slice Demux_IPv6_Slice;
+
+	// advice ordering: always execute this aspect first!
+	advice execution("void ipstack::Demux::ipv6_demux(ipstack::IPv6_Packet*, unsigned, ipstack::Interface*)") :
+		order("IPv6_Receive", "%" && !"IPv6_Receive");
+
+	advice execution("void ipstack::Demux::ipv6_demux(ipstack::IPv6_Packet*, unsigned, ipstack::Interface*)") &&
+	args(packet, len, interface) && that(demux) :
+		around(IPv6_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
+
+		//is the receiving interface running ipv6?
+		if (interface->isIPv6Up() == false) {
+			//discard packets on down interfaces
+			return;
+		}
+
+		len = packet->validPacketLength(len); //strip packet (e.g. ethernet padding)
+		if (len == 0) {
+			//invalid packet length
+			return;
+		}
+		*(tjp->arg<1>()) = len; //update function parameter (for other aspects)
+		//packet length seems to be ok
+
+		if (packet->get_version() != IPv6_Packet::IPV6_VERSION) {
+			//no ipv6 packet
+			return;
+		}
+
+		//IPv6 packet has passed all verification check so far ...
+		if (interface->hasIPv6Address(packet->get_dst_ipaddr())) {
+			//this packet is destined for this local host
+			tjp->proceed(); // continue ipv6_demux(...)
+		} else {
+			//this packet has to be routed elsewhere
+//       demux.ipv6_forward(packet, len, interface);
+		}
+	}
+};

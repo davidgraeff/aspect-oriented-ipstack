@@ -42,7 +42,7 @@ namespace ipstack
 		// Free all pending packets
 		clearHistory();
 		// Clear receive buffer
-		while (ReceiveBuffer* t = (ReceiveBuffer*)packetbuffer->get()) {
+		while (ReceiveBuffer* t = receiveRawPointer()) {
 			ReceiveBuffer::free(t);
 		}
 		// Unbind and reset socket state

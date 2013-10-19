@@ -24,5 +24,20 @@ namespace ipstack
 	/**
 	* Inherit from this class if you want your socket to be extended by the sendbuffer API.
 	*/
-	class sendbufferAPI {};
+	class sendbufferAPI {
+	public:
+		/**
+		* Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
+		* invalid after sending it and may be freed by calling socket->freeSendbuffer(sendbuffer).
+		*/
+		static bool send(SendBuffer* dataToSend) {
+			// it is not supported to send a sendbuffer again. Use sendbuffer->recyle().
+			if (dataToSend->getState()!=SendBuffer::WritingState) {
+				return false;
+			}
+			dataToSend->setState(SendBuffer::TransmittedState);
+			dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
+			return true;
+		}
+	};
 } // namespace ipstack

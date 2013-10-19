@@ -22,10 +22,9 @@
 slice class MSS_TCP_Socket_Slice{
 public:
 	void recalculate_mss() {
-		// estimateSendBufferMinSize MUST NOT be influenced by the tcp header size aspect in this context
 		const uint_fast16_t headersize = estimateSendBufferMinSize();
 		const uint_fast16_t memsize = get_Mempool()->SIZE_BIG;
-		const uint_fast16_t mtusize = getMTU();
+		const uint_fast16_t mtusize = getUsedInterface()->getMTU();
 		if (memsize<mtusize)
 			setMSS(memsize-headersize);
 		else

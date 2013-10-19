@@ -7,37 +7,28 @@ namespace ipstack {
 	
 IPV4::IPV4() : interface(0), dst_ipv4_addr(0), id(0) {}
 
-Interface* IPV4::find_route(uint32_t ipv4_dstaddr) {
+void IPV4::resolveRoute()
+{
+	//TODO: use neighbour cache
 	Router& router = Router::Inst(); //short name
 	//search for local interface. check ip addr AND subnet masks
 	Interface* interface = router.head_interface;
 	while (interface != 0) {
 		if (interface->isIPv4Up()) {
-			if ((interface->getIPv4Addr() & interface->getIPv4Subnetmask()) == (ipv4_dstaddr & interface->getIPv4Subnetmask())) {
-				if (interface->getIPv4Addr() != ipv4_dstaddr) { //addresses MUST NOT be equal
+			if ((interface->getIPv4Addr() & interface->getIPv4Subnetmask()) == (dst_ipv4_addr & interface->getIPv4Subnetmask())) {
+				if (interface->getIPv4Addr() != dst_ipv4_addr) { //addresses MUST NOT be equal
 					//valid route found
-					return interface;
+					this->interface = interface;
+					return;
 				}
 			}
 		}
 		interface = interface->getNext();
 	}
-	return 0;
+	
+	this->interface = 0;
 }
-	
-void IPV4::resolveRoute()
-{
-	
-	interface = find_route(dst_ipv4_addr);
-	using_gateway = false;
-	if (interface != 0)
-		return;
 
-	//use default gateway
-	Router& router = Router::Inst(); //short name
-	interface = find_route(router.ipv4_get_gateway_addr());
-	using_gateway = true;
-}
 void IPV4::setupHeader(IPv4_Packet* packet, unsigned int datasize)
 {
 	packet->set_ihl(IPv4_Packet::IPV4_MIN_HEADER_SIZE / 4);
@@ -87,11 +78,5 @@ void IPV4::set_dst_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
 
 uint32_t IPV4::get_dst_addr() const { return dst_ipv4_addr; }
 
-uint32_t IPV4::get_nexthop_ipaddr() {
-	if (using_gateway == false) {
-		return dst_ipv4_addr; //local
-	} else {
-		return Router::Inst().ipv4_get_gateway_addr(); //gateway
-	}
-}
+uint32_t IPV4::get_nexthop_ipaddr() { return dst_ipv4_addr; }
 }

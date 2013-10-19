@@ -30,7 +30,7 @@ using namespace ipstack;
 aspect Sendbuffer_IPCMPv4  {
 	advice execution("% ipstack::%Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%" , "Sendbuffer_IPCMPv4");
 
-	advice execution("% ipstack::ICMPv4_DerivedSocket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
+	advice execution("% ipstack::ICMPv4_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
 		after(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 		// We do not write the icmp header here: this is done in the icmp aspects. Just set the ip header protocol
 		sendbuffer->p.transport_packet = sendbuffer->getDataPointer();

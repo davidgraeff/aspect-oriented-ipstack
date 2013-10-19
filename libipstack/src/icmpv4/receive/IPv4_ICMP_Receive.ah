@@ -47,7 +47,7 @@ aspect IPv4_ICMP_Receive {
 			buffer.p.transport_packet = icmp;
 			buffer.setPayload(icmp, payloadlen-ICMPv4_Packet::ICMP_HEADER_SIZE);
 			
-			ICMPv4_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
+			ICMPv4_Socket* socket = Management_Task::Inst().get_socket_icmpv4();
 			if (socket->acceptedData(icmp->get_type(), icmp->get_code())) {
 				socket->addToReceiveQueue(buffer);
 			}

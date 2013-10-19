@@ -29,7 +29,7 @@ using namespace ipstack;
  * InternetChecksum_Tx_Offloading_all aspect is active.
  */
 aspect Sendbuffer_ICMPv4_Checksum  {
-	advice execution("% ipstack::ICMPv4_DerivedSocket::send(...)") && args(dataToSend) :
+	advice execution("% ipstack::ICMPv4_Socket::send(...)") && args(dataToSend) :
 	before(SendBuffer* dataToSend) {
 		
 		ICMPv4_Packet* icmp = (ICMPv4_Packet*) dataToSend->p.transport_packet;

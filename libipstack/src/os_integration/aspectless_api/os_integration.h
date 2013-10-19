@@ -39,15 +39,5 @@ namespace ipstack_app {
 		* corruption).
 		*/
 		static void haltsystem();
-		
-		/**
-		 * Some libipstack functionalities like arp, ndp and tcp are using
-		 * busy waiting. If you have configured libipstack to be single tasked,
-		 * the wait_for_input method is called in the busy loops to provide you
-		 * a mean to receive data from the network and provide it to the ipstack.
-		 * 
-		 * You do not need to implement this method if you use multitasking.
-		 */
-		static void wait_for_input();
 	};
 } // ipstack

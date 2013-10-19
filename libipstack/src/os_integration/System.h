@@ -31,6 +31,15 @@ public:
 	  * Call this for ipstack initalization.
 	  */
 	static void init() {}
+	
+	/**
+	 * Call this periodically. This is for maintenance like
+	 * garbage collection, ARP/NDP entries expire etc. You may not call
+	 * it more often than you receive packets. It is recommended
+	 * to call it after demux(...) or 1 second depending on what happens
+	 * later.
+	 */
+	static void periodic() {}
 };
 
 }

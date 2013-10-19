@@ -18,6 +18,7 @@
 #pragma once
 #include "IPv4_Singlestack_Slice.ah"
 #include "ipv4/IPv4onSockets.h"
+#include "ipv4/InternetChecksum.h"
 
 using namespace ipstack;
 
@@ -43,5 +44,10 @@ aspect IPv4_Singlestack_Socket_aspect {
 	
 	advice execution("bool ipstack::IP::is_ip_src_addr_matching(ipstack::IP&)") && args(ip) : around(IP& ip) {
 		*(tjp->result()) = (tjp->that()->ipv4.get_src_addr()==ip.ipv4.get_src_addr());
+	}
+
+	advice execution("% ipstack::InternetChecksum::computePseudoHeader(...)") &&
+		args(ip_packet, payloadlen, upper_layer_nextheader) : around(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+		*(tjp->result()) = InternetChecksumV4::computePseudoHeader(ip_packet, payloadlen, upper_layer_nextheader);
 	}
 };

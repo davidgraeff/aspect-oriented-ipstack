@@ -22,12 +22,12 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "ICMPv6_Packet.h"
-#include "ICMPv6_DerivedSocket.h"
+#include "ICMPv6_Socket.h"
 
 using namespace ipstack;
 
 aspect IPv6_ICMP_Echo_Reply {
-	advice execution("bool ipstack::ICMPv6_DerivedSocket::acceptedData(%,%)") &&
+	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
 	args(type, code) : around(uint8_t type, uint8_t code) {
 		if ((type == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 			(code == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
@@ -37,14 +37,14 @@ aspect IPv6_ICMP_Echo_Reply {
 		tjp->proceed();
 	}
 		
-	advice execution("void ipstack::ICMPv6_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
 	args(b) : around(SmartReceiveBufferPtr& b) {
 
 		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
 		if ((icmp_packet->get_type() == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 		(icmp_packet->get_code() == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
 
-			ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
+			ICMPv6_Socket& socket = Management_Task::Inst().get_socket_icmpv4();
 			uint16_t maxlen = socket.getMaxPayloadLength(b.get_interface());
 			uint16_t payloadlen = b.get_payload_size();
 			if (payloadlen < maxlen) {

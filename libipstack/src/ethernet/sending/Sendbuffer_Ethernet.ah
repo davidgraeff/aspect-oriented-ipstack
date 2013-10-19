@@ -38,7 +38,7 @@ aspect Sendbuffer_Ethernet {
 	
 	// Before ARP or NDP
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : 
-		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_DirectResponse_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_%_Aspect");
+		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_%_Aspect");
 
 	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
 		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {

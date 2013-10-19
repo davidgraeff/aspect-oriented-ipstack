@@ -19,6 +19,10 @@
 
 #include "util/ipstack_inttypes.h"
 #include "IPv6AddressUtilities.h"
+#include "router/Interface.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
+#include "sending/RouteResult.h"
 
 
 namespace ipstack {
@@ -115,5 +119,19 @@ private:
 	 */
 	unsigned getSpecificHeaderSize() ;
 
+	/**
+	 * Return true if this entry is useful for a route
+	 * May be influenced by other aspects to check validity (For example the Time_Expire aspect).
+	 */
+	static bool find_route_is_matching(const ipv6addr& ipv6_dstaddr, AddressEntry* entry);
+
+	/**
+	 * Check each interface and all assigned IPv6 prefixes. If no fitting prefix was found
+	 * a default router entry is returned. If no default router is known, an invalid RouteResult
+	 * is returned.
+	 * This method also proposes a fitting IPv6 src address to be used for the given destination address.
+	 * (An IPv6 interface may have several IPv6 addresses assigned simultanously)
+	 */
+	RouteResult find_route(const ipv6addr& ipv6_dstaddr);
 }; // end IPV6 class
 } //namespace ipstack

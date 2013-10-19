@@ -1,0 +1,57 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2011 Christoph Borchert
+
+#pragma once
+#include "ethernet/Eth_Frame.h"
+#include "demux/Demux.h"
+#include "router/Interface.h"
+#include "arp/ARP_Packet.h"
+#include "util/ipstack_inttypes.h"
+
+using namespace ipstack;
+
+aspect ARP_Ethernet {
+	/* ARP is only defined on ethernet link layer -> Use ethernet_demux. */
+	advice execution("void ipstack::Demux::ethernet_demux(ReceiveBuffer&)") && args(buffer) :
+		around(ReceiveBuffer& buffer) {
+
+		Eth_Frame* eth_frame = buffer.p.ethernet_frame;
+
+		if (eth_frame->get_type() != ARP_Packet::ETH_TYPE_ARP) {
+			tjp->proceed();
+			return;
+		}
+
+		unsigned arp_len = buffer.get_payload_size() - Eth_Frame::ETH_HEADER_SIZE;
+		if (arp_len < ARP_Packet::ARP_HEADER_SIZE)
+			return; //packet too small, abort processing!
+
+		ARP_Packet* packet = (ARP_Packet*) eth_frame->get_data();
+
+		if (packet->get_hw_type() != ARP_Packet::ARP_HW_TYPE_ETH) {
+			// We do not have an ARP packet over Ethernet.
+			// Because ARP is effectively only used for ethernet, we do not
+			// use tjp->proceed() here, but abort the processing.
+			return; 
+		}
+
+		// Current payload is the arp packet and its length
+		buffer.setPayload(packet, arp_len);
+			
+		Management_Task::Inst().get_socket_arp()->addToReceiveQueue(buffer);
+	}
+};

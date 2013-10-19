@@ -22,9 +22,9 @@ namespace ipstack {
 	/**
 	 * Amount of cache entries
 	 */
-	#ifdef kconfig_cfIPSTACK_IPv6_cache //kconfig value
-		enum {IPSTACK_IPV6_CACHE_ENTRIES_SIZE=kconfig_cfIPSTACK_IPv6_cache};
+	#ifdef kconfig_cfIPSTACK_IPV6_INTERFACE_PREFIXES_SIZE //kconfig value
+		enum {IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE=kconfig_cfIPSTACK_IPV6_INTERFACE_PREFIXES_SIZE};
 	#else
-		enum {IPSTACK_IPV6_CACHE_ENTRIES_SIZE=10};
+		enum {IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE=10};
 	#endif
 }

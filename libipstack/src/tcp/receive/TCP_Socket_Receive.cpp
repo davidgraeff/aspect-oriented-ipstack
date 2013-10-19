@@ -143,8 +143,7 @@ namespace ipstack
 
 	void TCP_Socket_Private::processOneReceivedPacket()
 	{
-		ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
-		input(receiveB);
+		input(receiveRawPointer());
 	}
 
 	bool TCP_Socket_Private::insertPayloadIntoReceivebuffer(TCP_Segment* segment, uint32_t seqnum, unsigned payload_len)

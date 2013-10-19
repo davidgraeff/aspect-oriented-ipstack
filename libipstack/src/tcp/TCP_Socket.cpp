@@ -54,42 +54,37 @@ namespace ipstack
 			return false;
 
 		//Wait for SYN packet
-		while (isListening()) {
-			ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
-			input(receiveB); 
-		}
 		recv_loop();
 		return socket.isEstablished();
 	}
 
 	bool TCP_Socket::connect()
 	{
-		if (!hasValidSrcDestAddresses()) {
-			return false; //no (valid) dst_ipv4_addr set
+		//only allow connecting in CLOSED state with valid dst_ipv4_addr
+		if (!hasValidSrcDestAddresses() || !isClosed()) {
+			return false;
 		}
-		if (isClosed()) {
-			//only allow connecting in CLOSED state
-			set_sport(TCP_Segment::UNUSED_PORT); //reset source port
-			if (bind()) {
-				gen_initial_seqnum();
-				sendWindow = 0;
+		set_sport(TCP_Segment::UNUSED_PORT); //reset source port
+		if (!bind())
+			return false;
+		
+		gen_initial_seqnum();
+		sendWindow = 0;
 
-				SendBuffer* b = requestSendBufferTCP_syn();
-				if (b != 0) {
-					TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
-					writeHeader(b);
-					segment->set_SYN();
-					seqnum_next++; // 1 seqnum consumed
-					state = SYNSENT; // next state
-					send(b);
-					waiting = true;
-					history.add(b, getRTO());
-				}
-				recv_loop();
-				return isEstablished();
-			}
-		}
-		return false;
+		SendBuffer* b = requestSendBufferTCP_syn();
+		if (b != 0) {
+			TCP_Segment* segment = (TCP_Segment*)b->getDataPointer();
+			writeHeader(b);
+			segment->set_SYN();
+			seqnum_next++; // 1 seqnum consumed
+			state = SYNSENT; // next state
+			send(b);
+			waiting = true;
+			history.add(b, getRTO());
+		} else
+			return false;
+		recv_loop();
+		return isEstablished();
 	}
 
 	//full close (no half-close supported)
@@ -144,12 +139,12 @@ namespace ipstack
 	int TCP_Socket::poll(unsigned int msec)
 	{
 		if (isEstablished() || isCloseWait()) {
-			ReceiveBuffer* receiveB = (ReceiveBuffer*)packetbuffer->get();
+			ReceiveBuffer* receiveB = receiveRawPointer();
 			if (receiveB == 0) {
 				//no gratuitous packets received, yet
 				bool timeout_reached = (msec==0) ? false : block((uint32_t)msec); //wait for max. msec
 				if (!timeout_reached) {
-					receiveB = (ReceiveBuffer*)packetbuffer->get(); //check for new packet, since timeout was not reached
+					receiveB = receiveRawPointer(); //check for new packet, since timeout was not reached
 				} else {
 					return -2;
 				}
@@ -158,7 +153,7 @@ namespace ipstack
 				do {
 					//process all gratuitous packets that have arrived
 					input((TCP_Segment*) receiveB->getData(), receiveB->getSize());
-					receiveB = (ReceiveBuffer*)packetbuffer->get();
+					receiveB = receiveRawPointer();
 				} while (receiveB != 0);
 				updateHistory(); //cleanup packets which are not used anymore
 				processACK(); //send ACK if necessary

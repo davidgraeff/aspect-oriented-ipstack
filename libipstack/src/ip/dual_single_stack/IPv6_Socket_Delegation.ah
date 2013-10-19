@@ -20,6 +20,7 @@
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/InternetChecksum.h"
 
 using namespace ipstack;
 
@@ -45,6 +46,11 @@ aspect IPv6_Singlestack_Socket_aspect {
 	
 	advice execution("bool ipstack::IP::is_ip_src_addr_matching(ipstack::IP&)") && args(ip) : around(IP& ip) {
 		*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_src_addr(),ip.ipv6.get_src_addr());
+	}
+	
+	advice execution("% ipstack::InternetChecksum::computePseudoHeader(...)") &&
+		args(ip_packet, payloadlen, upper_layer_nextheader) : around(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+		*(tjp->result()) = InternetChecksumV6::computePseudoHeader(ip_packet, payloadlen, upper_layer_nextheader);
 	}
 };
 

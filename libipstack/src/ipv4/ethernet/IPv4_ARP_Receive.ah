@@ -1,0 +1,77 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2011 Christoph Borchert
+
+#pragma once
+
+#include "demux/Demux.h"
+#include "router/Interface.h"
+
+#include "arp/ARP_Packet.h"
+#include "arp/ARP_Cache.h"
+#include "ethernet/Eth_Frame.h"
+
+using namespace ipstack;
+
+aspect IPv4_ARP_Receive {
+  advice execution("void ipstack::ARP_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+         args(b):
+         around(SmartReceiveBufferPtr& b){
+
+	// Extract arp packet from receive buffer.
+	ARP_Packet_IPv4* packet = (ARP_Packet_IPv4*) b->get_payload_data();
+	unsigned len = b->get_payload_size();
+	Interface* interface = b->get_interface();
+	
+    if(packet->arp_header.get_protocol_type() == ARP_Packet::ARP_PROTOCOL_TYPE_IPV4){
+      //we have an ARP packet for IPv4
+          
+      //is the receiving interface running ipv4?
+      if(interface->isIPv4Up() == false){
+        //discard packets on down interfaces
+        return;
+      }
+          
+      //check for correct packet size
+      if(len < ARP_Packet::ARP_IPV4_PACKETSIZE){
+        //packet size too small!
+        return;
+      }
+
+      if(interface->getIPv4Addr() == packet->arp_dst_ipv4_addr){
+        //this ARP packet is for us
+        
+        //extract source hw- and ipv4-addresses
+        uint8_t* src_hw_addr = packet->get_payload();
+        uint8_t* src_ipv4_addr = packet->get_payload() + ARP_Packet::ARP_HW_ADDR_SIZE_ETH;
+        
+        if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
+          //Send ARP-Reply
+          IPv4_ARP::reply(src_hw_addr, packet->arp_src_ipv4_addr, interface);
+		}
+        else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
+          //Update ARP Cache entries
+          IPv4_ARP::update(packet->arp_src_ipv4_addr, src_hw_addr);
+        }
+      }
+    }
+    else{
+      tjp->proceed();
+    }
+  }
+  
+};
+

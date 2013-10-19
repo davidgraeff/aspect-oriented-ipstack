@@ -44,9 +44,7 @@ namespace ipstack
 				//Our SYN+ACK (from state LISTEN or SYNSENT) got lost
 				TCP_Record* record = history.get();
 				if (record != 0) {
-					SendBuffer* b = record->getSendBuffer();
-					//retransmit first item of TCP_History (there should be only one!)
-					send(b);
+					retransmit(record);
 				} else {
 					//TODO: abort connection here?
 				}

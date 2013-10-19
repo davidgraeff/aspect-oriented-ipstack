@@ -26,12 +26,12 @@ namespace ipstack {
 		virtual unsigned getMaxFreeBlockSize() = 0;
 	};
 
-class RingbufferInterface {
-public:
-	virtual void put(void* val) = 0;
-	virtual void* get() = 0;
-	virtual bool isEmpty() = 0;
-	virtual bool isFull() = 0;
-};
+	class RingbufferInterface {
+	public:
+		virtual void put(void* val) = 0;
+		virtual void* get() = 0;
+		virtual bool isEmpty() = 0;
+		virtual bool isFull() = 0;
+	};
 } //namespace ipstack
 

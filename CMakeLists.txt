@@ -14,8 +14,8 @@ if (NOT BUILD_LIBIPSTACK_WITHOUT_KCONFIG AND NOT EXISTS "${KCONFIG_EXECUTABLE}")
 	include(cmake/kconfig_frontends.cmake)
 endif()
 
-# build ipstack static lib
-add_subdirectory (libipstack)
-
 # build integrations
 add_subdirectory (integration)
+
+# build ipstack static lib
+add_subdirectory (libipstack)

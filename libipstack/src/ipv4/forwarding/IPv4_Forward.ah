@@ -26,8 +26,6 @@ using namespace ipstack;
 //TODO: not implemented yet!
 
 aspect IPv4_Forward {
-
-	/* Affect class: IP_Demux */
 	advice execution("void ipstack::Demux::ipv4_forward(ipstack::IPv4_Packet*, unsigned, ipstack::Interface*)") &&
 	args(packet, len, interface) && that(demux) :
 		after(IPv4_Packet* packet, unsigned len, Interface* interface, Demux& demux) {
@@ -37,16 +35,11 @@ aspect IPv4_Forward {
 		//TODO: verfiy the algorithm below! (perhaps optimize it?)
 		Interface* ir = IPV4::find_route(packet->get_dst_ipaddr());
 		if (ir == 0) {
-			//destination is NOT on a local link. use gateway
-			ir = IPV4::find_route(router.ipv4_get_gateway_addr());
+			//TODO: destination is NOT on a local link. use gateway
 		}
 		//std::cout << "Routing over: " << (const char*) ir->name << std::endl;
 		if ((ir != 0) && (ir != interface)) {
 			//TODO: route this paket -> copy it to userspace routing daemon?
 		}
-
 	}
-
-	/* Affect class: XY */
-
 };

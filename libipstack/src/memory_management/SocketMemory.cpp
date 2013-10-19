@@ -52,17 +52,17 @@ namespace ipstack
 	void SocketMemory::block() {}
 	
 	SmartReceiveBufferPtr SocketMemory::receive(){
-		return SmartReceiveBufferPtr((ReceiveBuffer*)packetbuffer->get(), this);
+		return SmartReceiveBufferPtr(receiveRawPointer(), this);
 	}
 
 	SmartReceiveBufferPtr SocketMemory::receive(uint64_t waitForPacketTimeoutMS) {
-		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
+		ReceiveBuffer* recv = receiveRawPointer();
 		if (!recv) {
 			if (!waitForPacketTimeoutMS )
 				return 0;
 			uint64_t timeout = Clock::now() + Clock::ms_to_ticks(waitForPacketTimeoutMS);
 			while(timeout < Clock::now()){
-				recv = (ReceiveBuffer*)packetbuffer->get();
+				recv = receiveRawPointer();
 				if (recv)
 					break;
 			}
@@ -71,11 +71,15 @@ namespace ipstack
 	}
 	
 	SmartReceiveBufferPtr SocketMemory::receiveBlock(){
-		ReceiveBuffer* recv = (ReceiveBuffer*)packetbuffer->get();
+		ReceiveBuffer* recv = receiveRawPointer();
 		while(recv == 0){
 			block();
-			recv = (ReceiveBuffer*)packetbuffer->get();
+			recv = receiveRawPointer();
 		}
 		return SmartReceiveBufferPtr(recv, this);
+	}
+	
+	ReceiveBuffer* SocketMemory::receiveRawPointer() {
+		return (ReceiveBuffer*)packetbuffer->get();;
 	}
 }

@@ -67,7 +67,7 @@ namespace ipstack
 		* SmartReceiveBufferPtr b = socket->receive();
 		* printf(b->getData());
 		*/
-		SmartReceiveBufferPtr receive();
+		inline SmartReceiveBufferPtr receive();
 		
 		/**
 		* Convenience method: Block until a packet is available or a timeout is reached.
@@ -82,6 +82,8 @@ namespace ipstack
 		* This method is not implemented, if you have disabled receive support.
 		*/
 		SmartReceiveBufferPtr receiveBlock();
+		
+		ReceiveBuffer* receiveRawPointer();
 		void block();
 
 	protected:

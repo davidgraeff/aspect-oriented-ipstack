@@ -10,28 +10,6 @@ namespace ipstack {
 		restoreDefaultSendingConfiguration();
 	}
 
-	ipstack::AddressEntry* IPV6::resolveRoute()
-	{
-		// No valid destination address
-		if (!dst_ipv6_addr.ipaddrB8[0]) {
-			interface = 0;
-			return 0;
-		}
-		Router& router = Router::Inst();
-		RouteResult route = router.ipv6_find_route(dst_ipv6_addr);
-		if (route.proposed_src_addr) {
-			copy_ipv6_addr(route.proposed_src_addr->ipv6, src_ipv6_addr);
-			if (route.proposed_src_addr->hoplimit) { // if hoplimit is known
-				hoplimit = route.proposed_src_addr->hoplimit;
-			} else {
-				hoplimit = IPv6_Packet::IPV6_DEFAULT_HOPLIMIT;
-			}
-		} else // Probably a multicast destination address. Just use the unspecified ip as src
-			get_unspecified_ipv6_address(src_ipv6_addr);
-		interface = route.interface;
-		return route.proposed_src_addr;
-	}
-
 	ipv6addr IPV6::get_nexthop_ipaddr()
 	{
 		return dst_ipv6_addr;
@@ -80,6 +58,75 @@ namespace ipstack {
 	bool IPV6::hasValidSrcDestAddresses() const
 	{
 		return (src_ipv6_addr.ipaddrB8[0] != 0) && (dst_ipv6_addr.ipaddrB8[0] != 0);
+	}
+	
+	ipstack::AddressEntry* IPV6::resolveRoute()
+	{
+		// No valid destination address
+		if (!dst_ipv6_addr.ipaddrB8[0]) {
+			interface = 0;
+			return 0;
+		}
+		RouteResult route = find_route(dst_ipv6_addr);
+		if (route.proposed_src_addr) {
+			copy_ipv6_addr(route.proposed_src_addr->ipv6, src_ipv6_addr);
+			if (route.proposed_src_addr->hoplimit) { // if hoplimit is known
+				hoplimit = route.proposed_src_addr->hoplimit;
+			} else {
+				hoplimit = IPv6_Packet::IPV6_DEFAULT_HOPLIMIT;
+			}
+		} else // Probably a multicast destination address. Just use the unspecified ip as src
+			get_unspecified_ipv6_address(src_ipv6_addr);
+		interface = route.interface;
+		return route.proposed_src_addr;
+	}
+
+	bool IPV6::find_route_is_matching(const ipv6addr& ipv6_dstaddr, AddressEntry* entry) {
+		return compare_ipv6_addr(ipv6_dstaddr, entry->ipv6, entry->prefixlen);
+	}
+
+	RouteResult IPV6::find_route(const ipv6addr& ipv6_dstaddr) {
+		Router& router = Router::Inst();
+		/**
+		 * We will remember an entry for a default router
+		 */
+		RouteResult backup_default_router;
+		
+		// Check each interface and all assigned IPv6 prefixes
+		Interface* interface = router.head_interface;
+		while (interface != 0) {
+			// Only check enabled interfaces
+			if (interface->isIPv6Up()) {
+				uint8_t nextEntry = 0;
+				// Check all assigned IPv6 prefixes for the current interface
+				while (AddressEntry* entry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+					if (find_route_is_matching(ipv6_dstaddr, entry)) {
+						// A route has been found (prefix is matching). We do not check for the
+						// shortest prefix here. We'll get an icmpv6 redirect message if the target knows a better route
+						// anyway.
+						return RouteResult(entry, interface);
+					}
+					// If there is no default route interface assigned yet, and the 
+					if (entry->isRouting && !backup_default_router.interface &&
+						IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == IPV6AddressScope::IPV6_SCOPE_GLOBAL_UNICAST)
+						backup_default_router.proposed_src_addr = entry;
+				}
+				// Ok, we did not find a valid prefix entry. But may be there are default routers
+				if (!backup_default_router.interface) {
+					uint8_t nextEntry = 0;
+					while (NDPCacheEntry* entry = interface->addressmemory.findEntry<NDPCacheEntryType>(&nextEntry)) {
+						if (entry->isRouting) {
+							backup_default_router.interface = interface;
+							break;
+						}
+					}
+				}
+			}
+			interface = interface->getNext();
+		}
+		
+		backup_default_router.isDefaultRouter = true;
+		return backup_default_router;
 	}
 }
 

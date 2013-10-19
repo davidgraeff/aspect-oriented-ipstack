@@ -20,7 +20,7 @@
 #include "util/ipstack_inttypes.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "ipv6/AddressMemory.h"
+#include "ipv6/InterfacePrefixes.h"
 
 using namespace ipstack;
 
@@ -32,11 +32,12 @@ public:
 	/**
 	 * The address memory has to be public. A lot of functionality relies on this.
 	 */
-	AddressMemory addressmemory;
+	InterfacePrefixes assignedAddresses;
 	
 	/**
 	 * [ASPECT WEAVE IN]
-	 * Generate a full valid IPv6 by providing an IPv6-Prefix (valid in the sense of the RFC, there may be duplicates on-link)
+	 * Generate a full valid IPv6 address by providing an IPv6-Prefix
+	 * (valid in the sense of the RFC, there may be duplicates on-link)
 	 * Input: address prefix
 	 * Output: IP with interface identifier (e.g. ethernet mac) in IP's lower bits as first parameter.
 	 */
@@ -48,7 +49,7 @@ public:
 	 */
 	bool getInterfaceIPv6AddressByScope(ipstack::ipv6addr& addr, ipstack::IPV6AddressScope::IPv6_ADDRESS_SCOPE scope) {
 		uint8_t nextEntry = 0;
-		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+		while (AddressEntry* entry = assignedAddresses.findEntry(&nextEntry)) {
 			if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == scope) {
 				copy_ipv6_addr(entry->ipv6, addr);
 				return true;
@@ -68,7 +69,7 @@ public:
 	AddressEntry* makeIPv6AddressByPrefix(const ipstack::ipv6addr& prefix, uint8_t prefixlen,
 								 uint8_t ipstate = AddressEntry::AddressEntryStateTemporary,
 								 uint8_t routerEntryPosition = AddressMemory::EntryUndefined) {
-		AddressEntry* entry = (AddressEntry*)addressmemory.findEntry<FreeEntryType>();
+		AddressEntry* entry = assignedAddresses.findEntry(0,true);
 		if (!entry)
 			return 0;
 
@@ -88,12 +89,11 @@ public:
 	/**
 	 * Aspect: Multicast
 	 */
-	void registerIPv6Address(AddressEntry* entry) {
-		entry->reserve();
-	}
+	void registerIPv6Address(AddressEntry* entry) {}
 
 	/**
-	 * Aspect: If duplicate address detection is configured and the address state is set to AddressEntry::AddressEntryStateTemporary
+	 * Aspect: If duplicate address detection is configured and
+	 * the address state is set to AddressEntry::AddressEntryStateTemporary
 	 * do an duplicate address detection.
 	 */
 	void setIPv6AddressState(AddressEntry* entry, uint8_t ipstate) {
@@ -104,7 +104,7 @@ public:
 	bool hasIPv6Address(const ipstack::ipv6addr& addr) {
 		uint8_t nextEntry = 0;
 
-		while (AddressEntry* entry = addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
+		while (AddressEntry* entry = assignedAddresses.findEntry(&nextEntry)) {
 			if (compare_ipv6_addr(addr, entry->ipv6, entry->prefixlen)) {
 				return true;
 			}
@@ -120,7 +120,7 @@ public:
 	void setIPv6Up(bool up) {
 		if (!up && ipv6_up) { // was online -> take offline
 			// free all assigned addresses
-			addressmemory.freeAll(AddressEntry::ID);
+			assignedAddresses.freeAll(AddressEntry::ID);
 		}
 		ipv6_up = up;
 	}

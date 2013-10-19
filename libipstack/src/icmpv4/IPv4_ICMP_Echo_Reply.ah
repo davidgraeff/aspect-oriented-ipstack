@@ -22,13 +22,13 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "icmpv4/ICMPv4_Packet.h"
-#include "ICMPv4_DerivedSocket.h"
+#include "ICMPv4_Socket.h"
 
 using namespace ipstack;
 
 
 aspect IPv4_ICMP_Echo_Reply {
-	advice execution("bool ipstack::ICMPv4_DerivedSocket::acceptedData(%,%)") &&
+	advice execution("bool ipstack::ICMPv4_Socket::acceptedData(%,%)") &&
 	args(type, code) : around(uint8_t type, uint8_t code) {
 		if ((type == ICMPv4_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 			(code == ICMPv4_Packet::ICMP_CODE_ECHO)) {
@@ -38,14 +38,14 @@ aspect IPv4_ICMP_Echo_Reply {
 		tjp->proceed();
 	}
 		
-	advice execution("void ipstack::ICMPv4_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	advice execution("void ipstack::ICMPv4_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
 	args(b) : around(SmartReceiveBufferPtr& b) {
 		
 		ICMPv4_Packet* icmp_packet = static_cast<ICMPv4_Packet*>(b.get_payload_data());
 		if ((icmp_packet->get_type() == ICMPv4_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 			(icmp_packet->get_code() == ICMPv4_Packet::ICMP_CODE_ECHO)) {
 			
-			ICMPv4_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
+			ICMPv4_Socket& socket = Management_Task::Inst().get_socket_icmpv4();
 			uint16_t maxlen = socket.getMaxPayloadLength(b.get_interface());
 			uint16_t payloadlen = b.get_payload_size();
 			if (payloadlen < maxlen) {

@@ -32,7 +32,7 @@
  * start up at the same time after a power shortage etc.
  */
 aspect NDP_MDL_Respond {
-	advice execution("bool ipstack::ICMPv6_DerivedSocket::acceptedData(%,%)") &&
+	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
 	args(type, code) : around(uint8_t type, uint8_t code) {
 		if ((type == 130)) {
 			tjp->result() = true;
@@ -45,7 +45,7 @@ aspect NDP_MDL_Respond {
 	  * Respond to multicast Query (This is a version 1 response, but should work with version 2 implementations, too)
 	  */
 
-	advice execution("void ipstack::ICMPv6_DerivedSocket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
 	args(b) : around(SmartReceiveBufferPtr& b) {
 
 		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
@@ -64,7 +64,7 @@ aspect NDP_MDL_Respond {
 			}
 
 			if (need_response) {
-				ICMPv6_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv6();
+				ICMPv6_Socket& socket = Management_Task::Inst().get_socket_icmpv6();
 				IPV6& ipv6 = socket.ipv6;
 				ipv6.setHoplimit(1);
 				

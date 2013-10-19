@@ -1,0 +1,75 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2013 David Gräff
+
+#pragma once
+#include "thread_mutex_helper.h"
+
+using namespace ipstack;
+
+aspect OS_Integration_Multitask_app {
+	//advice ordering: execute OS_Integration_Multitask_app at first!
+	advice execution ("void ipstack::Interface::send(...)") : 
+			order("OS_Integration_Multitask_app" , "%" && !"OS_Integration_Multitask_app");
+	
+	// Interface::send must be guarded, because the main process sends arp/icmp packets,
+	// and user processes sends arbitrary packets, too. 
+	Mutex mutex_send;
+	advice execution("void ipstack::Interface::send(...)")  : around(){
+		Lock l(&mutex_send);
+		tjp->proceed();
+	}
+	
+	//// Mempool must be synchronized ////
+	// We have a global mutex for all sockets/mempools here. A more fine grained solution
+	// is to have a mutex for every socket
+	Mutex mutex_mempool;
+	advice execution("% ipstack::SendBuffer::createInstance(...)" || "% ipstack::SocketMemory::free%(...)") : around() {
+		Lock l(&mutex_mempool);
+		tjp->proceed();
+	}
+	
+	//// sync socket-linked-list operations and socket->getNext() etc ////
+	Mutex mutex_socket_linked_list;
+	advice execution("% ipstack::%_Socket::%bind()" || "% ipstack::DemuxLinkedList::%(%)") : around() {
+		Lock l(&mutex_socket_linked_list);
+		tjp->proceed();
+	}
+	
+	//// receiving-queue ////
+	// We have a global mutex for all sockets/receive-queues here. A more fine grained solution
+	// is to have a mutex for every socket
+	Mutex mutex_receiving_queue;
+	// sync add-to receiving-queue operation
+	advice execution("% ipstack::SocketMemory::addToReceiveQueue(...)") : around() {
+		Lock l(&mutex_receiving_queue);
+		tjp->proceed();
+	}
+	
+	// sync get-from receiving-queue operation
+	advice call("% ipstack::SocketMemory::receiveRawPointer(...)") : around() {
+		Lock l(&mutex_receiving_queue);
+		tjp->proceed();
+	}
+	
+	// sync get state of receiving-queue operation
+	advice call("% ipstack::SocketMemory::is_packetbuffer_full(...)") : around() {
+		Lock l(&mutex_receiving_queue);
+		tjp->proceed();
+	}
+	
+};
+

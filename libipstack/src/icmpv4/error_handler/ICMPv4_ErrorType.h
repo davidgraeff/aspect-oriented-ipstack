@@ -18,7 +18,7 @@
 #pragma once
 #include "ipv4/IPv4_Packet.h"
 #include "icmpv4/ICMPv4_Packet.h"
-#include "icmpv4/ICMPv4_DerivedSocket.h"
+#include "icmpv4/ICMPv4_Socket.h"
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "demux/receivebuffer/ReceiveBuffer.h"
@@ -28,7 +28,7 @@ namespace ipstack
 	class ICMPv4_ErrorReply
 	public:
 		static void send(ReceiveBuffer* buffer, uint8_t type, uint8_t code) {
-			ICMPv4_DerivedSocket& socket = Management_Task::Inst().get_socket_icmpv4();
+			ICMPv4_Socket& socket = Management_Task::Inst().get_socket_icmpv4();
 			
 			// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
 			const uint8_t echoErrornousPacketSize = buffer->p.ipv4->get_ihl() * 4 + 8;

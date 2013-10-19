@@ -48,26 +48,13 @@ public:
 		}
 		return sendbuffer;
 	}
-
-	/**
-	* Send the data of a SendBuffer that was created with requestSendBuffer(). The packet is
-	* invalid after sending it and may be freed by calling socket->freeSendbuffer(sendbuffer).
-	*/
-	bool send(SendBuffer* dataToSend) {
-		if (dataToSend->getState()!=SendBuffer::WritingState) { // it is not supported to send a sendbuffer again.
-			return false;
-		}
-		dataToSend->setState(SendBuffer::TransmittedState);
-		dataToSend->getInterface()->send(dataToSend->getDataStart(), dataToSend->getSize());
-		return true;
-	}
 	
 	/**
 	 * Influenced by aspects of all network-stack layers to get the mimimum
 	 * size for a send buffer to contain all those headers. The current state
 	 * of the layers should be taken into consideration. E.g. IPv6 should
 	 * increase the size by its own header and all IPv6 extension headers it
-	 * plan to add at its current state.
+	 * plan to add in its current state.
 	 */
 	unsigned estimateSendBufferMinSize() { return 0; }
 	
@@ -77,28 +64,15 @@ public:
 	 * add its own header + IPv6 extension headers depending on its current state.
 	 */
 	void prepareSendBuffer(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {}
-	
-	/**
-	 * A convenience method to get the maximum transmission unit for the used interface.
-	 */
-	uint_fast16_t getMTU(Interface* interface = 0) const {
-		if (interface==0)
-			interface = getUsedInterface();
-		if (!interface)
-			return 0;
-		return interface->getMTU();
-	}
-	
+
 	/**
 	 * The minium of the remaining MTU and the available memory.
 	 * Use this before creating a UDP SendBuffer where you want a maximum of available space for example.
 	 */
-	uint_fast16_t getMaxPayloadLength(Interface* interface = 0) const {
-		if (interface==0)
-			interface = getUsedInterface();
+	uint_fast16_t getMaxPayloadLength(Interface* interface) const {
 		const uint_fast16_t headersize = interface ? estimateSendBufferMinSize() : 0;
 		const uint_fast16_t memsize = get_Mempool()->getMaxFreeBlockSize();
-		const uint_fast16_t mtusize = getMTU(interface);
+		const uint_fast16_t mtusize = interface->getMTU();
 			
 		if (memsize<mtusize) return memsize-headersize;
 		return mtusize-headersize;

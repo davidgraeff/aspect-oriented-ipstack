@@ -21,13 +21,13 @@
 #include "ipv4/InternetChecksum.h"
 #include "router/Interface.h"
 #include "icmpv4/ICMPv4_Packet.h"
-#include "ICMPv4_DerivedSocket.h"
+#include "ICMPv4_Socket.h"
 #include <iostream>
 
 using namespace ipstack;
 
 aspect IPv4_ICMP_ReceiveOutput {
-	advice execution("bool ipstack::ICMPv4_DerivedSocket::acceptedData(%,%)") &&
+	advice execution("bool ipstack::ICMPv4_Socket::acceptedData(%,%)") &&
 	args(type, code) && result(is_accepted) : after(uint8_t type, uint8_t code, bool is_accepted) {
 
 		std::cout <<"ICMPv4 received: Accepted " << is_accepted <<

@@ -41,10 +41,8 @@ namespace ipstack {
 	public:
 		// cache for fast sending
 		Interface* interface;
-		bool using_gateway;
 	private:
 		uint32_t dst_ipv4_addr;
-		
 		
 		/**
 		* IP sequence number (fragmentation etc)
@@ -52,7 +50,6 @@ namespace ipstack {
 		uint16_t id;
 		
 		void resolveRoute();
-		static Interface* find_route(uint32_t ipv4_dstaddr)
 		
 		void setupHeader(IPv4_Packet* packet, unsigned datasize);
 		

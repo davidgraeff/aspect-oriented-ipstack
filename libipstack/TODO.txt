@@ -5,5 +5,7 @@ Things to do:
          interface->up() eine adresse zugewiesen werden oder up() verhindert werden.
          (DHCP)
  * TCP: Incoming packets should not be able to steal buffers for acknowledgements in TCP
+   -> Receiving window < available buffers
  * TCP: NODELAY ausschalten/einschalten des Nagle Algorithmus zur Verhinderung von zu kleinen
         Paketen beim absenden.
+ * IGMP

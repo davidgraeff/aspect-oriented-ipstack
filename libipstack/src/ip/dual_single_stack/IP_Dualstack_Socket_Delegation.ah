@@ -21,7 +21,9 @@
 #include "IP_Dualstack_IPVx_Slice.ah"
 #include "ip/IP.h"
 #include "ipv4/IPv4onSockets.h"
+#include "ipv4/InternetChecksum.h"
 #include "ipv6/IPv6onSockets.h"
+#include "ipv6/InternetChecksum.h"
 
 /**
  * If both IPv4 and IPv6 are configured, selecting
@@ -106,6 +108,14 @@ aspect IP_Dualstack_Socket_Delegation {
 			else
 				*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_dst_addr(),ip.ipv6.get_dst_addr());
 		}
+	}
+	
+	advice execution("% ipstack::InternetChecksum::computePseudoHeader(...)") &&
+		args(ip_packet, payloadlen, upper_layer_nextheader) : around(char* ip_packet, uint16_t payloadlen, uint8_t upper_layer_nextheader) {
+			if (IP::get_ip_version(ip_packet) == 4)
+				*(tjp->result()) = InternetChecksumV4::computePseudoHeader(ip_packet, payloadlen, upper_layer_nextheader);
+			else
+				*(tjp->result()) = InternetChecksumV6::computePseudoHeader(ip_packet, payloadlen, upper_layer_nextheader);
 	}
 };
 
