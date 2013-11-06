@@ -32,7 +32,7 @@ aspect IPv4_ICMP_Echo_Reply {
 	args(type, code) : around(uint8_t type, uint8_t code) {
 		if ((type == ICMPv4_Packet::ICMP_TYPE_ECHO_REQUEST) &&
 			(code == ICMPv4_Packet::ICMP_CODE_ECHO)) {
-			tjp->result() = true;
+			*(tjp->result()) = true;
 			return;
 		}
 		tjp->proceed();

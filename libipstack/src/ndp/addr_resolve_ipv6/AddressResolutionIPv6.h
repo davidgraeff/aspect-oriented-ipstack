@@ -4,34 +4,32 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // Aspect-Oriented-IP is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// Copyright (C) 2011 Christoph Borchert
+//
+// Copyright (C) 2012 David Gräff
 
+#pragma once
 
-#include "Router.h"
-#include "Interface.h"
+#include "util/ipstack_inttypes.h"
+#include "ipv6/ndpcache/NDPCacheConfig.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/AddressMemory.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/IPv6onSockets.h"
+#include "os_integration/Clock.h"
+#include <string.h>
 
 namespace ipstack {
-	Interface* Router::get_interface(int index)
-	{
-		Interface* interface = head_interface;
-		for (int i = 0; (i < index) && (interface != 0); i++) {
-			interface = interface->getNext();
-		}
-		return interface;
-	}
 
-	void add_interface(Interface* interface) {
-		interface.next_interface = head_interface;
-		head_interface = &interface;
-	}
-} // namespace ipstack
-
+class AddressResolutionIPv6 {
+	public:
+		static NDPCacheEntry* lookup(const ipv6addr& addr, Interface* interface);
+	};
+} // end namespace

@@ -99,32 +99,6 @@ menuconfig ipstack
 				default y
 		endmenu
 
-		menuconfig ipstack_direct_response
-			depends on ipstack
-			bool "Direct response: Use link layer remote addr as destination"
-			default y
-			help
-				Offers a way to avoid arp/ndp for address resolution but use the remote address directly.
-				This feature is usefull for ip stack managment tasks like ICMP and tcp reset,
-				where an additional address resolution is costly and not necessary.
-				If this option is not enabled, you have to provide a separate OS Task for management sockets and
-				copy the received frame to the incoming-buffer of a socket. The socket's task is responsible for
-				responses by using the known address resolution mechanisms (arp/ndp).
-				
-			config ipstack_debug_delay_send
-				depends on ipstack_icmp_ipv6
-				bool "Delay responses"
-				default y
-				help
-					An incoming icmpv6 packet may trigger the generation of multiple response messages.
-					For example an incoming "neighbor solicitation message" have to be answered by an
-					"neighbor advertisement message" and additionally if the remote host is unknown we have
-					to send a "neighbor solicitation message" on our own. For the case that the network device has
-					a shared buffer for incoming/outgoing traffic and because we do not copy the incoming
-					packet to a buffer of our own it is recommend to activate this option to delay sending
-					packets until the received packet has been processed entirely.
-			
-				
 		menuconfig ipstack_linklayer_offloading
 			depends on ipstack
 			bool "Hardware Checksumming Support"
@@ -160,6 +134,16 @@ menuconfig ipstack
 		menu "Address resolution"
 			depends on ipstack
 			
+			config cfNEIGHBOURCACHE_ENTRIES
+				depends on ipstack && (ipstack_ipv6 || ipstack_ipv4)
+				int "Maximum IP to Link-layer address entries"
+				default 20
+				help
+					Caches the IP to Link-Layer address relation (ARP, NDP) and is used to store detected routers
+					and fixed router entries for IPv4 (static, DHCP) and IPv6 (static, NDP).
+					The number of entries in this cache determines the maximum cached IP to Link-Layer address relations. Because the memory for each entry is preallocated the number of on-link devices the ipstack should remember has to be guessed beforehand and configured statically. One entry consumes 12 Bytes for IPv4, 24 Bytes for IPv6 and 28 Bytes for both IP versions.
+					You MUST allow at least two entries per IP version. The maximum entry limit is 254.
+					
 			menuconfig ipstack_arp
 				depends on ipstack
 				bool "ARP Support"
@@ -228,16 +212,7 @@ menuconfig ipstack
 
 	menu "Network layer"
 		depends on ipstack
-		
-		config cfIPSTACK_NEIGHBOUR_cache
-			depends on ipstack && (ipstack_ipv6 || ipstack_ipv4)
-			int "Maximum IP to Link-layer address entries"
-			default 20
-			help
-				Caches the IPv6 to Link-Layer address relation (ARP, NDP) and is used to store detected routers
-				and fixed router entries (like the ipv4 default gateway).
-				The number of entries in this cache determines the maximum cached IP to Link-Layer address relations. Because the memory for each entry is preallocated the number of on-link devices the device should remember has to be guessed beforehand and configured statically. One entry consumes 24 Bytes. You MUST allow at least two entries. The maximum entry limit is 254.
-				
+
 		menuconfig ipstack_ipv4
 			depends on ipstack
 			bool "IPv4 Support"

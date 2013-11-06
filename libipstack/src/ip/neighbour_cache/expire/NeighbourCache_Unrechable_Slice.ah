@@ -1,0 +1,40 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "util/ipstack_inttypes.h"
+
+using namespace ipstack;
+
+aspect NeighbourCache_unrechable_entry {
+	advice "ipstack::NeighbourEntry" : slice class {
+	public:
+	/**
+		* This is part of the neighbour unreachablility detection.
+		* This method have to be called by upper layer protocols. Examples:
+		* - TCP: if no responses are received and retransmits fail
+		* - NDP messages: No response from remote even after retransmits
+		* - UDP Userspace: Expected response is missing
+		* [A Neighbour Solicitation Message should be send now.]
+		*/
+	void suspect_unreachable(NDPCacheEntry* entry) {
+		if (!entry) return;
+		entry->expire_value = 0; // this entry would be removed by the next refresh cycle
+		entry->state = NDPCacheEntry::NDPCacheEntryState_Stale; // do not use this entry for traffic
+	}
+};

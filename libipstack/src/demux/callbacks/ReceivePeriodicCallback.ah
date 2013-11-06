@@ -13,25 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2012-2013 David Gräff
 
+#pragma once
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
+#include "ReceivePeriodicCallback.h"
 
-#include "Router.h"
-#include "Interface.h"
+using namespace ipstack;
 
-namespace ipstack {
-	Interface* Router::get_interface(int index)
-	{
-		Interface* interface = head_interface;
-		for (int i = 0; (i < index) && (interface != 0); i++) {
-			interface = interface->getNext();
+aspect ReceivePeriodicCallbackAspect {
+	advice execution("% ipstack::System::periodic(...)") : after() {
+		ReceivePeriodicCallback* next = ReceivePeriodicCallback::receivedFrame;
+		while (next) {
+			next->checkReceived();
+			next = next->getNext();
 		}
-		return interface;
 	}
-
-	void add_interface(Interface* interface) {
-		interface.next_interface = head_interface;
-		head_interface = &interface;
-	}
-} // namespace ipstack
-
+};

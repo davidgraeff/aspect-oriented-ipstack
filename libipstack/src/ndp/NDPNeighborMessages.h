@@ -74,6 +74,16 @@ public:
 	  * the destination address.
 	  */
 	static void send_neighbor_solicitation(const ipstack::ipv6addr& ipv6_srcaddr, const ipstack::ipv6addr& ipv6_dstaddr, Interface* interface, bool useSolicitatedMulticastAddress);
+	
+	// handle incoming Neighbour Solicitation request by
+	// returning a Neighbour Advertisement packet to the requesting host
+	static void reply(const uint8_t* src_hwaddr, const ipv6addr& src_addr, ReceiveBuffer& b);
+
+	/**
+		* Send a Neighbour Solicitation packet.
+		* @param state The current state the dest_addr is in. Usually NeighbourEntryState_Incomplete
+		*/
+	static void request(const ipv6addr& dest_addr, uint8_t state, Interface* interface);
 };
 
 } //namespace ipstack

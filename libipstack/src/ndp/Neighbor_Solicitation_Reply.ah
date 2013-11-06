@@ -18,31 +18,30 @@
 #pragma once
 
 #include "router/Interface.h"
+#include "NDPNeighborMessages.h"
 
 using namespace ipstack;
 
-aspect InternetChecksum_Rx_Offloading {
-	/**
-	 * Do not compute checksums for received packets if the hardware has done this already
-	 */
-	advice execution("bool ipstack::%::checksum_valid(%, %, ipstack::Interface*)") : around() {
-		Interface* interface = *tjp->arg<2>();
-		if (interface->hasTransmitterHardwareChecksumming()) {
-			**(tjp->result()) = true; //checksum has already been checked by hardware
-		} else {
-			tjp->proceed();
+aspect Neighbor_Solicitation_Receive {
+	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
+	args(type, code) : around(uint8_t type, uint8_t code) {
+		if ((type == 135) &&
+			(code == 0)) {
+			*(tjp->result()) = true;
+			return;
 		}
+		tjp->proceed();
 	}
+	
+	// Reply to solicitation messages from other hosts
+	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	args(b) : around(SmartReceiveBufferPtr& b) {
 
-	// *** Affect class 'IPv4_Packet'
-	// ipv4_checksum is also checked by hardware
-	advice execution("bool ipstack::IPv4_Packet::validPacketChecksum(%)")  :
-		around() {
-		Interface* interface = (Interface*)*tjp->arg<0>();
-		if (interface->hasReceiverHardwareChecksumming()) {
-			**(tjp->result()) = true; //checksum has already been checked by hardware
-		} else {
-			tjp->proceed();
+		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
+		if ((icmp_packet->get_type() == 135) && (icmp_packet->get_code() == 0)) {
+			
+			NDPRouterMessages::NeighborSolicitationMessage* message = (NDPRouterMessages::NeighborSolicitationMessage*)icmp_packet;
+			NDPNeighborMessages::reply(message->target_address, b);
 		}
 	}
 };

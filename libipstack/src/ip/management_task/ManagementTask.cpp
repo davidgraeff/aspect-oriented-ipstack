@@ -19,8 +19,6 @@
 #include "Management_Task.h"
 
 namespace ipstack {
-	Management_Task Management_Task::inst_; //create singleton instance
-	
 	void Management_Task::block() {}
 	void Management_Task::runIteration() {}
 } // namespace ipstack

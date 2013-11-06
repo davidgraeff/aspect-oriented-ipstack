@@ -13,25 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2013 David Gräff
 
-
-#include "Router.h"
-#include "Interface.h"
+#pragma once
+#include "demux/receivebuffer/SmartReceiveBufferPtr.h"
+#include "ReceiveCallback.h"
 
 namespace ipstack {
-	Interface* Router::get_interface(int index)
-	{
-		Interface* interface = head_interface;
-		for (int i = 0; (i < index) && (interface != 0); i++) {
-			interface = interface->getNext();
-		}
-		return interface;
-	}
+	/**
+	 * Inherit from this class to get an abstract method receiveCallback that is
+	 * called by ipstack::System::periodic() if your socket object got new data via addToReceiveQueue.
+	 */
+	class ReceivePeriodicCallback :public ReceiveCallback, public DemuxLinkedList<ReceivePeriodicCallback*> {  
+	public:
+		ReceivePeriodicCallback(SocketMemory* socketmemory);
 
-	void add_interface(Interface* interface) {
-		interface.next_interface = head_interface;
-		head_interface = &interface;
-	}
+		/**
+		 * This is used by the ReceivePeriodicCallback-Aspect to get all objects that are derived
+		 * from this class.
+		 */
+		static ReceivePeriodicCallback* receivedFrame;
+	
+	};
+
 } // namespace ipstack
-

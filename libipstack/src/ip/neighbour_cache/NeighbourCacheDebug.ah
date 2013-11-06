@@ -1,0 +1,142 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+// 
+// Copyright (C) 2013 David Gräff
+
+#pragma once
+#include "router/Interface.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ipv6/IPv6onSockets.h"
+#include "router/Router.h"
+#include "router/sendbuffer/SendBuffer.h"
+#include "util/ipstack_inttypes.h"
+
+using namespace ipstack;
+
+/**
+  * Add debug messages for ndpcache add/remove
+  */
+aspect IPv6NDPCache_aspect_debug {
+	bool lookup;
+
+	advice execution( "void ipstack::System::init()" ) : after() {
+		lookup = 0;
+	}
+	
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "NDPLookupDebug", "IPv6_Ethernet_NDPCache_Blocking_Aspect");
+	
+	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+		around(SendBuffer* sendbuffer) {
+		
+			// check ip version
+		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
+			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->p.ip_packet;
+			
+			lookup = 1;
+			char tempbuf[50] = {0};
+			ipstack::ipv6_addr_toString(ip->get_dst_ipaddr(), tempbuf);
+			std::cout << "NDP Lookup: For IP "<<tempbuf<<". Wait..." << std::endl;
+		}
+		tjp->proceed();
+	}
+	
+	advice execution("% ipstack::Interface::block_until_neighbor_advertisement(...)") && args(entry) && that(interface) :
+		after(NDPCacheEntry* entry, Interface& interface) {
+		
+		lookup = 0;
+ 		std::cout << "NDP Lookup: Lookup result " << interface.is_NDPCacheEntry_reachable(entry) << std::endl;
+	}
+	
+	/**
+	  * addNDPCacheEntry is also called by the ndp neighbor advertisement message to update
+	  * the entry. If addNDPCacheEntry is called while we are in lookup mode, we will therefore log that.
+	  */
+	advice execution("% ipstack::Interface::addNDPCacheEntry(...)") && that(interface) :
+		after(Interface& interface) {
+		
+		// only print out messages if we are in a lookup at the moment
+		if ( lookup == 0 )
+			return;
+		
+		NDPCacheEntry* entry = *tjp->result();
+		if (!entry) {
+			std::cout << "NDP Lookup: Received address, but entry not found" << std::endl;
+			return;
+		}
+		
+		char tempbuf[50] = {0};
+		ipstack::ipv6_addr_toString(entry->ipv6, tempbuf);
+		std::cout << "NDP Lookup: Received address. IPv6 is " << tempbuf << std::endl;
+	}
+	
+	advice execution("void ipstack::Interface::freeNDPCacheEntry(%)") && that(interface) :
+		after(Interface& interface) {
+			std::cout << "NDP Cache: Free I: " << &interface << std::endl;
+	}
+	advice execution("void ipstack::Interface::reserveNDPCacheEntry(ipstack::NDPCacheEntry*)") && args(entry) && that(interface) :
+		after(NDPCacheEntry* entry, Interface& interface) {
+			char tempbuf[50] = {0};
+			ipstack::ipv6_addr_toString(entry->ipv6, tempbuf);
+			std::cout << "NDP Cache: Add I: "<<  &interface <<"\n   IP " << tempbuf << std::endl;
+	}
+	
+
+	/**
+	  * Return on-link destination ip instead of just the user-set dest ip
+	  */
+	advice execution("% ipstack::IPV6::get_nexthop_ipaddr()") && that(ipv6) : around(IPV6& ipv6) {
+		NDPCacheEntry* entry =  ipv6.get_nexthop_ndpcache_entry();
+		if (!entry) {
+			std::cout << "DestCache: No destcache entry. Link local dest ip?" << std::endl;
+		} else {
+			std::cout << "DestCache: Use dest cache entry as next-hop ip" << std::endl;
+		}
+		tjp->proceed();
+	}
+
+
+	advice execution("% ipstack::IPV6::resolveRoute(...)") :
+		order("Router_Destination_Cache_aspect_debug" , "Router_Destination_Cache_aspect");
+
+	/**
+	 * Update destination cache:
+	 * -------------------------
+	 * A destination cache entry is usually updated by the link layer (ethernet) aspect.
+	 * But if we know the router entry of the ndp-cache already, we can use it.
+	 */
+	advice execution("% ipstack::IPV6::resolveRoute(...)") && that(ipv6) : after(IPV6& ipv6) {
+		AddressEntry* entry = *(tjp->result());
+		
+		if (!ipv6.interface || !entry)
+			return;
+		
+		// if we have an on-link address: do nothing
+		if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == IPV6AddressScope::IPV6_SCOPE_LINKLOCAL) {
+			std::cout << "DestCache: Link-local address as dest. Nothing to do." << std::endl;
+			return;
+		}
+		
+		// We will now look at that entry, if there is a router connected to it.
+		if (entry->routerEntryPosition == AddressMemory::EntryUndefined) {
+			std::cout << "DestCache: No router entry found for dest ip!" << std::endl;
+			return;
+		}
+
+		// Yes there is a router connected to this entry. Use the routers ip as next hop.
+		NDPCacheEntry* ndpentry = (NDPCacheEntry*)ipv6.interface->addressmemory.getEntryAtPosition(entry->routerEntryPosition);
+		std::cout << "DestCache: Router entry as next-hop ip %p!\n", ndpentry);
+	}
+};

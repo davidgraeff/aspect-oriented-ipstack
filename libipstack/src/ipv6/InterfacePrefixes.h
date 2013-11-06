@@ -25,7 +25,7 @@
 namespace ipstack
 {
 /**
- * An IPv6 n assigned interface address prefix. If this is an entry, not assigned by
+ * An IPv6 assigned interface address prefix. If this is an entry, not assigned by
  * a router but manually, the routerEntryPosition is "EntryUndefined".
  *
  * Initially an entry is in the "AddressEntryStateTemporary" state until a
@@ -33,7 +33,7 @@ namespace ipstack
  * be dismissed (duplicate found) or the state is changed to "AddressEntryStateValid".
  */
 struct AddressEntry {
-	uint8_t prefixlen;
+	uint8_t prefixlen; // 0 means entry is not used!
 	
 	enum { AddressEntryStateTemporary = 0, AddressEntryStateValid = 1};
 	union {

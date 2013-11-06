@@ -37,8 +37,14 @@ namespace ipstack
 		
 		Interface* getUsedInterface() { return 0; }
 		
-		// the lower 4 bits of the first byte are for the version information of an IP packet
-		static inline uint8_t get_ip_version(char* packet) { return *(packet) & 0x0f; }
+		// 4 bits of the first byte are for the version information of an IP packet
+		static inline uint8_t get_ip_version(char* packet) {
+			union {
+			  uint8_t first_byte;
+			  uint8_t other:4, version:4;
+			};
+			first_byte = packet[0];
+			return version;
 		
 		/**
 		 * @return Return true if the src addr of the @ip_packet is matching with

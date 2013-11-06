@@ -50,7 +50,7 @@ aspect Sendbuffer_Ethernet {
 		}
 
 		// we have an ethernet destination address: return true
-		*tjp->result() = true;
+		**(tjp->result()) = true;
 
 		// Get destination ethernet frame from sendbuffer.
 		Eth_Frame* dest_eth_frame = sendbuffer->p.ethernet_frame;

@@ -13,25 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2013 David Gräff
 
 
-#include "Router.h"
-#include "Interface.h"
+#include "ReceivePeriodicCallback.h"
 
 namespace ipstack {
-	Interface* Router::get_interface(int index)
-	{
-		Interface* interface = head_interface;
-		for (int i = 0; (i < index) && (interface != 0); i++) {
-			interface = interface->getNext();
-		}
-		return interface;
-	}
 
-	void add_interface(Interface* interface) {
-		interface.next_interface = head_interface;
-		head_interface = &interface;
+	ReceivePeriodicCallback* ReceivePeriodicCallback::receivedFrame = 0;
+
+	ReceivePeriodicCallback::ReceivePeriodicCallback(SocketMemory* socketmemory) : ReceiveCallback(socketmemory) {
+		// Add to linked list of ReceivePeriodicCallback objects
+		if (!receivedFrame)
+			receivedFrame = this;
+		else {
+			this->setNext(receivedFrame->getNext());
+			receivedFrame->setNext(this);
+		}
 	}
 } // namespace ipstack
 

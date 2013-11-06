@@ -35,7 +35,7 @@ aspect NDP_MDL_Respond {
 	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
 	args(type, code) : around(uint8_t type, uint8_t code) {
 		if ((type == 130)) {
-			tjp->result() = true;
+			*(tjp->result()) = true;
 			return;
 		}
 		tjp->proceed();

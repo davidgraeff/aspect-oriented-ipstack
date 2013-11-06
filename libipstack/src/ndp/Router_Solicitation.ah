@@ -1,0 +1,48 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/ipstack_inttypes.h"
+#include "NDPRouterMessages.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
+
+using namespace ipstack;
+
+aspect NDP_Router_Solicitation {
+	// Do a router solicitation after assigning a link local ip (if any is assigned: use unspecified ip otherwise)
+	advice execution("void ipstack::Interface::setIPv6Up(bool)") :
+		order("IPv6_add_link_local_address" , "NDP_Router_Solicitation");
+
+	// As of RFC we send a router solicitation after the link comes up 
+	advice execution("void ipstack::Interface::setIPv6Up(bool)") && args(up) && that(interface) : around(bool up, Interface& interface) {
+		if (!up) {
+			tjp->proceed();
+			return;
+		}
+
+		// Execute setIPv6Up(bool): This will join the all-router link-local multicast group so that we can receive router responses
+		tjp->proceed();
+		
+		ipstack::ipv6addr addr = {{0}};
+		addr.ipaddrB8[0] = 0xff;
+		addr.ipaddrB8[1] = 0x02;
+		addr.ipaddrB8[15] = 0x02;
+		NDPRouterMessages::send_router_solicitation(addr, &interface);
+	}
+};

@@ -1,0 +1,47 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012-2013 David Gräff
+
+#pragma once
+
+#include "util/ipstack_inttypes.h"
+#include "ndp/router/NDPRouterMessages.h"
+#include "icmpv6/ICMPv6_Socket.h"
+#include "ipv6/IPv6AddressUtilities.h"
+#include "ip/ndpcache/NDPCacheEntry.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
+
+aspect NDP_RefreshNDPCache_RouterEntries {
+	/**
+	 * Overwrite behaviour: We send a Router Solicitation message if
+	 * a ndp cache entry for an entry (router) is going to expire. The Router Advertisement message
+	 * will refresh the ndp cache entry.
+	 */
+	advice execution("% ipstack::Interface::router_entry_refresh(...)") && args(entry) :
+		around(NDPCacheEntry* entry) {
+
+		// Only do something for IPv6 neighbour entry routers
+		if (!entry->state.ip6) {
+			tjp->proceed();
+			return;
+		}
+		
+		// Send solicitation message for this specific router, not a multicast message
+		NDPRouterMessages::send_router_solicitation(entry->ipv6, entry->interface);
+	}
+};
+

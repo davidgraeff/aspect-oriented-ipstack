@@ -17,56 +17,54 @@
 
 #pragma once
 
+#include "util/ipstack_inttypes.h"
+#include "ICMPV6/ICMPv6_Packet.h"
+#include "icmpv6/ndp/NDPNeighborMessages.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/InternetChecksum.h"
-#include "demux/Demux.h"
+#include "ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipv6/AddressMemory.h"
 #include "router/Interface.h"
-#include "ICMPv6_Packet.h"
-#include "ICMPv6_Socket.h"
+#include "demux/Demux.h"
 
 using namespace ipstack;
 
-aspect IPv6_ICMP_Echo_Reply {
+aspect Neighbor_Advertisement_Receive {
 	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
 	args(type, code) : around(uint8_t type, uint8_t code) {
-		if ((type == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
-			(code == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
+		if ((type == 136) &&
+			(code == 0)) {
 			*(tjp->result()) = true;
 			return;
 		}
 		tjp->proceed();
 	}
-		
+	
 	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
 	args(b) : around(SmartReceiveBufferPtr& b) {
 
 		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
-		if ((icmp_packet->get_type() == ICMPv6_Packet::ICMP_TYPE_ECHO_REQUEST) &&
-		(icmp_packet->get_code() == ICMPv6_Packet::ICMP_CODE_ECHO_REQUEST)) {
-
-			ICMPv6_Socket& socket = Management_Task::Inst().get_socket_icmpv4();
-			uint16_t maxlen = socket.getMaxPayloadLength(b.get_interface());
-			uint16_t payloadlen = b.get_payload_size();
-			if (payloadlen < maxlen) {
-				maxlen = payloadlen;
-			}
+		if ((icmp_packet->get_type() == 136) && (icmp_packet->get_code() == 0)) {
 			
-			SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
-			if (sbi) {
-				sbi->mark("IPv6_ICMP_Echo_Reply");
-				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->getDataPointer();
-
-				reply_icmp->set_type(ICMPv6_Packet::ICMP_TYPE_ECHO_REPLY);
-				reply_icmp->set_code(ICMPv6_Packet::ICMP_CODE_ECHO_REPLY);
-				sbi->writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE);
-				// append original payload of the source icmp packet
-				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv6_Packet::ICMP_HEADER_SIZE);
-
-				socket.send(sbi);
+			// Look in the NDP Cache for an entry
+			NDPCacheEntry* entry = interface->ndpcache_find(message->target_address);
+			if (entry) {
+				entry->isRouter = message->isRouter();
+				
+				// e.g. for the expire aspect to reset the expire time of an IP
+				interface->entryConfirmed(entry);
+				
+				// get dest mac
+				char dest_ethernet_mac[6];
+				bool foundDestMac = NDPMessages::get_option_linklayer_address(NDPMessages::TargetLinkLayer,
+					(char*)message->options, payloadlen, (char*)dest_ethernet_mac);
+					
+				// update entry
+				if (foundDestMac && (message->isOverride() || entry->state != NDPCacheEntry::NDPCacheEntryState_Reachable)) {
+					memcpy(entry->hw, dest_ethernet_mac, sizeof(entry->hw));
+					entry->state = NDPCacheEntry::NDPCacheEntryState_Reachable;
+				}
 			}
-		} else {
-			tjp->proceed();
+
 		}
 	}
-
 };

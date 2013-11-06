@@ -62,6 +62,34 @@ namespace ipstack {
 	
 	ipstack::AddressEntry* IPV6::resolveRoute()
 	{
+// 		if (!ipv6.interface || !entry)
+// 			return;
+// 		
+// 		// if we have an on-link address: do nothing
+// 		if (IPV6AddressScope::getIPv6AddressScope(entry->ipv6) == IPV6AddressScope::IPV6_SCOPE_LINKLOCAL) {
+// 			ipv6.set_nexthop_ndpcache_entry(0);
+// 			return;
+// 		}
+// 		
+// 		// We will now look at that entry, if there is a router connected to it.
+// 		if (entry->routerEntryPosition == AddressMemory::EntryUndefined) {
+// 			// OK, bad situation: The destination address is neither link-local nor a router is known for it.
+// 			// This is not our business: Just do nothing
+// 			return;
+// 		}
+// 
+// 		// Yes there is a router connected to this entry. Use the routers ip as next hop.
+// 		NDPCacheEntry* ndpentry = (NDPCacheEntry*)ipv6.interface->addressmemory.getEntryAtPosition(entry->routerEntryPosition);
+// 		if (ndpentry->id != NDPCacheEntry::ID) {
+// 			// This should not happen. The entry at the given position is not an ndp entry
+// 			// Fix it!
+// 			entry->routerEntryPosition = AddressMemory::EntryUndefined;
+// 			return;
+// 		}
+// 
+// 		// Use the router as next hop
+// 		ipv6.set_nexthop_ndpcache_entry(ndpentry);
+// 		
 		// No valid destination address
 		if (!dst_ipv6_addr.ipaddrB8[0]) {
 			interface = 0;

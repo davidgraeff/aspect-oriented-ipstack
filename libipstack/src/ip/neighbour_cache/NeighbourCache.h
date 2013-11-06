@@ -13,101 +13,79 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
 
-#include "ipv6/IPv6AddressUtilities.h"
-#include "IPv6_Config.h"
 
 #include "util/ipstack_inttypes.h"
+#include "util/singleton.h"
+#include "NeighbourEntry.h"
 
 namespace ipstack
 {
-/**
- * An IPv6 address entry. This combines an assigned interface address
- * and a received router prefix. If this is an entry, not assigned by
- * a router but manually, the router_entry_pos is "EntryUndefined".
- *
- * Initially an entry is in the "AddressEntryStateTemporary" state until a
- * neighbour address duplication check has been performed. The entry will either
- * be dismissed (duplicate found) or the state is changed to "AddressEntryStateValid".
- * 
- */
-struct AddressEntry {
-	uint8_t prefixlen;
-	
-	enum { AddressEntryStateTemporary = 0, AddressEntryStateValid = 1};
-	union {
-		uint8_t stateflag;
-		struct {
-			uint8_t state:2;
-			uint8_t isOnLink:1;
-			uint8_t toBeRemoved:1;
-		} __attribute__((packed));
-	};
-	
-	uint8_t routerEntryPosition;
-	uint8_t hoplimit;
-	
-	ipv6addr ipv6;
-} __attribute__((packed));
 
 /**
- * A memory block for storing ipv6 address entries
- * Possible improvement:
- * Insertion sort: A sorted list of entries (sorting AddressEntry by IPv6) allows to use binary search.
- * Because we assume to have only 2-3 ipv6 prefixes in average, the current implementation stores the
- * prefixes unordered. 
+ * API declaration for a neighbour cache
  */
-class InterfacePrefixes
+class NeighbourCache : public Singleton<NeighbourCache>
 {
 	private:
 		// Define SIZE
-		enum {SIZE = sizeof(AddressEntry)};
-		typedef uint8_t AddressPosition;
+		enum {SIZE = sizeof(NeighbourEntry)};
+		typedef uint8_t EntryPosition;
 		
-		unsigned char memory[SIZE* IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE];
+		unsigned char memory[SIZE* NEIGHBOURCACHE_ENTRIES];
 	public:
 		enum { EntryUndefined = 255 };
-		InterfacePrefixes() {
-			freeAll();
+		NeighbourCache();
+		void freeEntry(void* entry) {
+			EntryPosition pos = getPosition(entry);
+			if (pos == EntryUndefined)
+				return;
+			if (entry->isRouter) {
+				removeRouter(entry);
+			}
+			((char*)entry)[0] = 0;
+		}
+		
+		// For aspects to react to removed routers
+		void removeRouter(NeighbourEntry*, EntryPosition position) {}
+		
+		inline NeighbourEntry* getEntryAtPosition(EntryPosition i)
+		{ return reinterpret_cast<NeighbourEntry*>(&memory[i * SIZE]); }
+
+		inline bool is_reachable(NDPCacheEntry* entry) {
+			return (entry->state == NDPCacheEntry::NDPCacheEntryState_Reachable);
 		}
 
-		inline void freeEntry(void* entry) { ((char*)entry)[0] = 0; }
+		/**
+		* If an entry has been confirmed by external means (static or by NDP Neighbor Advertisement)
+		* this method is called. This can be used by aspects to for example reset the expire time.
+		* The basic implementation does nothing.
+		*/
+		void entryConfirmed(NDPCacheEntry* entry) {}
 		
-		inline AddressEntry* getEntryAtPosition(AddressPosition i)
-		{ return reinterpret_cast<AddressEntry*>(&memory[i * SIZE]); }
-
+		/**
+		* An aspect has to weave in a strategy to regain space in the NDP cache.
+		*/
+		void dropUnused() {}
+		
 		/**
 		 * The first parameter (if set) is a pointer to the start position
 		 * and will return found_position+1.
 		 * The second parameter is the type that will be searched for.
 		 * type==0: free entry
 		 */
-		AddressEntry* findEntry(AddressPosition* startentry = 0, unsigned char type) {
-			for (AddressPosition i = (startentry ? *startentry : 0); i < IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE; ++i) {
-				if (memory[i * SIZE] == type) {
-					if (startentry) *startentry = i + 1;
-					return getEntryAtPosition(i);
-				}
-			}
-			return 0;
-		}
+		NeighbourEntry* findEntry(EntryPosition* startentry = 0, bool findEmpty = false);
 
-		void freeAll() {
-			for (AddressPosition i = 0; i < IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE; ++i) {
-				memory[i * SIZE] = 0;
-			}
-		}
-		AddressPosition getPosition(AddressEntry* entry) {
-			for (AddressPosition i = 0; i < IPSTACK_IPV6_INTERFACE_PREFIXES_SIZE; ++i) {
-				if (getEntryAtPosition(i) == entry)
-					return i;
-			}
-			return EntryUndefined;
-		}
+		void freeAll();
 		
+		EntryPosition getPosition(NeighbourEntry* entry);
+	private:
+		NeighbourCache() {} //ctor hidden
+		NeighbourCache(const NeighbourCache&); //copy ctor hidden
+		NeighbourCache& operator=(NeighbourCache const&); // assign op. hidden
 };
 
 } //namespace ipstack

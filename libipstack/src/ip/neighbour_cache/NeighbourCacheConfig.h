@@ -20,5 +20,32 @@
 #include "IPStack_Config.h"
 
 namespace ipstack {
-	enum {NEIGHBOURCACHE_WAIT_FOR_RESPONSE_MS = 1000U };
+	#ifdef kconfig_cfNEIGHBOURCACHE_ENTRIES //kconfig value
+		enum {NEIGHBOURCACHE_ENTRIES=kconfig_cfNEIGHBOURCACHE_ENTRIES};
+	#else
+		enum {NEIGHBOURCACHE_ENTRIES = 10U};
+	#endif
+		
+	#ifdef kconfig_cfNEIGHBOURCACHE_WAIT_FOR_RESPONSE_MS //kconfig value
+		enum {NEIGHBOURCACHE_WAIT_FOR_RESPONSE_MS=kconfig_cfNEIGHBOURCACHE_WAIT_FOR_RESPONSE_MS};
+	#else
+		enum {NEIGHBOURCACHE_WAIT_FOR_RESPONSE_MS = 1000U};
+	#endif
+	
+	// BSD: if_ether.c: /* once resolved, good for 20 more minutes */
+	#ifdef kconfig_cfNEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC //kconfig value
+		enum {NEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC=kconfig_cfNEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC};
+	#else
+		enum {NEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC = 20*60}; // in seconds
+	#endif
+	
+	#ifdef kconfig_cfNDP_CACHE_REFRESH_SEC //kconfig value
+		enum {NDP_CACHE_REFRESH_SEC=kconfig_cfNDP_CACHE_REFRESH_SEC};
+	#else
+		enum {NDP_CACHE_REFRESH_SEC = 3*60}; // in seconds
+	#endif
+	enum {
+		NDPCACHE_EXPIRE_RATE_PER_MINUTE = 2 * NDP_CACHE_REFRESH_SEC,
+		NDPCACHE_TRESHOLD_REQUIRE_SOLICITATION = NDPCACHE_EXPIRE_RATE_PER_MINUTE * 3
+	};
 }

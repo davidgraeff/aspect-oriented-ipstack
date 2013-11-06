@@ -14,37 +14,32 @@
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // Copyright (C) 2011 Christoph Borchert
-
 #pragma once
+#include <string.h> //for memcpy
+#include "util/ipstack_inttypes.h"
+#include "ethernet/Eth_Frame.h"
 #include "router/Interface.h"
-#include "util/singleton.h"
+#include "os_integration/Clock.h"
+
+#include "ARP_IPv4_Packet.h"
+#include "arp/ARP_Packet.h"
+
 
 namespace ipstack {
-	/**
-	 * Public demux API: Route incoming traffic of your hardware to the demux(...)
-	 * method.
-	 */
-	class ReceiveBuffer;
-	class Demux : public Singleton<Demux> {  
+
+class AddressResolutionIPv4 {
 	public:
-		void demux(const void* data, unsigned len, Interface* interface);
-		
-		/**
-		* Call this if the receiving queue is full
-		*/
-		void error_receiving_queue_full(ReceiveBuffer* buffer) {
-			//Aspects to be weaved here!
-		}
-		/**
-		* Call this if the received packet does not fit into one of the available memory blocks
-		*/
-		void error_receiving_memory_too_small(ReceiveBuffer* buffer) {
-			//Aspects to be weaved here!
-		}
-	private:
-		Demux() {} //ctor hidden
-		Demux(const Demux&); //copy ctor hidden
-		Demux& operator=(Demux const&); // assign op. hidden
-	};
+	// Lookup the corresponding ethernet address for an ipv4 address.
+	// Uses the neighbour cache for lookups.
+	// If not found, send ARP Requests and wait for replies. This call is
+	// blocking.
+	static const uint8_t* lookup(uint32_t ipv4_addr, Interface* interface);
+	
+	// handle incoming arp request: return an arp reply packet to the requesting host 
+	static void reply(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, ReceiveBuffer& b);
+
+	// Send an ARP-Request packet
+	static void request(uint32_t ipv4_addr, Interface* interface);
+};
 
 } // namespace ipstack

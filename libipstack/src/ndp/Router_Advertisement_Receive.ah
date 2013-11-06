@@ -1,0 +1,82 @@
+// This file is part of Aspect-Oriented-IP.
+//
+// Aspect-Oriented-IP is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Aspect-Oriented-IP is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright (C) 2012 David Gräff
+
+#pragma once
+
+#include "util/ipstack_inttypes.h"
+#include "../ICMPv6_Packet.h"
+#include "NDPRouterMessages.h"
+#include "ipv6/IPv6_Packet.h"
+#include "ipv6/ndpcache/NDPCacheEntry.h"
+#include "ipv6/AddressMemory.h"
+#include "router/Interface.h"
+#include "demux/Demux.h"
+
+/**
+  * React on router advertisement messages: Add/update all propagated prefixes as ipv6 addresses to the interface on which we received the message.
+  */
+aspect NDP_Router_Advertisement {
+	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
+	args(type, code) : around(uint8_t type, uint8_t code) {
+		if ((type == 134) &&
+			(code == 0)) {
+			*(tjp->result()) = true;
+			return;
+		}
+		tjp->proceed();
+	}
+	
+	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	args(b) : around(SmartReceiveBufferPtr& b) {
+
+		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
+		if ((icmp_packet->get_type() == 134) && (icmp_packet->get_code() == 0)) {
+			
+			NDPRouterMessages::RouterAdvertisementMessage* message = (NDPRouterMessages::RouterAdvertisementMessage*)icmp_packet;
+
+			if (payloadlen < sizeof(NDPRouterMessages::RouterAdvertisementMessage))
+				return; // drop packet
+			payloadlen -= sizeof(NDPRouterMessages::RouterAdvertisementMessage);
+
+			// get src mac (in the options)
+			char src_ethernet_mac[6];
+			bool foundMac = NDPMessages::get_option_linklayer_address(NDPMessages::SourceLinkLayer,
+			(char*)message->options, payloadlen, (char*)src_ethernet_mac);
+
+			bool router_is_shuting_down = (message->router_lifetime == 0) && (message->reachable_time == 0);
+			bool is_routing = (message->router_lifetime != 0);
+			uint8_t hoplimit = message->curHopLimit;
+			char* prefix_options = (char*)message->options;
+			
+			// Try to find the router entry in our ndp cache
+			NDPCacheEntry* entry = interface->ndpcache_find(packet->get_src_ipaddr());
+			if (!entry) {
+				// Not found: Create a new one. Either this is stale (mac is known) or incomplete (mac not known)
+				// In both cases we send out a neighbor solicitation message but if we know the ethernet mac, we will use it
+				entry = interface->addNDPCacheEntry(packet->get_src_ipaddr(), (uint8_t*)src_ethernet_mac,
+				foundMac ? NDPCacheEntry::NDPCacheEntryState_Stale : NDPCacheEntry::NDPCacheEntryState_Incomplete);
+			}
+			if (!entry)
+				return;
+		
+			NDPRouterMessages::update_router_entry(interface, entry, foundMac, router_is_shuting_down,
+												   is_routing, hoplimit, prefix_options);
+		} else {
+			tjp->proceed();
+		}
+	}
+};

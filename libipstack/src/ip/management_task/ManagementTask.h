@@ -17,6 +17,7 @@
 
 #pragma once
 #include "memory_management/MemoryInterface.h"
+#include "util/singleton.h"
 
 namespace ipstack {
 	/**
@@ -39,16 +40,13 @@ namespace ipstack {
 	 *    static MemoryInterface& get_mem_icmpv4() { static ManagementSocketMemory mem; return mem; }
 	 *    ICMPv4_Socket& get_socket_icmpv4() { static ICMPv4_Socket socket(get_mem_icmpv4()); return socket; }
 	 */
-	class Management_Task {
+	class Management_Task : public Singleton<Management_Task> {
 		private:
-		//singleton design pattern
-		static Management_Task inst_;
 		Management_Task() {} //ctor hidden
 		Management_Task(const Management_Task&); //copy ctor hidden
 		Management_Task& operator=(Management_Task const&); // assign op. hidden
 
 		public:
-		static Management_Task& Inst() { return inst_; } //get singleton
 		
 		/**
 		 * Entry point for this task. It executes runIteration in a loop, calling
