@@ -23,6 +23,9 @@ namespace ipstack
 
 	/**
 	* Inherit from this class if you want your socket to be extended by the sendbuffer API.
+	* You need to have a method
+	*   Interface* getUsedInterface();
+	* implemented!
 	*/
 	class sendbufferAPI {
 	public:

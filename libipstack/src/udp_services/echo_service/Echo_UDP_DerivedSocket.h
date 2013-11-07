@@ -42,7 +42,7 @@ namespace ipstack
 			if (b->get_payload_size() < maxlen) {
 				maxlen = b->get_payload_size();
 			}
-			send(b->get_payload_data(), maxlen, b->receivebuffer_pointer());
+			send(b->get_payload_data(), maxlen, *b);
 		}
 	};
 }

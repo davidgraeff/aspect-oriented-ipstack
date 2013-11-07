@@ -16,7 +16,7 @@
 // Copyright (C) 2011 Christoph Borchert
 
 
-#include "AddressResolutionIPv4.h"
+#include "IPv6ToLinkLayer.h"
 #include "ip/neighbour_cache/NeighbourCacheConfig.h"
 #include "arp/ARPConfig.h"
 

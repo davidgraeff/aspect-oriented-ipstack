@@ -13,33 +13,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2011 Christoph Borchert
+// Copyright (C) 2011 Christoph Borchert, 2013 David Gräff
+
 #pragma once
-#include <string.h> //for memcpy
 #include "util/ipstack_inttypes.h"
-#include "ethernet/Eth_Frame.h"
-#include "router/Interface.h"
-#include "os_integration/Clock.h"
-
-#include "ARP_IPv4_Packet.h"
-#include "arp/ARP_Packet.h"
-
 
 namespace ipstack {
 
+class NeighbourEntry;
+class Interface;
 class AddressResolutionIPv4 {
 	public:
 	// Lookup the corresponding ethernet address for an ipv4 address.
 	// Uses the neighbour cache for lookups.
 	// If not found, send ARP Requests and wait for replies. This call is
 	// blocking.
-	static const uint8_t* lookup(uint32_t ipv4_addr, Interface* interface);
-	
-	// handle incoming arp request: return an arp reply packet to the requesting host 
-	static void reply(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, ReceiveBuffer& b);
+	static inline const NeighbourEntry* lookup(uint32_t ipv4_addr, Interface* interface);
 
 	// Send an ARP-Request packet
-	static void request(uint32_t ipv4_addr, Interface* interface);
+	static inline void request(uint32_t ipv4_addr, Interface* interface);
 };
 
 } // namespace ipstack

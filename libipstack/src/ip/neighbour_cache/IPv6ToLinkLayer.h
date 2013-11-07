@@ -27,7 +27,7 @@
 
 namespace ipstack {
 
-class FindIPv6 {
+class IPv6ToLinkLayer {
 	public:
 		/**
 		* Look up an IP address and return the corresponding entry of the NDP cache.

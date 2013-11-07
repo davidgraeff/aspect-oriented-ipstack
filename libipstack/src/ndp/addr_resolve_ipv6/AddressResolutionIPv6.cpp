@@ -18,6 +18,8 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
+#include "ip/neighbour_cache/NeighbourCache.h"
+#include "ip/neighbour_cache/NeighbourEntry.h"
 #include "ipv6/ndpcache/NDPCacheConfig.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
@@ -28,10 +30,10 @@
 
 namespace ipstack {
 
-	NDPCacheEntry* AddressResolutionIPv6::lookup(const ipv6addr& addr, Interface* interface) {
-		NDPCacheEntry* entry = interface->ndpcache_find(ip->get_dst_ipaddr());
+	NeighbourEntry* AddressResolutionIPv6::lookup(const ipv6addr& addr, Interface* interface) {
+		NeighbourEntry* entry = interface->ndpcache_find(ip->get_dst_ipaddr());
 		if (entry == 0) {
-			entry = interface->addNDPCacheEntry(ip->get_dst_ipaddr(), 0, NDPCacheEntry::NDPCacheEntryState_Incomplete);
+			entry = interface->addNeighbourEntry(ip->get_dst_ipaddr(), 0, NeighbourEntry::NeighbourEntryState_Incomplete);
 
 			if (entry) {
 				// Wait for ndp reply
@@ -40,12 +42,12 @@ namespace ipstack {
 				while(Clock::now() < timeout) {
 					socket->block(waitTicks);
 					hw_addr = find(ipv4_addr);
-					if (is_NDPCacheEntry_reachable) return entry;
+					if (is_NeighbourEntry_reachable) return entry;
 				}
 
 				interface->block_until_neighbor_advertisement(entry);
 				// Check state
-				if (entry->state != NDPCacheEntry::NDPCacheEntryState_Reachable) {
+				if (entry->state != NeighbourEntry::NeighbourEntryState_Reachable) {
 					interface->addressmemory.freeEntry(entry);
 					entry = interface->ndpcache_findRouter();
 				}

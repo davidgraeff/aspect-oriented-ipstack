@@ -30,9 +30,9 @@ aspect ARP_Socket_Mem {
 			return mem;
 		}
 	public:
-		ARP_Socket* get_socket_arp() {
+		ARP_Socket& get_socket_arp() {
 			static ARP_Socket socket(get_mem_arp());
-			return &socket;
+			return socket;
 		}
 	};
 };

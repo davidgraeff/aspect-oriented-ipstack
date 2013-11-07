@@ -18,7 +18,7 @@
 #pragma once
 
 #include "router/Interface.h"
-#include "arp/IPv4_ARP.h"
+#include "arp/addr_resolve_ipv4/AddressResolutionIPv4.h"
 #include "ethernet/Eth_Frame.h"
 #include "ethernet/EthernetAddressUtilities.h"
 #include "router/Router.h"
@@ -26,11 +26,11 @@
 
 using namespace ipstack;
 
-aspect ARP_Lookup_Aspect {
+aspect Neighbour_Lookup_ipv4 {
 	// We want to provide a lookup of ethernet addresses for IP sockets.
 	pointcut prepareSendBuffer_IP_only() = execution("% ipstack::%_Socket::prepareSendBuffer(...)" && derived("ipstack::IP"));
-		
-	advice prepareSendBuffer_IP_only() : order("Sendbuffer_IPv%", "ARP_Lookup_Aspect");
+
+	advice prepareSendBuffer_IP_only() : order("Sendbuffer_IPv%", "Neighbour_Lookup_ipv4");
 	advice prepareSendBuffer_IP_only() && args(sendbuffer, use_as_response) :
 		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
 
@@ -40,7 +40,7 @@ aspect ARP_Lookup_Aspect {
 			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->p.ethernet_frame);
 			Interface* interface = sendbuffer->getInterface();
 
-			const uint8_t* dst_hw_addr = IPv4_ARP::lookup(ip->get_dst_ipaddr(), interface);
+			const uint8_t* dst_hw_addr = AddressResolutionIPv4::lookup(ip->get_dst_ipaddr(), interface);
 			if (dst_hw_addr == 0) {
 				sendbuffer->setState(SendBuffer::InvalidState);
 				return; //don't send this packet: destination MAC address unknown!

@@ -69,7 +69,7 @@ aspect NDP_MDL_Respond {
 				ipv6.setHoplimit(1);
 				
 				const unsigned maxlen = sizeof(MLDMessages::mldv1_listener_report);
-				SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
+				SendBuffer* sbi = socket.requestSendBuffer(maxlen, *b);
 				if (sbi) {
 					sbi->mark("NDP_MDL_Respond");
 					MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), query->addr);

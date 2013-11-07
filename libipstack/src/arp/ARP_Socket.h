@@ -22,6 +22,7 @@
 
 namespace ipstack
 {
+	class Interface;
 	/**
 	 * We define an own class for icmpv6 traffic, to have more context for aspect matching.
 	 * For example the checksum calculation is done via an aspect.

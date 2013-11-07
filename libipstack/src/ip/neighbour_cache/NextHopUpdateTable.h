@@ -28,7 +28,7 @@ namespace ipstack
 /**
  * 
  */
-class NextHopUpdateTable : public Singleton<NeighbourCache>
+class NextHopUpdateTable : public Singleton<NextHopUpdateTable>
 private:
 	struct {
 		NeighbourEntry* e;

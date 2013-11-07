@@ -13,33 +13,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2012 David Gräff
-
+// Copyright (C) 2011 Christoph Borchert
 #pragma once
-
-#include "util/ipstack_inttypes.h"
 #include <string.h> //for memcpy
-#include "router/Interface.h"
-#include "../ARP.h"
-#include "../ARP_Cache.h"
+#include "util/ipstack_inttypes.h"
 #include "ethernet/Eth_Frame.h"
+#include "router/Interface.h"
+#include "os_integration/Clock.h"
 
-using namespace ipstack;
+#include "ARP_IPv4_Packet.h"
+#include "arp/ARP_Packet.h"
 
-/**
-  * We not only reply to an ARP request but also cache the incoming address, because we can assume
-  * that the remote host want to send us further packets.
-  */
-aspect IPv4_ARP_CacheIncoming {
-  
-  // *** Affect class: ARP_Cache
-  advice execution("void ipstack::ARP_Cache::ipv4_reply(%, %, ipstack::Interface*)") &&
-         args(src_hwaddr, src_ipv4_addr, interface) &&
-         that(cache) :
-         after(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, Interface* interface, ARP_Cache& cache) {
 
- 		  //Update ARP Cache entries
-		  cache.ipv4_update((uint32_t*) src_ipv4_addr, src_hw_addr);
-  }
-  
+namespace ipstack {
+
+class AddressReplyIPv4 {
+	public:
+	// handle incoming arp request: return an arp reply packet to the requesting host 
+	static inline void reply(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, SmartReceiveBufferPtr& b);
 };
+
+} // namespace ipstack

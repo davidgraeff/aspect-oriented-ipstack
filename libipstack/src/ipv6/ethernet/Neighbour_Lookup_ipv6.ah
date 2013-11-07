@@ -25,6 +25,7 @@
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6onSockets.h"
 #include "ipv6/AddressMemory.h"
+#include "ndp/addr_resolve_ipv6/AddressResolutionIPv6.h"
 
 using namespace ipstack;
 
@@ -35,10 +36,12 @@ using namespace ipstack;
   * Implementation limitation: This aspect (ipv6_lookup method actually) will block the current
   * task until the destination address is known or a timeout occur.
   */
-aspect NDP_Lookup {
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "IPv6_Ethernet_NDPCache_Blocking_Aspect");
+aspect Neighbour_Lookup_ipv6 {
+	// We want to provide a lookup of ethernet addresses for IP sockets.
+	pointcut prepareSendBuffer_IP_only() = execution("% ipstack::%_Socket::prepareSendBuffer(...)" && derived("ipstack::IP"));
 	
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
+	advice prepareSendBuffer_IP_only() : order("Sendbuffer_IPv%", "Neighbour_Lookup_ipv6");
+	advice prepareSendBuffer_IP_only() && args(sendbuffer) :
 		around(SendBuffer* sendbuffer) {
 
 		// check ip version
@@ -47,7 +50,7 @@ aspect NDP_Lookup {
 			Interface* interface = sendbuffer->getInterface();
 			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->p.ethernet_frame);
 
-			NDPCacheEntry* entry = IPv6_NDP::lookup(ip->get_dst_ipaddr(), interface);
+			NDPCacheEntry* entry = AddressResolutionIPv6::lookup(ip->get_dst_ipaddr(), interface);
 			if (entry == 0) {
 				sendbuffer->setState(SendBuffer::InvalidState);
 				return; //don't send this packet: destination MAC address unknown!

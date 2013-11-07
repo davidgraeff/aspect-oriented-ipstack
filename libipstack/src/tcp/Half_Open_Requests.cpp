@@ -7,7 +7,7 @@ namespace ipstack
 	void Half_Open_Requests::respond(ReceiveBuffer& b) {
 		TCP_Segment* incoming_segment = static_cast<TCP_Segment*>(b.get_payload_data());
 		uint_fast16_t payload_len = b.get_payload_size();
-		SendBuffer* sendbuffer = socket.requestSendBuffer(b.get_interface(), maxlen, b.receivebuffer_pointer());
+		SendBuffer* sendbuffer = socket.requestSendBuffer(b.get_interface(), maxlen, *b);
 
 		TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 		segment->set_dport(incoming_segment->get_sport());

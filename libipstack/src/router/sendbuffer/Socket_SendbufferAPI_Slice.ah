@@ -44,6 +44,7 @@ public:
 		if (!sendbuffer) return 0;
 		prepareSendBuffer(sendbuffer,use_as_response);
 		if (sendbuffer->getState()!=SendBuffer::WritingState) {
+			freeSendbuffer(sendbuffer);
 			return 0;
 		}
 		return sendbuffer;

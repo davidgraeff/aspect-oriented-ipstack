@@ -16,9 +16,8 @@
 // Copyright (C) 2011 Christoph Borchert
 
 
-#include "AddressResolutionIPv4.h"
-#include "ip/neighbour_cache/NeighbourCacheConfig.h"
-#include "arp/ARPConfig.h"
+#include "IPv4ToLinkLayer.h"
+#include "NeighbourCacheConfig.h"
 
 namespace ipstack {
 	uint8_t* AddressResolutionIPv4::find(uint32_t ipv4_addr){

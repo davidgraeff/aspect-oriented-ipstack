@@ -39,8 +39,7 @@ namespace ipstack
 			ICMPv6_Socket* socket = Management_Task::Inst().get_socket_icmpv6();
 			
 			// As of ICMPv6 RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
-			SendBuffer* sbi = socket->requestSendBuffer(ICMPv6_Packet::ICMP_MAX_DATA_SIZE,
-													buffer.receivebuffer_pointer());
+			SendBuffer* sbi = socket->requestSendBuffer(ICMPv6_Packet::ICMP_MAX_DATA_SIZE, &buffer);
 			if (sbi) {
 				sbi->mark("ICMPv6_ErrorReply");
 				ICMPv6Unrechable* reply = (ICMPv6Unrechable*)sbi->getDataPointer();

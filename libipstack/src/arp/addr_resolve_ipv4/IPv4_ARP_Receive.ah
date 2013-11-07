@@ -60,11 +60,11 @@ aspect IPv4_ARP_Receive {
         
         if(packet->get_opcode() == ARP_Packet::ARP_REQUEST){
           //Send ARP-Reply
-          IPv4_ARP::reply(src_hw_addr, packet->arp_src_ipv4_addr, interface);
+          AddressReplyIPv4::reply(src_hw_addr, packet->arp_src_ipv4_addr, b);
 		}
         else if(packet->get_opcode() == ARP_Packet::ARP_REPLY){
           //Update ARP Cache entries
-          IPv4_ARP::update(packet->arp_src_ipv4_addr, src_hw_addr);
+          AddressResolutionIPv4::update(packet->arp_src_ipv4_addr, src_hw_addr);
         }
       }
     }

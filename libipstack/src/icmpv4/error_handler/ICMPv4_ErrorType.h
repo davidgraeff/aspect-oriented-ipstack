@@ -32,8 +32,7 @@ namespace ipstack
 			
 			// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
 			const uint8_t echoErrornousPacketSize = buffer->p.ipv4->get_ihl() * 4 + 8;
-			SendBuffer* sbi = socket.requestSendBuffer(echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE,
-													buffer->receivebuffer_pointer());
+			SendBuffer* sbi = socket.requestSendBuffer(echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE, buffer);
 			if (sbi) {
 				sbi->mark("ICMPv4_ErrorReply");
 				ICMPv4_Packet* icmp_error_reply = (ICMPv4_Packet*)sbi->getDataPointer();

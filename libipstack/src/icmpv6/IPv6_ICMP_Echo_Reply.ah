@@ -51,7 +51,7 @@ aspect IPv6_ICMP_Echo_Reply {
 				maxlen = payloadlen;
 			}
 			
-			SendBuffer* sbi = socket.requestSendBuffer(maxlen, b.receivebuffer_pointer());
+			SendBuffer* sbi = socket.requestSendBuffer(maxlen, *b);
 			if (sbi) {
 				sbi->mark("IPv6_ICMP_Echo_Reply");
 				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->getDataPointer();

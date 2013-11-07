@@ -13,23 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2013 David Gräff
 
 #pragma once
 
-#include "util/ipstack_inttypes.h"
-#include "ipv6/ndpcache/NDPCacheConfig.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "ipv6/AddressMemory.h"
-#include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
-#include "os_integration/Clock.h"
-#include <string.h>
 
 namespace ipstack {
 
+class NeighbourEntry;
+class Interface;
 class AddressResolutionIPv6 {
 	public:
-		static NDPCacheEntry* lookup(const ipv6addr& addr, Interface* interface);
+		static NeighbourEntry* lookup(const ipv6addr& addr, Interface* interface);
 	};
 } // end namespace
