@@ -18,7 +18,7 @@
 #pragma once
 
 #include "IPStack_Config.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 #include "udp/UDP_Socket.h"
 #include "memory_management/Mempool_Instance_UDP.h"
 
@@ -33,14 +33,14 @@ class UDPDebugPort {
 			socket.ipv4.set_dst_addr(cfIPSTACK_UDP_DEBUGPORT_DESTIPv4);
 			socket.set_dport(cfIPSTACK_UDP_DEBUGPORT_DESTPORT);
 			
-			SendBuffer* outBuffer = socket.requestSendBuffer(len);
+			SendBuffer* outBuffer = SendbufferIP::requestIPBuffer(socket, socket, len);
 			
 			// didn't get buffer, maybe "len" is to great or no ip interface is up -> abort
 			if (!outBuffer)
 				return;
 			
 			outBuffer->write(msg, len);
-			socket.send(outBuffer);
+			outBuffer->send();
 		}
 };
 

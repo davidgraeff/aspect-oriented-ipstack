@@ -29,14 +29,12 @@
 #include <QDebug>
 #include <QHBoxLayout>
 
-PickDependencies::PickDependencies(const QString& kconfig_input_filename, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::PickDependencies)
+PickDependencies::PickDependencies(DependencyModel* dependsModel, QWidget *parent) :
+    QDialog(parent), ui(new Ui::PickDependencies), dependsModel(dependsModel)
 {
     ui->setupUi(this);
     ui->frame->setLayout(new QVBoxLayout());
     ui->treeView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    dependsModel = new DependencyModel(kconfig_input_filename,this);
     dependsModelProxy = new FilterProxyModel(this);
     dependsModelProxy->setSourceModel(dependsModel);
     dependsModelProxy->setDynamicSortFilter(true);

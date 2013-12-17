@@ -56,7 +56,7 @@ aspect sendbuffer_protect {
 	/**
 	  * Warning message if allocation fails
 	  */
-	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+	advice execution( "% ipstack::SendBuffer::requestRawBuffer(...)" ) : after() {
 		if (*tjp->result() == 0) {
 			std::cout << "SendBuffer: Allocation failed!" << std::endl;
 		} else {

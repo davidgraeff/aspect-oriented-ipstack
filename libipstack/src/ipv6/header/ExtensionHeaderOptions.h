@@ -25,12 +25,23 @@ namespace ipstack
 /**
   * The structure of an IPv6 extension
   */
-struct IPv6HeaderExtension {
-	uint8_t nextheader;		// Identifies the type of the header that will follow this extension header
-	uint8_t len_in_8octets; 	// example: 1 means a size of 64 bits
-	uint8_t options[];
+struct IPv6HeaderExtensionOption {
+	uint8_t type;
+	uint8_t len_in_bytes;
+	uint8_t data[];
 } __attribute__((packed));
 
+struct IPv6HeaderExtension {
+	uint8_t nextheader;		// Identifies the type of the header that will follow this extension header
+	uint8_t len_in_octets; 	// example: 1 means a size of 64 bits
+	IPv6HeaderExtensionOption options[];
+} __attribute__((packed));
+
+// Types of IPv6 Header extensions
+enum {IPv6Ext_HopyByHop = 0, IPv6Ext_DestOptions = 60, IPv6Ext_Routing = 43,
+	IPv6Ext_Fragment = 44, IPv6Ext_Authentification = 51, IPv6Ext_ESP = 50,
+	IPv6Ext_Mobility = 135, IPv6Ext_NoNext = 59 };
+	
 /**
  * Parses extension header options and provide padding options
  */
@@ -41,23 +52,22 @@ public:
 	 * Return false if a parsing error occured or if one of the options
 	 * told us, that if we do not understand it, we should drop the packet.
 	 */
-	static bool parseOptions(uint8_t* data, unsigned remaining_length, Interface* interface) {
+	static bool parseOptions(IPv6HeaderExtensionOption* extensionOption, unsigned remaining_length, Interface* interface) {
 		while (remaining_length) {
-			uint8_t option_len = data[1];
-			if (!parseOption(data[0], option_len, &data[2], interface))
+			const uint8_t option_len = extensionOption->len_in_bytes;
+			if (!parseOption(extensionOption->type, option_len, extensionOption->data, interface))
 				return false;
 			
-			if (option_len>remaining_length)
+			if (option_len > remaining_length)
 				return false;
+			
+			// Advance pointer and decrease remaining option length
 			remaining_length -= option_len;
-			data += option_len;
+			extensionOption = ((char*)extensionOption) + option_len;
 		}
 		return true;
 	}
 	
-	/**
-	 * This can be intercepted by aspects to react on received IPv6 options.
-	 */
 	static bool parseOption(uint8_t type, uint8_t data_len, uint8_t* data, Interface* interface) {
 		// We didn't recognice this option and the option want us to drop the packet
 		if ((type & 0xC0) != 00)
@@ -77,6 +87,21 @@ public:
 			data[0] = 1;
 			data[1] = remainingBytes-2;
 		}
+	}
+	
+	/**
+	 * Skip the current ipv6 header extension and return the header type after that.
+	 */
+	static unsigned char skipHeader(ReceiveBuffer& buffer) {
+		IPv6HeaderExtension* headerExtension = (IPv6HeaderExtension*)buffer.get_payload_data();
+		
+		const unsigned extension_length_in_bytes = headerExtension->len_in_octets * 8 + 8;
+		if (!ExtensionHeaderOptions::parseOptions(headerExtension->options, extension_length_in_bytes, buffer.get_interface())) {
+			return IPv6Ext_NoNext; // drop packet
+		}
+		
+		buffer.setPayload((char*)headerExtension) + extension_length_in_bytes, buffer.get_payload_size()-extension_length_in_bytes);
+		return headerExtension->nextheader;
 	}
 };
 

@@ -51,7 +51,7 @@ namespace ipstack
 			return false;
 		} else {
 			//verify if connection tupel (src port, dest port, src ip) is not used already
-			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
+			TCP_Socket_Private* current = TCP_Socket::getHead();
 			while (current != 0) {
 				if (current->get_sport() == get_sport() && current->get_dport() == get_dport() &&
 					current->ip.is_ip_src_addr_matching(ip)) {
@@ -64,7 +64,7 @@ namespace ipstack
 
 		if (isListening()) {
 			//insert at end
-			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
+			TCP_Socket_Private* current = TCP_Socket::getHead();
 			while (current != 0) {
 				if (!current->getNext()) {
 					current->setNext(this);
@@ -74,17 +74,17 @@ namespace ipstack
 			}
 		} else {
 			//insert at front
-			setNext(tcp_head_socket);
-			Demux::Inst().tcp_head_socket = this;
+			TCP_Socket::setNext(TCP_Socket::getHead());
+			TCP_Socket::setHead(this);
 		}
 		return true;
 	}
 
 	void TCP_Socket_Private::unbind() {
-		if (this == Demux::Inst().tcp_head_socket) {
-			Demux::Inst().tcp_head_socket = getNext();
+		if (this == TCP_Socket::getHead()) {
+			TCP_Socket::setHead(TCP_Socket::getNext());
 		} else {
-			TCP_Socket_Private* current = Demux::Inst().tcp_head_socket;
+			TCP_Socket_Private* current = TCP_Socket::getHead();
 			TCP_Socket_Private* next = current->getNext();
 			while (next != 0) {
 				if (next == this) {

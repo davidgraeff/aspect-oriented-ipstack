@@ -24,16 +24,6 @@ namespace ipstack {
 	 * Inherit from this class to get an abstract method receiveCallback that is
 	 * called by ipstack::System::periodic() if your socket object got new data via addToReceiveQueue.
 	 */
-	class ReceivePeriodicCallback :public ReceiveCallback, public DemuxLinkedList<ReceivePeriodicCallback*> {  
-	public:
-		ReceivePeriodicCallback(SocketMemory* socketmemory);
-
-		/**
-		 * This is used by the ReceivePeriodicCallback-Aspect to get all objects that are derived
-		 * from this class.
-		 */
-		static ReceivePeriodicCallback* receivedFrame;
-	
-	};
+	class ReceivePeriodicCallback :public ReceiveCallback, public LinkedList<ReceivePeriodicCallback, true> {};
 
 } // namespace ipstack

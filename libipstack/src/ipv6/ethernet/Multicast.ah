@@ -21,7 +21,7 @@
 #include "ethernet/Eth_Frame.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -32,21 +32,21 @@ using namespace ipstack;
  */
 aspect IPv6_Ethernet_Multicast {
 	// call-advice ordering: always add the ethernet header before the IPv6 header!
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") :
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") :
 		order("Sendbuffer_IPv6_Ethernet" , "Sendbuffer_IPv6");
 
 	// add ethernet header to the SendBuffer. This method is only called with a valid
 	// SendBuffer -> no runtime checks.
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer)  :
-		around(SendBuffer* sendbuffer) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 
 		// only for IPv6
-		if (tjp->that()->m_useipversion != 6) {
+		if (ip.m_useipversion != 6) {
 			tjp->proceed();
 			return;
 		}
 		
-		IPV6& ipv6 = tjp->that()->ipv6;
+		IPV6& ipv6 = ip.ipv6;
 		Interface* interface = ipv6.interface;
 		if (interface->getType() != Interface::ETHERNET) {
 			tjp->proceed();

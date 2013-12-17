@@ -20,25 +20,19 @@
 #include "util/ipstack_inttypes.h"
 #include "ipv6/AddressMemory.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "router/Interface.h"
 #include "Address_prefix_expire_Slice.ah"
 #include "Interface_prefix_expire_Slice.ah"
 
 using namespace ipstack;
 
-/**
- * Add the ethernet header frame size to the createSendBuffer(size)
- * and fill in the ethernet header in prepareSendBuffer(...)
- */
 aspect Address_prefix_expire_aspect {
-	advice "ipstack::AddressEntry" :
+	advice "ipstack::AddressEntryIPv6" :
 	slice Address_prefix_expire_Slice;
-	advice "ipstack::Interface" :
-	slice Interface_prefix_expire_Slice;
 
-	advice execution("bool ipstack::Router::ipv6_find_route_is_matching(%, ipstack::AddressEntry*)") && args(entry) :
-		around(AddressEntry* entry) {
+	advice execution("bool ipstack::Router::ipv6_find_route_is_matching(%, ipstack::AddressEntryIPv6*)") && args(entry) :
+		around(AddressEntryIPv6* entry) {
 		if (!entry->preferred_time_minutes) {
 			*(tjp->result()) = false;
 			return;
@@ -46,11 +40,50 @@ aspect Address_prefix_expire_aspect {
 		tjp->proceed();
 	}
 
-	advice execution("ipstack::AddressEntry* ipstack::Interface::makeIPv6AddressByPrefix(...)") && result(entry) :
-		after(AddressEntry* entry) {
+	advice execution("ipstack::AddressEntryIPv6* ipstack::Interface::addAddress(...)") && result(entry) :
+		after(AddressEntryIPv6* entry) {
 		if (entry) {
-			entry->valid_time_minutes = AddressEntry::NoTimeExpire;
-			entry->preferred_time_minutes = AddressEntry::NoTimeExpire;
+			entry->valid_time_minutes = AddressEntryIPv6::NoTimeExpire;
+			entry->preferred_time_minutes = AddressEntryIPv6::NoTimeExpire;
 		}
 	}
+	
+	/**
+	 * TODO
+	 * Reset link to AddressEntryIPv6 on all ipv6 sockets
+	 * Depends on: IP_in_linked_list feature for IP_Socket iteration
+	 */
+	advice execution("void ipstack::Interface::freeAddress(ipstack::NeighbourEntry*, %)") && args(entry, position) :
+		around(NeighbourEntry* entry, EntryPosition position) {
+			
+		IP* ipsocket = IP::getHead();
+		while (ipsocket) {
+			if (compare_ipv6_addr(ipsocket->ipv6.get_dst_addr(), entry->ipv6)) {
+				ipsocket->resetRoute();
+			}
+			ipsocket = ipsocket->getNext();
+		}
+	}
+	
+	// This may be used by the ndp address unreachable detection
+	// Call this method every IPV6_REFRESH_IN_MINUTES
+	advice execution("void ipstack::System::periodic()") {
+		uint8_t nextEntry = 0;
+		while (AddressEntryIPv6* entry = getAddress(&nextEntry)) {
+			if (entry->valid_time_minutes==(uint32_t)AddressEntryIPv6::NoTimeExpire)
+				continue;
+			
+			if (entry->valid_time_minutes <= (uint32_t)IPV6_REFRESH_IN_MINUTES) {
+				freeAddress(entry);
+				continue;
+			}
+			
+			entry->valid_time_minutes -= IPV6_REFRESH_IN_MINUTES;
+			if (entry->preferred_time_minutes <= IPV6_REFRESH_IN_MINUTES)
+				entry->preferred_time_minutes = 0;
+			else
+				entry->preferred_time_minutes -= IPV6_REFRESH_IN_MINUTES;
+		}
+	}
+	enum {IPV6_REFRESH_IN_MINUTES = 3};
 };

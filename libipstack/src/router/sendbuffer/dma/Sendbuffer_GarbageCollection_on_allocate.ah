@@ -24,7 +24,7 @@ using namespace ipstack;
   * Garbage collection on alloc
   */
 aspect Sendbuffer_GarbageCollection_on_allocate {
-	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+	advice execution( "% ipstack::SendBuffer::requestRawBuffer(...)" ) : after() {
 		SendBuffer* sendbuffer = SendBuffer::free_first;
 		SendBuffer* sendbufferNext = 0, sendbufferLast = 0;
 		while (sendbuffer) {

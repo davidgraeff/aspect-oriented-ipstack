@@ -16,16 +16,12 @@
 // Copyright (C) 2011 Christoph Borchert, 2013 David Gräff
 #pragma once
 #include "util/ipstack_inttypes.h"
-#include "os_integration/Clock.h"
 #include "NeighbourCacheConfig.h"
 #include "NeighbourCache.h"
 
 using namespace ipstack;
 
 aspect Neighbour_Cache_Global_Timeout {  
-
-  uint64_t timeout_window;
-  
   inline uint64_t getNextExpireTime(const uint64_t curr_time) {
 	  return curr_time + Clock::ms_to_ticks(NEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC * 1000UL);
   }
@@ -34,11 +30,11 @@ aspect Neighbour_Cache_Global_Timeout {
 	  timeout_window = getNextExpireTime(Clock::now()); //in ticks
   }
 
-  advice execution("% ipstack::System::periodic(...)") : after() {
-    const uint64_t curr_time = Clock::now(); //in ticks
+  advice execution("% ipstack::System::periodic1min(...)") : after() {
+	  static uint8_t timout_mins = 0;
     
-    if(curr_time > timeout_window){
-      timeout_window = getNextExpireTime(Clock::now()); //in ticks
+    if(++timeout_window > NEIGHBOURCACHE_GLOBAL_TIMEOUT_SEC/60){
+      timeout_mins = 0;
 	  //invalidate all cache entries
       NeighbourCache.Inst().clear();
     }

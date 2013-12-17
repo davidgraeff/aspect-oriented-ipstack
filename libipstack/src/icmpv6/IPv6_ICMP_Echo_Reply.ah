@@ -23,6 +23,7 @@
 #include "router/Interface.h"
 #include "ICMPv6_Packet.h"
 #include "ICMPv6_Socket.h"
+#include "ip/SendbufferIP.h"
 
 using namespace ipstack;
 
@@ -51,7 +52,7 @@ aspect IPv6_ICMP_Echo_Reply {
 				maxlen = payloadlen;
 			}
 			
-			SendBuffer* sbi = socket.requestSendBuffer(maxlen, *b);
+			SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, maxlen, *b);
 			if (sbi) {
 				sbi->mark("IPv6_ICMP_Echo_Reply");
 				ICMPv6_Packet* reply_icmp = (ICMPv6_Packet*)sbi->getDataPointer();
@@ -61,8 +62,7 @@ aspect IPv6_ICMP_Echo_Reply {
 				sbi->writtenToDataPointer(ICMPv6_Packet::ICMP_HEADER_SIZE);
 				// append original payload of the source icmp packet
 				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv6_Packet::ICMP_HEADER_SIZE);
-
-				socket.send(sbi);
+				sbi->send();
 			}
 		} else {
 			tjp->proceed();

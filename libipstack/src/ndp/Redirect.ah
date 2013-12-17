@@ -25,7 +25,7 @@
  */
 
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "icmpv6/ICMPv6_Packet.h"
 #include "ndp/NDPMessages.h"
 #include "ndp/router/Interface.h"
@@ -47,11 +47,23 @@ aspect NDP_Redirect {
 		uint8_t options[];
 	} __attribute__((packed));
 	
-	advice execution("void ipstack::Demux::icmpv6_demux(ipstack::IPv6_Packet*, ipstack::ICMPv6_Packet*, unsigned, ipstack::Interface*)") &&
-	args(packet, icmp_packet, payloadlen, interface) && that(demux) :
-		around(IPv6_Packet* packet, ICMPv6_Packet* icmp_packet, unsigned payloadlen, Interface* interface, Demux& demux) {
+	advice execution("bool ipstack::ICMPv6_Socket::acceptedData(%,%)") &&
+	args(type, code) : around(uint8_t type, uint8_t code) {
+		if ((type == 137) &&
+			(code == 0)) {
+			*(tjp->result()) = true;
+			return;
+		}
+		tjp->proceed();
+	}
+	
+	advice execution("void ipstack::ICMPv6_Socket::receiveCallback(ipstack::SmartReceiveBufferPtr&)") &&
+	args(b) : around(SmartReceiveBufferPtr& b) {
+
+		ICMPv6_Packet* icmp_packet = static_cast<ICMPv6_Packet*>(b.get_payload_data());
+		if ((icmp_packet->get_type() == 137) && (icmp_packet->get_code() == 0)) {
 			RedirectMessage* message = (RedirectMessage*)icmp_packet;
-		if ((message->type == 137) && (message->code == 0)) {
+			
 			if (payloadlen < sizeof(RedirectMessage))
 				return; // drop packet
 			payloadlen -= sizeof(RedirectMessage);
@@ -66,7 +78,13 @@ aspect NDP_Redirect {
 			if (!ndpcacheentry)
 				return;
 			
-			NextHopUpdateTable::Inst().add(message->destination_address, ndpcacheentry);
+			IP* ipsocket = IP::getHead();
+			while (ipsocket) {
+				if (compare_ipv6_addr(ipsocket->ipv6.get_dst_addr(), message->destination_address)) {
+					ipsocket->resetRoute();
+				}
+				ipsocket = ipsocket->getNext();
+			}
 		} else {
 			tjp->proceed();
 		}

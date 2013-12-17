@@ -18,7 +18,7 @@
 #pragma once
 
 #include "IPStack_Config.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 #include "udp/UDP_Socket.h"
 #include "memory_management/Mempool_Instance_UDP.h"
 
@@ -40,7 +40,7 @@ class UDPDebugPort {
 				return;
 			
 			outBuffer->write(msg, len);
-			socket.send(outBuffer);
+			outBuffer->send();
 		}
 };
 

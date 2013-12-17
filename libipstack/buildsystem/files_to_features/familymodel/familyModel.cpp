@@ -109,6 +109,13 @@ QStringList FamilyModel::get_used_files() const
     return rootItem->get_all_files(true);
 }
 
+QStringList FamilyModel::get_dependencies() const
+{
+    QStringList d;
+    rootItem->get_dependencies_string(d);
+    return d;
+}
+
 QModelIndexList FamilyModel::get_missing_files() const
 {
     QModelIndexList list;
@@ -195,7 +202,7 @@ void FamilyModel::removeFile(FamilyFile *item)
             parent->childs.removeOne(item);
     }
     // Remote item and childs
-    qDebug() << "removeFile" << item->filename;
+//    qDebug() << "removeFile" << item->filename;
     delete item;
     endRemoveRows();
     emit removed_existing_files(l);
@@ -208,7 +215,6 @@ FamilyComponent* FamilyModel::addComponent(FamilyComponent *parent)
         parent = rootItem;
 
     FamilyComponent* i = FamilyComponent::createComponent(this, parent->get_directory(), parent);
-    i->update_component_name();
 	emit changed();
     return i;
 }
@@ -370,7 +376,7 @@ QVariant FamilyModel::data(const QModelIndex &index, int role) const
                 return mItem->cache_relative_directory;
             }
         } else if (role==Qt::ToolTipRole && column==0) {
-            return mItem->depends;
+            return mItem->get_dependencies();
         } else if (role==Qt::DecorationRole && column==0) {
             return icon_component;
         }
@@ -472,11 +478,9 @@ bool FamilyModel::node(FamilyComponent *current_item, const QJsonObject& obj) {
         new_dir = new_dir.absoluteFilePath(subdir);
 
     // Create new component
-    FamilyComponent* new_item = FamilyComponent::createComponent(this, new_dir,current_item);
-    new_item->depends = obj.value("depends").toString();
-    new_item->vname = obj.value("vname").toString();
-    new_item->update_component_name();
-
+    FamilyComponent* new_item = FamilyComponent::createComponent(this, new_dir,current_item,
+                                                                 obj.value("depends").toString(),
+                                                                 obj.value("vname").toString());
     // Add files
     QJsonArray files;
     if (obj.contains("file"))

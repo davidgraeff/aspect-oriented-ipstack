@@ -17,7 +17,7 @@
 
 #pragma once
 #include "IPv6_Singlestack_Slice.ah"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/InternetChecksum.h"

@@ -40,7 +40,7 @@ aspect sendbuffer_debug {
 		nextMsg = 0;
 	}
 
-	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+	advice execution( "% ipstack::SendBuffer::requestRawBuffer(...)" ) : after() {
 		SendBuffer* b = *tjp->result();
 		if (b != 0) {
 			std::cout << "SendBuffer: Allocated " << b << std::endl;

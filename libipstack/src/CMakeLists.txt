@@ -1,16 +1,9 @@
 # Look at doc/cmake_integrate_libipstack.mk for futher help
+# This cmake file works only if the aspect compiler has been discovered before
+# and if "${CMAKE_CURRENT_SOURCE_DIR}/../buildsystem/filterfiles.cmake" can be found
 
 cmake_minimum_required (VERSION 2.8.8)
-
-############## Aspect compiler ##############
-# Find and check ACXX compiler
-if(NOT CMAKE_ACXX_COMPILER_WORKS)
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../buildsystem/acxx")
-	enable_language(ACXX)
-endif()
-if(NOT CMAKE_ACXX_COMPILER_WORKS)
-	message(FATAL_ERROR "Required working ACXX compiler not found.")
-endif()
+include("${CMAKE_CURRENT_SOURCE_DIR}/../buildsystem/filterfiles.cmake")
 
 ############## Project and Compiler ##############
 project (libipstack ACXX CXX)
@@ -36,7 +29,6 @@ if (IPSTACK_ADDITIONAL_SRC)
 endif()
 
 # Compile all cpp sources with ACXX
-include("${CMAKE_CURRENT_SOURCE_DIR}/../buildsystem/filterfiles.cmake")
 SET(SRC_CXX_FILES)
 SET(SRC_AH_FILES)
 filter_files_two(SRC_CXX_FILES ".cpp" SRC_AH_FILES ".ah" ${SRC})

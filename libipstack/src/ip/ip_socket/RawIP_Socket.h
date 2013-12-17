@@ -19,7 +19,6 @@
 
 #include "demux/receivebuffer/SmartReceiveBufferPtr.h"
 #include "memory_management/SocketMemory.h"
-#include "router/sendbuffer/sendbufferAPI.h"
 #include "ip/IP.h"
 #include "util/ipstack_inttypes.h"
 namespace ipstack
@@ -31,7 +30,7 @@ namespace ipstack
  * This type of socket can be used if you want to send raw IP data, like ICMP or want to add
  * your own transport header, for instance for a tcp half-open-request response.
  */
-class RawIP_Socket : public SocketMemory, public SendBufferAPI, public IP
+class RawIP_Socket : public SocketMemory, public IP
 {
 	public:
 		// Construct with socket memory

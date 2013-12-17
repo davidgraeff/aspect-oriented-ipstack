@@ -66,7 +66,7 @@ class PickDependencies : public QDialog
     Q_OBJECT
     
 public:
-    explicit PickDependencies(const QString& kconfig_input_filename, QWidget *parent = 0);
+    explicit PickDependencies(DependencyModel* dependsModel, QWidget *parent = 0);
     ~PickDependencies();
 
     /// Construct a string out of the dependency pattern object

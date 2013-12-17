@@ -54,7 +54,7 @@ aspect ipstack_ifcfg0_v6_forcerouter  {
 			uint8_t position = interface->addressmemory.getPosition(entry);
 
 			// add an IP address with router prefix information
-			interface->makeIPv6AddressByPrefix(addr, cfIPSTACK_IFCFG0_IPv6_router_prefixlen, AddressEntry::AddressEntryStateTemporary, position);
+			interface->makeIPv6AddressByPrefix(addr, cfIPSTACK_IFCFG0_IPv6_router_prefixlen, AddressEntryIPv6::AddressEntryIPv6StateTemporary, position);
 		}
 	}
 };

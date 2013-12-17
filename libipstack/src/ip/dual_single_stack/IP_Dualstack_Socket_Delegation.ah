@@ -22,7 +22,7 @@
 #include "ip/IP.h"
 #include "ipv4/IPv4onSockets.h"
 #include "ipv4/InternetChecksum.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "ipv6/InternetChecksum.h"
 
 /**
@@ -38,10 +38,10 @@ aspect IP_Dualstack_Socket_Delegation {
 	  * version and therefore need a pointer to the m_useipversion variable of
 	  * the socket. 
 	  */
-	advice construction("ipstack::IP") : after() {
-		tjp->that()->m_useipversion = 4; // initial version is IPv4
-		tjp->that()->ipv4.m_useipversionPtr = &tjp->that()->m_useipversion;
-		tjp->that()->ipv6.m_useipversionPtr = &tjp->that()->m_useipversion;
+	advice construction("ipstack::IP") && that(ip) : after(IP& ip) {
+		ip.m_useipversion = 4; // initial version is IPv4
+		ip.ipv4.m_useipversionPtr = &ip.m_useipversion;
+		ip.ipv6.m_useipversionPtr = &ip.m_useipversion;
 	}
 	
 	/**
@@ -58,11 +58,11 @@ aspect IP_Dualstack_Socket_Delegation {
 	 * SET IP VERSION IF WE INTEND TO SEND A RESPONSE
 	 */
 	// we have to set the ip version, before IP-related aspects try to add any IP header
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("IP_Dualstack_Socket_Delegation", "Sendbuffer_IPv%");
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
-		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") : order("IP_Dualstack_Socket_Delegation", "Sendbuffer_IPv%");
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 			if (use_as_response) {
-				tjp->that()->m_useipversion = IP::get_ip_version(use_as_response->p.ip_packet);
+				ip.m_useipversion = IP::get_ip_version(use_as_response->p.ip_packet);
 			}
 			tjp->proceed();
 	}
@@ -70,43 +70,44 @@ aspect IP_Dualstack_Socket_Delegation {
 	/**
 	 * SENDING
 	 */
-	advice execution("ipstack::Interface* ipstack::IP::getUsedInterface()") : around() {
-		if (tjp->that()->m_useipversion == 4)
-			*tjp->result() = tjp->that()->ipv4.interface;
+	advice execution("ipstack::Interface* ipstack::IP::getUsedInterface()") && that(ip) : around(IP& ip) {
+		if (ip.m_useipversion == 4)
+			*tjp->result() = ip.ipv4.interface;
 		else
-			*tjp->result() = tjp->that()->ipv6.interface;
+			*tjp->result() = ip.ipv6.interface;
 	}
 	
-	advice execution("bool ipstack::IP::hasValidSrcDestAddresses()") : around() {
-		if (tjp->that()->m_useipversion == 4)
-			*tjp->result() = tjp->that()->ipv4.hasValidSrcDestAddresses();
+	advice execution("bool ipstack::IP::hasValidSrcDestAddresses()") && that(ip) : around(IP& ip) {
+		if (ip.m_useipversion == 4)
+			*tjp->result() = ip.ipv4.hasValidSrcDestAddresses();
 		else
-			*tjp->result() = tjp->that()->ipv6.hasValidSrcDestAddresses();
+			*tjp->result() = ip.ipv6.hasValidSrcDestAddresses();
 	}
 	
-	advice execution("void ipstack::IP::set_dst_ip_addr_to_peer_addr(char*)") && args(ip_packet)
-		: around(char* ip_packet) {
-		if (tjp->that()->m_useipversion == 4)
-			tjp->that()->ipv4.set_dst_addr(((IPv4_Packet*)ip_packet)->get_src_ipaddr());
+	advice execution("void ipstack::IP::set_dst_ip_addr_to_peer_addr(char*)") && that(ip) && args(ip_packetip)
+		: around(IP& ip, char* ip_packet) {
+		if (ip.m_useipversion == 4)
+			ip.ipv4.set_dst_addr(((IPv4_Packet*)ip_packet)->get_src_ipaddr());
 		else
-			tjp->that()->ipv6.set_dst_addr(((IPv6_Packet*)ip_packet)->get_src_ipaddr());
+			ip.ipv6.set_dst_addr(((IPv6_Packet*)ip_packet)->get_src_ipaddr());
 	}
 
-	advice execution("bool ipstack::IP::is_ip_peer_addr_matching(char*)") && args(ip_packet) : around(char* ip_packet) {
-		if (tjp->that()->m_useipversion == 4)
-			*(tjp->result()) = (tjp->that()->ipv4.get_dst_addr()==((IPv4_Packet*)ip_packet)->get_src_ipaddr());
+	advice execution("bool ipstack::IP::is_ip_peer_addr_matching(char*)") && that(ip) && args(ip_packetip)
+		: around(IP& ip, char* ip_packet) {
+		if (ip.m_useipversion == 4)
+			*(tjp->result()) = (ip.ipv4.get_dst_addr()==((IPv4_Packet*)ip_packet)->get_src_ipaddr());
 		else
-			*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_dst_addr(),((IPv6_Packet*)ip_packet)->get_src_ipaddr());
+			*(tjp->result()) = compare_ipv6_addr(ip.ipv6.get_dst_addr(),((IPv6_Packet*)ip_packet)->get_src_ipaddr());
 	}
 	
-	advice execution("bool ipstack::IP::is_ip_src_addr_matching(ipstack::IP&)") && args(ip) : around(IP& ip) {
-		if (tjp->that()->m_useipversion != ip.m_useipversion)
+	advice execution("bool ipstack::IP::is_ip_src_addr_matching(ipstack::IP&)") && that(this_ip) && args(ip) : around(IP& this_ip, IP& ip) {
+		if (this_ip.m_useipversion != ip.m_useipversion)
 			*(tjp->result()) = false;
 		else {
-			if (tjp->that()->m_useipversion == 4)
-				*(tjp->result()) = (tjp->that()->ipv4.get_dst_addr()==ip.ipv4.get_dst_addr());
+			if (this_ip.m_useipversion == 4)
+				*(tjp->result()) = (this_ip.ipv4.get_dst_addr()==ip.ipv4.get_dst_addr());
 			else
-				*(tjp->result()) = compare_ipv6_addr(tjp->that()->ipv6.get_dst_addr(),ip.ipv6.get_dst_addr());
+				*(tjp->result()) = compare_ipv6_addr(this_ip.ipv6.get_dst_addr(),ip.ipv6.get_dst_addr());
 		}
 	}
 	

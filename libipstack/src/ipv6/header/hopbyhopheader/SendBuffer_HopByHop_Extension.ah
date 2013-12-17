@@ -19,7 +19,7 @@
 
 #include "router/Interface.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "IPv6HopByHop.h"
 #include "util/ipstack_inttypes.h"
@@ -30,24 +30,24 @@ using namespace ipstack;
  * Set the IPv6 header extension: HopByHop
  */
 aspect Sendbuffer_IPv6_HopByHop_extension {
-// 	// Always first add the IPv6 header and after that the Extension headers.
-// 	// All upper layer protocols should be the last ones effecting these funtions.
-	advice execution("void ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv6" , "Sendbuffer_IPv6_HopByHop_extension");
-// 
-	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
-		after(unsigned v) {
+	advice execution("% ipstack::SendBufferIP::requestIPBuffer(ipstack::SocketMemory&, ipstack::IP&, %, ipstack::ReceiveBuffer*)") && args(mem, ip, requestedSize, use_as_response) :
+		before(SocketMemory& mem, IP& ip, uint_fast16_t requestedSize, ReceiveBuffer* use_as_response) {
 		// check ip version
-		if (tjp->that()->m_useipversion == 6) {
-			*tjp->result() = v + IPv6HopByHop::getSize(tjp->that()->ipv6);
+		if (ip.m_useipversion == IPV6_VERSION) {
+			*tjp->arg<2>() = requestedSize + IPv6HopByHop::getSize(ip.ipv6);
 		}
 	}
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
-		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+	// Always first add the IPv6 header and after that the Extension headers.
+	// All upper layer protocols should be the last ones effecting these funtions.
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") : order("Sendbuffer_IPv6" , "Sendbuffer_IPv6_HopByHop_extension");
+
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 
 		// check ip version
-		if (tjp->that()->m_useipversion == 6) {
-			IPV6& ipv6 = tjp->that()->ipv6;
+		if (ip.m_useipversion == 6) {
+			IPV6& ipv6 = ip.ipv6;
 			char* nextHeader = (char*)sendbuffer->getDataPointer(); // the next header field is always the first byte of an IPv6 extension header.
 			uint_fast16_t size = IPv6HopByHop::writeExtensionHeader(ipv6, nextHeader);
 

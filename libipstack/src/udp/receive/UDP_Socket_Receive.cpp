@@ -29,9 +29,9 @@
 namespace ipstack {
 	static uint16_t udp_last_default_port = 1024U;
 
-	bool UDP_Socket::bind(UDP_Socket* socket) {
-		uint16_t sport = socket->get_sport();
-		UDP_Socket* current = Demux::Inst().udp_head_socket;
+	bool UDP_Socket::bind() {
+		uint16_t sport = get_sport();
+		UDP_Socket* current = UDP_Socket::getHead();
 		
 		if (sport == UDP_Packet::UNUSED_PORT) {
 			//choose 'random' source port number
@@ -46,7 +46,7 @@ namespace ipstack {
 					current = current->getNext();
 				}
 				if (foundUnusedPort) {
-					socket->set_sport(udp_last_default_port);
+					set_sport(udp_last_default_port);
 					++udp_last_default_port; // increase for next bind()
 					break;
 				}
@@ -64,19 +64,19 @@ namespace ipstack {
 			}
 		}
 		//insert at front
-		socket->setNext(Demux::Inst().udp_head_socket);
-		Demux::Inst().udp_head_socket = socket;
+		setNext(UDP_Socket::getHead());
+		UDP_Socket::setHead(this);
 		return true;
 	}
 
-	void UDP_Socket::unbind(UDP_Socket* socket) {
-		if (socket == Demux::Inst().udp_head_socket) {
-			Demux::Inst().udp_head_socket = socket->getNext();
+	void UDP_Socket::unbind() {
+		if (this == UDP_Socket::getHead()) {
+			UDP_Socket::setHead(getNext());
 		} else {
-			UDP_Socket* current = Demux::Inst().udp_head_socket;
+			UDP_Socket* current = UDP_Socket::getHead();
 			UDP_Socket* next = current->getNext();
 			while (next != 0) {
-				if (next == socket) {
+				if (next == thid) {
 					current->setNext(next->getNext());
 					return;
 				}

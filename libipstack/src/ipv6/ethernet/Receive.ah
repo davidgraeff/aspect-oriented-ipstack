@@ -26,19 +26,16 @@
 using namespace ipstack;
 
 aspect IPv6_Receive_Ethernet {
-	advice execution("void ipstack::Demux::ethernet_demux(...)") &&
-	args(ethernet_frame, framelen, interface) && that(demux) :
-		after(const void* ethernet_frame, unsigned framelen, Interface* interface, Demux& demux) {
+	advice execution("void ipstack::Demux::ethernet_demux(ipstack::ReceiveBuffer&)") && args(buffer) && that(demux) :
+		after(ReceiveBuffer& buffer, Demux& demux) {
 
-		Eth_Frame* eth_frame = (Eth_Frame*) ethernet_frame;
+		Eth_Frame* eth_frame = (Eth_Frame*) buffer.p.ethernet_frame;
 
 		if (eth_frame->get_type() != IPv6_Packet::ETH_TYPE_IPV6)
 			return;
 
-		framelen -= Eth_Frame::ETH_HEADER_SIZE;
-
-		IPv6_Packet* packet = (IPv6_Packet*) eth_frame->get_data();
-
-		demux.ipv6_demux(packet, framelen, interface);
+		buffer.p.ip_packet = eth_frame->get_data();
+		buffer.setPayload(eth_frame->get_data(), buffer.get_payload_size()-Eth_Frame::ETH_HEADER_SIZE);
+		demux.ipv6_demux(buffer);
 	}
 };

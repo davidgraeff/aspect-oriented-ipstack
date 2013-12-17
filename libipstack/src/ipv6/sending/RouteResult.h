@@ -23,7 +23,7 @@
 namespace ipstack
 {
 	class Interface;
-	class AddressEntry;
+	class AddressEntryIPv6;
 /**
  * Represents a result for a ipv6_find_route() call.
  */
@@ -33,7 +33,7 @@ struct RouteResult {
 	 * to be used as src address. The pointer may be 0 if interface is 0 or
 	 * if the destination address was a multicast address.
 	 */
-	AddressEntry* proposed_src_addr;
+	AddressEntryIPv6* proposed_src_addr;
 	Interface* interface;
 	/**
 	 * If this route uses a default router instead of a prefix-matching
@@ -42,6 +42,6 @@ struct RouteResult {
 	bool isDefaultRouter;
 	
 	RouteResult() : proposed_src_addr(0), interface(0) {}
-	RouteResult(AddressEntry* p,Interface* i) : proposed_src_addr(p), interface(i), isDefaultRouter(false) {}
+	RouteResult(AddressEntryIPv6* p,Interface* i) : proposed_src_addr(p), interface(i), isDefaultRouter(false) {}
 };
 } //namespace ipstack

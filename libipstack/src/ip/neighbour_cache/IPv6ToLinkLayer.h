@@ -20,7 +20,7 @@
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/AddressMemory.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "os_integration/Clock.h"
 #include <string.h>
 

@@ -36,6 +36,7 @@ public:
     QString text;
     QString description;
     DependencyModel* model;
+    bool used;
 
     QString depends;
     int row;
@@ -46,6 +47,7 @@ public:
         childs.insert(binary_search_text_lower_bound(newItem->text), newItem);
     }
 
+    DependencyModelItem() : used(false),row(-1) {}
     ~DependencyModelItem() {
         qDeleteAll(childs);
     }
@@ -62,11 +64,25 @@ public:
     ~DependencyModel();
 
     void createModel();
+    /**
+     * @brief Mark all entries as unused again
+     * This will not reread the file on disk. Use createModel() to synchronize
+     * with the input file.
+     */
+    void resetAllUsed();
+    /**
+     * @brief Mark an entry as used.
+     * @param Identify the model entry by specifing the dependencyName.
+     */
+    void markUsed(const QString& dependencyName, bool used);
+
+    void updateDependency(const QString& oldDepString, const QString& newDepString);
 
     /// Return name of feature at position @index
     QString feature_name(const QModelIndex &current);
     QModelIndex indexOf(const QString& name);
     int count();
+    int countUnused() { return count()-usedEntries; }
     DependencyModelItem* getRootItem();
 
 	QVariant data(const QModelIndex &index, int role) const;
@@ -82,4 +98,5 @@ private:
     QString kconfig_input_filename;
     DependencyModelItem* getItemByName(const QString& name);
     QMap<QString, DependencyModelItem*> itemList;
+    unsigned usedEntries;
 };

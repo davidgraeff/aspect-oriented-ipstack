@@ -29,7 +29,7 @@ namespace ipstack {
 	void AddressReplyIPv4::reply(const uint8_t* src_hwaddr, const uint32_t* src_ipv4_addr, Interface* interface) {
 		ARP_Socket& socket = Management_Task::Inst().get_socket_arp();
 		
-		SendBuffer* sendbuffer = SendBuffer::createInstance(socket.get_Mempool(), Eth_ARP_IPv4_Packet::FRAMESIZE, interface);
+		SendBuffer* sendbuffer = SendBuffer::requestRawBuffer(socket, interface, Eth_ARP_IPv4_Packet::FRAMESIZE);
 		if (!sendbuffer) return 0;
 		
 		Eth_ARP_IPv4_Packet* packet = (Eth_ARP_IPv4_Packet*)sbi->getDataPointer();

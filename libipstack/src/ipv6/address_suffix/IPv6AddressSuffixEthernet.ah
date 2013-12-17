@@ -16,7 +16,7 @@
 // Copyright (C) 2012 David Gräff
 
 /// Purpose: The lower bytes of an IPv6 address consists normally of the link layer address (ethernet)
-/// This aspect will interfere with addInterfaceIdentifierToIPv6Address and will
+/// This aspect will interfere with addInterfaceIdentifier and will
 /// set the lower 64 Bytes of the address to the interface ethernet address (48 Bytes).
 /// This aspect is exclusive-or related to the privacy-extension aspect.
 
@@ -31,7 +31,7 @@ using namespace ipstack;
 #define CLR_BIT(p,n) ((p) &= ~((1) << (n)))
 
 aspect ipstack_ipv6_address_suffix_ethernet  {
-	advice execution( "void ipstack::Interface::addInterfaceIdentifierToIPv6Address(ipstack::ipv6addr&)" ) && args(address) && that(interface)
+	advice execution( "void ipstack::Interface::addInterfaceIdentifier(ipstack::ipv6addr&)" ) && args(address) && that(interface)
 	: around(ipv6addr& address, Interface& interface) {
 		
 		// put ethernet address into the IPv6 address. 

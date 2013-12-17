@@ -895,6 +895,7 @@ menuconfig ipstack
 						option if your hardware uses DMA.
 						Performance is impacted! This option uses more memory,
 						because all active sendbuffers have to be linked together.
+
 			endchoice
 		endmenu
 		

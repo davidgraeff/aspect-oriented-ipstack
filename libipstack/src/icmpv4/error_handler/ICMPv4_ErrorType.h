@@ -22,6 +22,7 @@
 #include "demux/Demux.h"
 #include "router/Interface.h"
 #include "demux/receivebuffer/ReceiveBuffer.h"
+#include "ip/SendbufferIP.h"
 
 namespace ipstack
 {
@@ -32,7 +33,8 @@ namespace ipstack
 			
 			// As of ICMP RFC we have to echo back part of the errornous packet -> at least the ip header and some data (8 bytes)
 			const uint8_t echoErrornousPacketSize = buffer->p.ipv4->get_ihl() * 4 + 8;
-			SendBuffer* sbi = socket.requestSendBuffer(echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE, buffer);
+			SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket,
+															echoErrornousPacketSize + ICMPv4_Packet::ICMP_HEADER_SIZE, buffer);
 			if (sbi) {
 				sbi->mark("ICMPv4_ErrorReply");
 				ICMPv4_Packet* icmp_error_reply = (ICMPv4_Packet*)sbi->getDataPointer();
@@ -45,8 +47,7 @@ namespace ipstack
 
 				// ICMPv4 RFC: Append at least the errornous ipv4 packet + 8 byte payload to the responding icmp packet
 				sbi->write(buffer->p.ipv4, echoErrornousPacketSize);
-
-				icmpv4instance.send(sbi);
+				sbi->send();
 			}
 		}
 	};

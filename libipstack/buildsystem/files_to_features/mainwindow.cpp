@@ -121,6 +121,7 @@ MainWindow::MainWindow(Options* o, QWidget *parent) :
     connect(componentModel,&FamilyModel::added_files,filemodel,&FileModel::removeFiles);
     connect(componentModel,&FamilyModel::rejected_existing_files,this,&MainWindow::rejected_files);
 	connect(componentModel,&FamilyModel::changed,this,&MainWindow::familyModelChanged);
+    connect(componentModel,&FamilyModel::updateDependency,dependsModel,&DependencyModel::updateDependency);
 
     // problems
     connect(ui->listProblems->selectionModel(),&QItemSelectionModel::currentChanged,
@@ -238,11 +239,11 @@ void MainWindow::update_problems()
         ui->listProblems->addItem(problem_item);
     }
 
-    if (dependsModel->count()) {
+    if (dependsModel->countUnused()) {
         auto* problem_item = new ProblemListItem(ProblemListItem::MISSING_DEPENDENCIES);
         problem_item->setIcon(QIcon::fromTheme("dialog-information"));
         problem_item->setText(tr("%1 kconfig dependencies are not used!").
-                              arg(dependsModel->count()));
+                              arg(dependsModel->countUnused()));
         ui->listProblems->addItem(problem_item);
     }
 
@@ -280,16 +281,16 @@ void MainWindow::update_problems()
             if (source->childs.isEmpty()) {
                 auto* problem_item = new ProblemListItem(ProblemListItem::EMPTY_COMPONENT);
                 problem_item->setIcon(QIcon::fromTheme("dialog-warning"));
-                problem_item->setText(tr("Component empty: Parent %1").arg(source->parent->cache_component_name));
+                problem_item->setText(tr("Component empty: Parent %1").arg(source->parent->get_component_name()));
                 problem_item->problem_component_item = source;
                 ui->listProblems->addItem(problem_item);
             } else if (source->parent && source->childs[0]->type==FamilyFile::TYPE &&
-                       static_cast<FamilyComponent*>(source)->vname.isEmpty() &&
-                       static_cast<FamilyComponent*>(source)->depends.isEmpty() &&
+                       static_cast<FamilyComponent*>(source)->get_vname().isEmpty() &&
+                       static_cast<FamilyComponent*>(source)->get_dependencies().isEmpty() &&
                        static_cast<FamilyComponent*>(source)->get_directory() == source->parent->get_directory()) {
                 auto* problem_item = new ProblemListItem(ProblemListItem::COMPONENT_WITH_ONLY_FILES);
                 problem_item->setIcon(QIcon::fromTheme("dialog-warning"));
-                problem_item->setText(tr("Files-Only component unneccesary: Parent %1").arg(source->parent->cache_component_name));
+                problem_item->setText(tr("Files-Only component unneccesary: Parent %1").arg(source->parent->get_component_name()));
                 problem_item->problem_component_item = source;
                 ui->listProblems->addItem(problem_item);
             }
@@ -334,7 +335,15 @@ void MainWindow::on_actionSave_triggered()
 void MainWindow::on_actionSynchronize_with_file_system_triggered()
 {
     filemodel->createFileTree();
+    dependsModel->createModel();
+    // Get all used kconfig dependencies and mark them as used in the dependency model
+    QStringList deps = componentModel->get_dependencies();
+    foreach (const QString& dep, deps) {
+        dependsModel->updateDependency(QString(), dep);
+    }
+
     add_log(tr("Scanned %1 files in project directory").arg(filemodel->get_unused_files_size()));
+    // Get all used files and remove them from the file model
     filemodel->removeFiles(componentModel->get_used_files());
     ui->treeFiles->expandAll();
     update_problems();
@@ -349,7 +358,7 @@ void MainWindow::on_actionAdd_component_triggered()
         currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
 
     focusComponent(componentModel->addComponent(currentComponent));
-    add_log(tr("Added component to %1").arg(currentComponent->parent->cache_component_name));
+    add_log(tr("Added component to %1").arg(currentComponent->parent->get_component_name()));
 }
 
 void MainWindow::on_actionRemove_selected_components_triggered()
@@ -379,10 +388,10 @@ void MainWindow::familyModelSelectionChanged(const QModelIndex &index)
     if (b->type == FamilyComponent::TYPE) {
         FamilyComponent* currentComponent = (FamilyComponent*)b;
 
-        ui->labelDepends->setText(currentComponent->depends);
+        ui->labelDepends->setText(currentComponent->get_dependencies());
         ui->labelPath->setText(componentModel->relative_directory(currentComponent->get_directory().absolutePath()));
         ui->lineName->blockSignals(true); // do not update the component by the value we set now
-        ui->lineName->setText(currentComponent->vname);
+        ui->lineName->setText(currentComponent->get_vname());
         ui->lineName->blockSignals(false);
         ui->lineName->setEnabled(true);
         ui->btnChangeSubdir->setEnabled(true);
@@ -392,7 +401,7 @@ void MainWindow::familyModelSelectionChanged(const QModelIndex &index)
         FamilyComponent* currentComponent = currentComponentFile->parent;
 
         ui->labelDepends->blockSignals(true);
-        ui->labelDepends->setText(currentComponent->depends);
+        ui->labelDepends->setText(currentComponent->get_dependencies());
         ui->labelDepends->blockSignals(false);
         ui->labelPath->setText(componentModel->relative_directory(currentComponentFile->get_full_path()));
         ui->lineName->setEnabled(false);
@@ -441,15 +450,14 @@ void MainWindow::on_btnChangeSubdir_clicked()
                                             tr("Cancel"));
         if (r == 0) {
             removeFiles = true;
-            add_log(tr("Remove files of %s").arg(currentComponent->cache_component_name));
+            add_log(tr("Remove files of %s").arg(currentComponent->get_component_name()));
         } if (r == 2) {
             add_log(tr("Aborted changing a directory"));
             return;
         }
     }
     currentComponent->set_directory(dir,removeFiles);
-    componentModel->update(currentComponent);
-    ui->labelPath->setText(currentComponent->cache_relative_directory);
+    ui->labelPath->setText(currentComponent->get_component_dir());
 }
 
 void MainWindow::on_btnChangeDepends_clicked()
@@ -459,14 +467,12 @@ void MainWindow::on_btnChangeDepends_clicked()
     FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
     Q_ASSERT(currentComponent);
 
-    PickDependencies* p = new PickDependencies(QString::fromStdString(options->kconfigfile));
-    p->set_initial_selection(currentComponent->depends);
+    PickDependencies* p = new PickDependencies(dependsModel);
+    p->set_initial_selection(currentComponent->get_dependencies());
     if (p->exec() == QDialog::Accepted) {
-        currentComponent->depends = p->get_dependency_string();
-        currentComponent->update_component_name();
-        componentModel->update(currentComponent);
+        currentComponent->set_dependencies(p->get_dependency_string());
         ui->labelDepends->blockSignals(true);
-        ui->labelDepends->setText(currentComponent->depends);
+        ui->labelDepends->setText(currentComponent->get_dependencies());
         ui->labelDepends->blockSignals(false);
     }
     p->deleteLater();
@@ -479,9 +485,7 @@ void MainWindow::on_lineName_textChanged(const QString &arg1)
     FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
     Q_ASSERT(currentComponent);
 
-    currentComponent->vname = arg1;
-    currentComponent->update_component_name();
-    componentModel->update(currentComponent);
+    currentComponent->set_vname(arg1);
 }
 
 void MainWindow::on_labelDepends_textChanged(const QString &arg1)
@@ -491,9 +495,7 @@ void MainWindow::on_labelDepends_textChanged(const QString &arg1)
     FamilyComponent* currentComponent=(FamilyComponent*)componentModelProxy->mapToSource(ui->treeComponents->currentIndex()).internalPointer();
     Q_ASSERT(currentComponent);
 
-    currentComponent->depends = arg1;
-    currentComponent->update_component_name();
-    componentModel->update(currentComponent);
+    currentComponent->set_dependencies(arg1);
 }
 
 void MainWindow::on_actionExpand_all_missing_files_only_triggered()
@@ -528,12 +530,11 @@ void MainWindow::on_actionClear_and_propose_component_structure_triggered()
             foreach(DependencyModelItem* sourceChild, source->childs) {
                 FamilyComponent* targetChild = FamilyComponent::createComponent(componentModel, QString::fromStdString(options->base_directory),target);
                 // name
-                targetChild->vname = sourceChild->name;
-                if (targetChild->vname.isEmpty())
-                    targetChild->vname = sourceChild->depends;
+                targetChild->set_vname(sourceChild->name);
+                if (targetChild->get_vname().isEmpty())
+                    targetChild->set_vname(sourceChild->depends);
                 // depends
-                targetChild->depends = "&" + sourceChild->depends;
-                targetChild->update_component_name();
+                targetChild->set_dependencies("&" + sourceChild->depends);
 
                 // add to queue
                 queue << QPair<DependencyModelItem*, FamilyComponent* >
@@ -578,8 +579,7 @@ void MainWindow::on_actionClear_use_filesystem_based_structure_triggered()
 
                 FamilyComponent* targetChild = FamilyComponent::createComponent(componentModel, sourceChild->full_absolute_path(),target);
                 // name
-                targetChild->vname = sourceChild->name;
-                targetChild->update_component_name();
+                targetChild->set_vname(sourceChild->name);
 
                 // add to queue
                 queue << QPair<FileModelItem*, FamilyComponent* >

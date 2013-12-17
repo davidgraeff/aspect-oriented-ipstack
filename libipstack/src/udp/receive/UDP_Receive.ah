@@ -29,10 +29,6 @@
 using namespace ipstack;
 
 aspect UDP_Receive {
-
-	// *** Affect class: Demux for registering a socket to be able to receive packets
-	advice "ipstack::Demux" : slice Demux_UDP_Slice;
-
 	advice destruction("ipstack::UDP_Socket") &&
 	that(socket) : before(UDP_Socket& socket) {
 		// remove this socket at Demux on destruction
@@ -69,7 +65,7 @@ aspect UDP_Receive {
 		
 		uint16_t udp_packet_dport = udp_packet->get_dport();
 
-		UDP_Socket* socket = demux.udp_head_socket;
+		UDP_Socket* socket = UDP_Socket::getHead();
 		while (socket != 0) {
 			if (socket->get_sport() == udp_packet_dport) {
 				if (!socket->addToReceiveQueue(buffer)) {

@@ -33,24 +33,17 @@ class NeighbourCache : public Singleton<NeighbourCache>
 	private:
 		// Define SIZE
 		enum {SIZE = sizeof(NeighbourEntry)};
-		typedef uint8_t EntryPosition;
 		
 		unsigned char memory[SIZE* NEIGHBOURCACHE_ENTRIES];
 	public:
-		enum { EntryUndefined = 255 };
+		typedef uint8_t EntryPosition;
+		enum { EntryUndefined = ((EntryPosition)-1), EntryMulticast = ((EntryPosition)-2) };
 		NeighbourCache();
-		void freeEntry(void* entry) {
-			EntryPosition pos = getPosition(entry);
-			if (pos == EntryUndefined)
-				return;
-			if (entry->isRouter) {
-				removeRouter(entry);
-			}
-			((char*)entry)[0] = 0;
-		}
+		void freeEntry(void* entry);
 		
 		// For aspects to react to removed routers
-		void removeRouter(NeighbourEntry*, EntryPosition position) {}
+		void removedRouter(NeighbourEntry*, EntryPosition position) {}
+		void removedNonRouter(NeighbourEntry*, EntryPosition position) {}
 		
 		inline NeighbourEntry* getEntryAtPosition(EntryPosition i)
 		{ return reinterpret_cast<NeighbourEntry*>(&memory[i * SIZE]); }

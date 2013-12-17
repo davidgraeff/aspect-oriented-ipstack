@@ -20,7 +20,7 @@
 #include "router/Interface.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "util/ipstack_inttypes.h"
 
 using namespace ipstack;
@@ -29,22 +29,20 @@ using namespace ipstack;
  * Set the IPv6 header
  */
 aspect Sendbuffer_IPv6 {
-	advice execution("% ipstack::%::estimateSendBufferMinSize()" && derived("ipstack::SendBufferAPI")
-		&& derived("ipstack::IP")) && result(v) :
-		after(unsigned v) {
+	advice execution("% ipstack::SendBufferIP::requestIPBuffer(ipstack::SocketMemory&, ipstack::IP&, %, ipstack::ReceiveBuffer*)") && args(mem, ip, requestedSize, use_as_response) :
+		before(SocketMemory& mem, IP& ip, uint_fast16_t requestedSize, ReceiveBuffer* use_as_response) {
 		// check ip version
-		if (tjp->that()->m_useipversion == IPV6_VERSION) {
-			*tjp->result() = v + tjp->that()->ipv6.getSpecificHeaderSize();
+		if (ip.m_useipversion == IPV6_VERSION) {
+			*tjp->arg<2>() = requestedSize + ip.ipv6.getSpecificHeaderSize();
 		}
 	}
 
-	advice execution("% ipstack::%::prepareSendBuffer(...)" && derived("ipstack::SendBufferAPI")
-		&& derived("ipstack::IP")) && args(sendbuffer, use_as_response) :
-		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 
 		// check ip version
-		if (tjp->that()->m_useipversion == IPV6_VERSION) {
-			IPV6& ipv6 = tjp->that()->ipv6;
+		if (ip.m_useipversion == IPV6_VERSION) {
+			IPV6& ipv6 = ip.ipv6;
 			uint_fast16_t headersize = ipv6.getSpecificHeaderSize();
 			sendbuffer->p.ip_packet = sendbuffer->getDataPointer();
 			IPv6_Packet* ip6_packet = (IPv6_Packet*)sendbuffer->p.ip_packet;

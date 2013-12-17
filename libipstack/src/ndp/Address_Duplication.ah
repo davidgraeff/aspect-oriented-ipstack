@@ -24,7 +24,7 @@
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/ndpcache/NDPCacheEntry.h"
 #include "ipv6/AddressMemory.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
 
@@ -39,18 +39,20 @@ aspect NDP_Address_Duplication {
 	static bool is_duplicate_address(const ipstack::ipv6addr& ipv6_dstaddr, Interface* interface) {
 		// duplicate address detection
 		uint8_t nextEntry = 0;
-		while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
-			if (/*addressentry->state == AddressEntry::AddressEntryStateTemporary &&*/ // Would be nice, but we have no timer -> all addresses are valid until proofed wrong currently
-				compare_ipv6_addr(ipv6_dstaddr, addressentry->ipv6)) {
+		InterfaceAddressesIPv6& ipv6Addr = interface->ipv6;
+		while (AddressEntryIPv6* AddressEntryIPv6 = ipv6Addr.getAddress(&nextEntry)) {
+			if (/*AddressEntryIPv6->state == AddressEntryIPv6::AddressEntryIPv6StateTemporary &&*/ // Would be nice, but we have no timer -> all addresses are valid until proofed wrong currently
+				compare_ipv6_addr(ipv6_dstaddr, AddressEntryIPv6->ipv6)) {
 				// Oh no! We have created a duplicate address. "Remove" it from our interface.
-				interface->addressmemory.freeEntry(addressentry);
-			// And add it with a changed byte: Hopefully this will not be a duplicate. We will check that of couse.
-				++addressentry->ipv6.ipaddrB8[15];
-				interface->registerIPv6Address(addressentry);
+				ipv6Addr.freeAddress(AddressEntryIPv6);
+				// And add it with a changed byte: Hopefully this will not be a duplicate. We will check that of couse.
+				ipstack::ipv6addr next_ip_address;
+				copy_ipv6_addr(next_ip_address, ipv6_dstaddr)) {
+				++(next_ip_address[15]);
 				// This will cause a duplicate address detection
-				interface->setIPv6AddressState(addressentry, AddressEntry::AddressEntryStateTemporary);
+				ipv6Addr.addAddress(next_ip_address, AddressEntryIPv6::AddressEntryIPv6StateTemporary);
 				return true;
-				}
+			}
 		}
 		return false;
 	}
@@ -63,9 +65,9 @@ aspect NDP_Address_Duplication {
 	 * to select another ip.
 	 */
 	advice execution("% ipstack::Interface::setIPv6AddressState(...)") && args(entry, ipstate) && that(interface) :
-		before(AddressEntry* entry, uint8_t ipstate, Interface& interface) {
+		before(AddressEntryIPv6* entry, uint8_t ipstate, Interface& interface) {
 
-		if (ipstate == AddressEntry::AddressEntryStateTemporary) {
+		if (ipstate == AddressEntryIPv6::AddressEntryIPv6StateTemporary) {
 			ipstack::ipv6addr srcaddr = {{0}};
 			NDPNeighborMessages::send_neighbor_solicitation(srcaddr, entry->ipv6, &interface, true);
 		}

@@ -28,6 +28,8 @@ namespace ipstack {
 		
 		// We rely on the compilers optimazion capabilities here to
 		// not generate a vtable for this linear inheritance situation.
+		// C++11: Use function pointer as template paramater instead
+		// http://stackoverflow.com/questions/3209225/how-to-pass-a-method-pointer-as-a-template-parameter
 		void receiveCallback(SmartReceiveBufferPtr& b) = 0;
 
 		void checkReceived();

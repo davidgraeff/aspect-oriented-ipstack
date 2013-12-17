@@ -31,14 +31,6 @@ class SendBufferPrivate
 {
 	public:
 		/**
-		  * We use a trick here to determine where to write the user data. We compute the the size of the class
-		  * and determine the end of the object in the memory. This has the advantage that other aspects may
-		  * add data members to this class and we will still begin with the user data after those statically
-		  * added member variables.
-		  */
-		void initStartPointer();
-
-		/**
 		  * After allocating a SendBuffer it is in the
 		  * "Writing-State". After calling send(..) with the buffer it is in the
 		  * "Transmitted-State". If an aspect fails on the buffer it will set it
@@ -62,9 +54,9 @@ class SendBufferPrivate
 		void setInterface(Interface* i);
 	protected:
 		uint_fast16_t m_memsize; // set to  user requested size
+		uint_fast16_t m_used; // set to  user requested size
 		uint8_t m_state;
 		Interface* m_interface;
-		void* data;
 };
 
 } // namespace ipstack

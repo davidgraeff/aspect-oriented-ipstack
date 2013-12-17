@@ -23,7 +23,7 @@
 #include "router/Router.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "ipv6/AddressMemory.h"
 #include "ndp/addr_resolve_ipv6/AddressResolutionIPv6.h"
 
@@ -38,14 +38,14 @@ using namespace ipstack;
   */
 aspect Neighbour_Lookup_ipv6 {
 	// We want to provide a lookup of ethernet addresses for IP sockets.
-	pointcut prepareSendBuffer_IP_only() = execution("% ipstack::%_Socket::prepareSendBuffer(...)" && derived("ipstack::IP"));
+	pointcut prepareSendBuffer_IP_only() = execution("void ipstack::SendbufferIP::prepareSendBuffer(...)");
 	
 	advice prepareSendBuffer_IP_only() : order("Sendbuffer_IPv%", "Neighbour_Lookup_ipv6");
-	advice prepareSendBuffer_IP_only() && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice prepareSendBuffer_IP_only() && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 
 		// check ip version
-		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
+		if (ip.m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
 			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->p.ip_packet;
 			Interface* interface = sendbuffer->getInterface();
 			Eth_Frame* eth_frame = (Eth_Frame*)(sendbuffer->p.ethernet_frame);

@@ -33,19 +33,16 @@ class FamilyModel;
 class FamilyFile;
 class FamilyComponent : public FamilyBaseItem {
 public:
+    ~FamilyComponent();
+    friend class FamilyModel;
     enum {TYPE=1};
-    static FamilyComponent* createComponent(FamilyModel *componentModel, const QDir& absolut_directory, FamilyComponent* parent);
-
-    // family model data
-    QString depends;
-    QString vname;
+    static FamilyComponent* createComponent(FamilyModel *componentModel,
+                                            const QDir& absolut_directory,
+                                            FamilyComponent* parent,
+                                            const QString& depends = QString(),
+                                            const QString& vname = QString());
 
     void toJSon(QJsonObject &jsonObject);
-
-    // For model handling: We cache some values for fast access
-    QString cache_component_name; // column 0
-    QString cache_relative_directory; // column 1
-    void update_component_name();
 
     /// Add files to this component. If files are not accepted a
     /// familyModel rejected signal will be emitted. If you set
@@ -57,6 +54,7 @@ public:
     void addFiles(const QStringList& files, add_files_enum subdirFlag);
     static FamilyComponent* findOrCreateRecursivly(FamilyComponent* current, QString relative_path);
     QStringList get_all_files(bool only_existing, bool remove_files = false);
+    void get_dependencies_string(QStringList& l);
 
     /**
      * Set the directory of this component. Alyways use the absolute dir,
@@ -67,12 +65,25 @@ public:
     /// Return absolut directory of this component
     QDir get_directory() const;
 
-    QString get_dependencies() const;
+    inline QString get_dependencies() const { return depends; }
     void set_dependencies(const QString& d);
 
+    inline QString get_vname() const { return vname; }
+    void set_vname(const QString& n);
+
+    inline QString get_component_name() const { return cache_component_name; }
+    inline QString get_component_dir() const { return cache_relative_directory; }
 private:
     // family model data
     QDir directory;
+    QString depends;
+    QString vname;
+
+    // For model handling: We cache some values for fast access
+    QString cache_component_name; // column 0
+    QString cache_relative_directory; // column 1
+    void update_component_name();
+
 
     // Hidden constructor
     FamilyComponent(FamilyModel *componentModel);

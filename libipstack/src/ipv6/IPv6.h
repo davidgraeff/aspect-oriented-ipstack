@@ -18,17 +18,14 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
-#include "IPv6AddressUtilities.h"
 #include "router/Interface.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "ipv6/AddressMemory.h"
 #include "sending/RouteResult.h"
 
 
 namespace ipstack {
 
 class Interface;
-class AddressEntry;
 class IPv6_Packet;
 /**
  * Adds IPv6 functionality to a socket.
@@ -47,62 +44,80 @@ public:
 	void setHoplimit(uint8_t h) ;
 
 	/**
-	 * Set the destination address. If
-	 * interface is set, src address and hoplimit are not determined automatically! You
-	 * should avoid setting the interface manually in most cases, but only if
-	 * you set the the src address and hoplimit manually, too.
+	 * Set the destination address and determines the hoplimit, src_addr, interface
+	 * and nexthop entry. If no nexthop entry from the neighbour cache can be resolved,
+	 * nexthop will be set to NoEntry and ARP/NDP_ND will be executed when you're going
+	 * to send a packet.
+	 * 
+	 * @param interface Usually the first matching interface for destination IP is
+	 * used. For a link-local IP that may always be the first interface. If you want
+	 * to send to a different interface, you have to provide it here.
 	 */
-	void set_dst_addr(const ipv6addr& dst, Interface* interface = 0) ;
+	void set_dst_addr(const ipv6addr& dst, Interface* interface = 0);
+	
+	/**
+	 * Reset cached next hop. This is called by set_dst_addr to find a
+	 * new fitting next hop entry in the neighbor cache. It is also called
+	 * by the Neighbor Discovery Protocol Redirect feature to actually change
+	 * the nexthop from a router entry to the on-link host entry.
+	 */
+	void resetRoute();
 
 	/**
-	 * If you really want to set the src ip yourself,
-	 * instead of letting the interface choose one for you,
-	 * you have to call this method after set_dst_addr!
+	 * You can only choose from one of the source IP addresses, which
+	 * are assigned to the current interface. The current interface is
+	 * determined by set_dst_addr.
 	 */
-	void set_src_addr(const ipv6addr& src) ;
+	void set_src_addr(AddressEntryIPv6* src_addr_entry) ;
 
 	// Warning, this is a pointer to the address. Use memcpy
 	// to replicate the address.
 	const ipv6addr& get_dst_addr() const { return dst_ipv6_addr; }
-	const ipv6addr& get_src_addr() const { return src_ipv6_addr; }
+	const ipv6addr get_src_addr() const {
+		if (!src_addr_entry) {
+			ipv6addr src_ipv6_addr;
+			get_unspecified_ipv6_address(src_ipv6_addr);
+			return src_ipv6_addr;
+		} else
+			return src_addr_entry->ipv6;
+	}
 	
 	/**
-	 * Return the destination address as a next hop address in the basic implementation.
-	 * If you enable the destination cache it will return a real on-link destination
-	 * or the unspecified address if no on-link destination can be resolved.
+	 * Return the IP addr of the next hop (router IP, on-link IP or destination IP).
+	 * The next hop is determined in set_dst_addr.
 	 */
 	ipv6addr get_nexthop_ipaddr() ;
 
 	bool hasValidSrcDestAddresses() const;
 public:
-	// cache for fast sending
-	Interface* interface;
-	// this is a copy of the most matching assigned ip of the interface
-	// Because ipv6 may assign multiple source ips to an interface this is neccessary.
-	// The best matching source ip will be assigned while setting the destination ip.
-	ipv6addr src_ipv6_addr;
-	friend class Router; // allow to call resolveRoute()
 private:
+	// Src ip address (indirect, via AddressEntryIPv6)
+	AddressEntryIPv6* src_addr_entry;
+	// Dest ip address
 	ipv6addr dst_ipv6_addr;
+	// Next hop entry (point to neighbor cache entry for the
+	// Dest IP, or a router, or is set to MulticastEntry)
+	NeighbourCache::EntryPosition nexthop_destination;
+	
 	uint8_t hoplimit;
 	IPV6(const ipstack::IPV6 &) {} // Bug in aspectc++: Segfault if no copy constructur
 
 	/**
 	 * Determine source ip address and interface that fits the destination address set.
 	 *
-	 * @return resolveRoute will return an AddressEntry that contains an IPv6 address that is currently
+	 * @return resolveRoute will return an AddressEntryIPv6 that contains an IPv6 address that is currently
 	 * assigned to this interface. This IPv6 address fits best to the destination address the
 	 * user has set. For example:
 	 * We have currently assigned two addresses to this interface:
 	 * - fe80::1:2:3:4:5:6
 	 * - 2001::1:2:3:4:5:6
 	 * If we want to send to the destination address fe80::7:8:9:a:b:c resolveRoute will return
-	 * an addressEntry with fe80::1:2:3:4:5:6 because that address fits best to the destination address.
+	 * an AddressEntryIPv6 with fe80::1:2:3:4:5:6 because only that address fits to the destination address.
 	 *
 	 * The src address will be set accordingly. If you do not want resolveRoute to be called by set_dst_addr
-	 * you have to set the second parameter "interface".
+	 * you have to set the second parameter "interface" (for multicast packets for example).
 	 */
-	AddressEntry* resolveRoute();
+	AddressEntryIPv6* resolveRoute();
 
 	void setupHeader(IPv6_Packet* packet, unsigned datasize) ;
 
@@ -123,7 +138,7 @@ private:
 	 * Return true if this entry is useful for a route
 	 * May be influenced by other aspects to check validity (For example the Time_Expire aspect).
 	 */
-	static bool find_route_is_matching(const ipv6addr& ipv6_dstaddr, AddressEntry* entry);
+	static bool find_route_is_matching(const ipv6addr& ipv6_dstaddr, AddressEntryIPv6* entry);
 
 	/**
 	 * Check each interface and all assigned IPv6 prefixes. If no fitting prefix was found

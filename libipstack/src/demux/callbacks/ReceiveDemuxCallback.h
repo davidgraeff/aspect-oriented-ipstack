@@ -27,16 +27,6 @@ namespace ipstack {
 	 * If managed sockets live in a seperate task receiveCallback is not called after
 	 * demux processing but from the Management_Task class.
 	 */
-	class ReceiveDemuxCallback :public ReceiveCallback, public DemuxLinkedList<ReceiveDemuxCallback*> {  
-	public:
-		ReceiveDemuxCallback(SocketMemory* socketmemory);
-
-		/**
-		 * This is used by the ReceiveDemuxCallback-Aspect to get all objetcs that are derived
-		 * from this class.
-		 */
-		static ReceiveDemuxCallback* receivedFrame;
-	
-	};
+	class ReceiveDemuxCallback :public ReceiveCallback, public LinkedList<ReceiveDemuxCallback, true> {};
 
 } // namespace ipstack

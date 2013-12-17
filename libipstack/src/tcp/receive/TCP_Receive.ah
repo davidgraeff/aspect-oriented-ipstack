@@ -58,7 +58,7 @@ aspect TCP_Receive {
 		// by the tcp socket class!
 		//buffer.setPayload(tcp_segment, payloadlen-TCP_Segment::TCP_MIN_HEADER_SIZE);
 		
-		TCP_Socket* socket = demux.tcp_head_socket;
+		TCP_Socket* socket = TCP_Socket::getHead();
 		
 		const uint16_t dport = tcp_segment->get_dport();
 		const uint16_t sport = tcp_segment->get_sport();

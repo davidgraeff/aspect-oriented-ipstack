@@ -13,23 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2013 David Gräff
+// Copyright (C) 2012-2013 David Gräff
 
+#pragma once
+#include "IPv4.h"
 
-#include "ReceiveDemuxCallback.h"
+using namespace ipstack;
 
-namespace ipstack {
-
-	ReceiveDemuxCallback* ReceiveDemuxCallback::receivedFrame = 0;
-
-	ReceiveDemuxCallback::ReceiveDemuxCallback(SocketMemory* socketmemory) : ReceiveCallback(socketmemory) {
-		// Add to linked list of ReceiveDemuxCallback objects
-		if (!receivedFrame)
-			receivedFrame = this;
-		else {
-			this->setNext(receivedFrame->getNext());
-			receivedFrame->setNext(this);
-		}
-	}
-} // namespace ipstack
-
+aspect IPv4onSocketsAspect {
+	advice "ipstack::IP" : slice class {
+	public:
+		IPV4 ipv4;
+	};
+};

@@ -96,7 +96,7 @@ aspect sendbuffer_debuginfo {
 		nextMsg = 0;
 	}
 
-	advice execution( "% ipstack::SendBuffer::createInstance(...)" ) : after() {
+	advice execution( "% ipstack::SendBuffer::requestRawBuffer(...)" ) : after() {
 		SendBuffer* b = *tjp->result();
 		if (b != 0) {
 			// clear messages with same SendBuffer pointer.

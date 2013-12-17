@@ -23,64 +23,36 @@
 #include "util/protocol_layers.h"
 #include "SendBufferPrivate.h"
 
-namespace ipstack
-{
-	class ReceiveBuffer;
-	/**
-	 * A sendbuffer is used for all sending activity within the tcp/ip stack. It is manipulated and filled
-	 * by different aspects of the network stack layers. The size for the buffer has to be known beforehand
-	 * to allocate the memory.
-	 * You have to request a send-buffer to send data via send(...) in sockets.
-	 * 
-	 * Write your payload either to the data address like in this example:
-	 * Socket s;
-	 * SendBuffer* b = s.requestSendBuffer(size);
-	 * if (!b) ABORT();
-	 * memcpy(b->getDataPointer(), "test", 4);
-	 *
-	 * You may omit memcpy for integers for example with this code:
-	 * ((uint32_t*)b->getDataPointer()) = 47248459;
-	 * b->writtenToDataPointer(size_of(uint32_t)); // tell the sendbuffer how many bytes you have written
-	 * s.send(b);
-	 * 
-	 * Another way of writting to a sendbuffer is using the write method:
-	 * write(const char* data, uint16_t length);
-	 * 
-	 * Always check if you got a null pointer as a result. This indicates your
-	 * requested size is to big or there is no memory chunk of this size
-	 * available at the moment. Wait and try it later.
-	 * 
-	 * A SendBuffer object is invalid after calling send with it. You have to
-	 * request a new one for more data to send. YOu may also use recycle() under
-	 * some conditions.
-	 * 
-	 * Always free a SendBuffer after sending it (if you do not want to recycle it).
-	 * Call socket.freeSendbuffer(sendBuffer);
-	 * 
-	 */
+namespace ipstack {
+class ReceiveBuffer;
 class SendBuffer : public SendBufferPrivate
 {
 	public:
 		/**
-		  * Create a new SendBuffer object and allocate memory for it. If not enough memory is available 0
-		  * is returned. You should provide the destination interface. It is recommend to use the convenience
-		  * methods of yout socket instead of a raw SendBuffer directly.
+		  * Allocate memory and if that is successful, create a thin wrapper ("sendbuffer")
+		  * around it.
+		  * @param mem The socket memory, the buffer will be allocated on.
+		  * @param interface You should provide the destination interface. Necessary for
+		  * interface->hasBeenSend(memory).
+		  * @param requestedSize The buffer size.
+		  * @return Return a sendbuffer wrapper object around a free memory block.
+		  * If not enough memory is available 0 is returned.
 		  */
-		static SendBuffer* createInstance(MemoryInterface* mem, uint_fast16_t requestedSize, Interface* interface);
+		static SendBuffer* requestRawBuffer(SocketMemory& mem, Interface* interface, uint_fast16_t requestedSize);
 
 		/**
+		  * Send the data of a SendBuffer. The packet is invalid after sending it
+		  * and may be freed by calling socket->freeSendbuffer(sendbuffer).
+		  */
+		bool send();
+		
+		/**
 		 * Put your data here.
-		 * Example:
-		 * SendBuffer* buffer = socket.requestSendBuffer(4);
-		 * memcpy(buffer->getDataPointer(), "test", 4);
-		 * OR
-		 * *((int32*)buffer->getDataPointer()) = 1472984;
-		 * Always call writtenToDataPointer after writting to this memory location!
 		 */
 		void* getDataPointer();
 
 		/**
-		 * Use this method to increment the data pointer after writing to it directly
+		 * Use this method to increment the data pointer after writing to it directly.
 		 */
 		void writtenToDataPointer(uint_fast16_t length);
 
@@ -102,7 +74,7 @@ class SendBuffer : public SendBufferPrivate
 		/**
 		 * Return the size in bytes that is available for your data.
 		 * Cache this value!
-		 * */
+		 */
 		uint_fast16_t getRemainingSize();
 		uint_fast16_t getSize();
 		

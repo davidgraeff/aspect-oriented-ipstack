@@ -17,9 +17,8 @@
 #pragma once
 
 #include "memory_management/SocketMemory.h"
-#include "demux/DemuxLinkedListContainer.h"
+#include "util/LinkedList.h"
 #include "TCP_Socket_Private.h"
-#include "router/sendbuffer/sendbufferAPI.h"
 #include "util/ipstack_inttypes.h"
 #include "ip/IP.h"
 
@@ -28,8 +27,8 @@ namespace ipstack
 	/**
 	 * Public API for a TCP Socket
 	 */
-	class TCP_Socket : public TCP_Socket_Private, public DemuxLinkedList<TCP_Socket>,
-		public SocketMemory, public SendBufferAPI, public IP
+	class TCP_Socket : public TCP_Socket_Private, public LinkedList<TCP_Socket>,
+		public SocketMemory, public IP
 	{
 		public:
 			// **************************************************************************

@@ -21,6 +21,17 @@ namespace ipstack {
 	NeighbourCache::NeighbourCache() {
 		freeAll();
 	}
+	
+	void NeighbourCache::freeEntry(void* entry) {
+		EntryPosition pos = getPosition(entry);
+		if (pos == EntryUndefined)
+			return;
+		if (entry->isRouter) {
+			removedRouter(entry);
+		} else
+			removedNonRouter(entry);
+		((char*)entry)[0] = 0;
+	}
 
 	NeighbourEntry* NeighbourCache::findEntry(EntryPosition* startentry, bool findEmpty) {
 		for (EntryPosition i = (startentry ? *startentry : 0); i < NEIGHBOURCACHE_ENTRIES; ++i) {

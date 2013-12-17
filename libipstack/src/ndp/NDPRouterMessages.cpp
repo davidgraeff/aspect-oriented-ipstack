@@ -23,14 +23,15 @@
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/ndpcache/NDPCacheEntry.h"
 #include "ipv6/AddressMemory.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
+#include "ip/SendbufferIP.h"
 
 namespace ipstack {
 
 void NDPRouterMessages::send_router_solicitation(ipstack::ipv6addr ipv6_dstaddr, Interface* interface) {
 
-	ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-	IPV6& ipv6 = icmpv6instance.ipv6;
+	ICMPv6_Socket &socket = ICMPv6_Socket::instance();
+	IPV6& ipv6 = socket.ipv6;
 	ipv6.set_dst_addr(ipv6_dstaddr, interface); // all routers multicast address
 	// For the src address try to get the link local address
 	if (interface->getInterfaceIPv6AddressByScope(ipv6_dstaddr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
@@ -44,8 +45,7 @@ void NDPRouterMessages::send_router_solicitation(ipstack::ipv6addr ipv6_dstaddr,
 	const uint8_t resSize = sizeof(NDPRouterMessages::RouterSolicitationMessage)
 		+ NDPMessages::multiple_of_octets(interface->getAddressSize())*8;
 	
-	Demux::Inst().setDirectResponse(true);
-	SendBuffer* sbi = icmpv6instance.requestSendBuffer(interface, resSize);
+	SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, resSize);
 	if (sbi) {
 		sbi->mark("send_router_solicitation");
 		NDPRouterMessages::RouterSolicitationMessage* msg = (NDPRouterMessages::RouterSolicitationMessage*)sbi->getDataPointer();
@@ -54,7 +54,7 @@ void NDPRouterMessages::send_router_solicitation(ipstack::ipv6addr ipv6_dstaddr,
 		msg->reserved = 0;
 		NDPMessages::write_option_linklayer_address(NDPMessages::SourceLinkLayer,(char*)msg->options, interface->getAddress(), interface->getAddressSize());
 		sbi->writtenToDataPointer(resSize);
-		icmpv6instance.send(sbi);
+		sbi->send();
 	}
 }
 
@@ -78,9 +78,9 @@ void NDPRouterMessages::update_router_entry(Interface* interface) {
 
 	// First: Flag all entries of this router as ToBeDeleted
 	uint8_t nextEntry = 0;
-	while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
-		if (addressentry->routerEntryPosition == routerPosition) {
-			addressentry->toBeRemoved = 1;
+	while (AddressEntryIPv6* AddressEntryIPv6 = interface->ipv6.getAddress(&nextEntry)) {
+		if (AddressEntryIPv6->routerEntryPosition == routerPosition) {
+			AddressEntryIPv6->toBeRemoved = 1;
 		}
 	}
 
@@ -91,25 +91,25 @@ void NDPRouterMessages::update_router_entry(Interface* interface) {
 		while (routerprefix) {
 			if (routerprefix->useForStatelessAddressConfiguration()) {
 				// Find ipv6 address with a prefixlen of this interface that equals the new propagated prefix
-				AddressEntry* addressentry = 0;
-				while ((addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry))) {
-					if (addressentry->routerEntryPosition == routerPosition &&
-							compare_ipv6_addr(addressentry->ipv6, routerprefix->prefix, routerprefix->prefix_length)) {
+				AddressEntryIPv6* AddressEntryIPv6 = 0;
+				while ((AddressEntryIPv6 = interface->ipv6.getAddress(&nextEntry))) {
+					if (AddressEntryIPv6->routerEntryPosition == routerPosition &&
+							compare_ipv6_addr(AddressEntryIPv6->ipv6, routerprefix->prefix, routerprefix->prefix_length)) {
 						break;
 					}
 				}
 
-				if (!addressentry) {
-					addressentry = interface->makeIPv6AddressByPrefix(routerprefix->prefix, routerprefix->prefix_length,
-								AddressEntry::AddressEntryStateTemporary,
+				if (!AddressEntryIPv6) {
+					AddressEntryIPv6 = interface->addAddress(routerprefix->prefix, routerprefix->prefix_length,
+								AddressEntryIPv6::AddressEntryIPv6StateTemporary,
 								routerPosition);
 				}
-				if (addressentry) {
-					addressentry->toBeRemoved = 0;
-					addressentry->hoplimit = hoplimit;
-					addressentry->isOnLink = routerprefix->isOnLink();
-					addressentry->valid_time_minutes = routerprefix->get_valid_lifetime();
-					addressentry->preferred_time_minutes = routerprefix->get_preferred_lifetime();
+				if (AddressEntryIPv6) {
+					AddressEntryIPv6->toBeRemoved = 0;
+					AddressEntryIPv6->hoplimit = hoplimit;
+					AddressEntryIPv6->isOnLink = routerprefix->isOnLink();
+					AddressEntryIPv6->valid_time_minutes = routerprefix->get_valid_lifetime();
+					AddressEntryIPv6->preferred_time_minutes = routerprefix->get_preferred_lifetime();
 				}
 			}
 
@@ -121,9 +121,9 @@ void NDPRouterMessages::update_router_entry(Interface* interface) {
 
 	// Third: Remove all flaged entries
 	nextEntry = 0;
-	while (AddressEntry* addressentry = interface->addressmemory.findEntry<AddressEntryType>(&nextEntry)) {
-		if (addressentry->routerEntryPosition == routerPosition && addressentry->toBeRemoved) {
-			interface->addressmemory.freeEntry(addressentry);
+	while (AddressEntryIPv6* AddressEntryIPv6 = interface->ipv6.getAddress(&nextEntry)) {
+		if (AddressEntryIPv6->routerEntryPosition == routerPosition && AddressEntryIPv6->toBeRemoved) {
+			interface->ipv6.freeEntry(AddressEntryIPv6);
 		}
 	}
 }

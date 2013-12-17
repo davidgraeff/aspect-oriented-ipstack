@@ -18,6 +18,8 @@
 #pragma once
 
 #include "util/ipstack_inttypes.h"
+#include "util/LinkedList.h"
+
 namespace ipstack
 {
 

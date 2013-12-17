@@ -7,7 +7,7 @@ is not the case, it will be put in a linked list with all the other not-freed bu
 
 ## Garbage collection on alloc
 If you enabled the feature **Garbage collection before every alloc**,
-on every call to `SendBuffer::createInstance` all those buffers will be checked again and freed if possible.
+on every call to `SendBuffer::requestRawBuffer` all those buffers will be checked again and freed if possible.
 
 ## Block until send
 If you enabled the feature **Block until send**,

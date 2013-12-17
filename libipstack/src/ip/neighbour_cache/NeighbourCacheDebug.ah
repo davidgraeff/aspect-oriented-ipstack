@@ -19,7 +19,7 @@
 #include "router/Interface.h"
 #include "ipv6/IPv6_Packet.h"
 #include "ipv6/IPv6AddressUtilities.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "router/Router.h"
 #include "router/sendbuffer/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
@@ -36,12 +36,12 @@ aspect IPv6NDPCache_aspect_debug {
 		lookup = 0;
 	}
 	
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "NDPLookupDebug", "IPv6_Ethernet_NDPCache_Blocking_Aspect");
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") : order("Sendbuffer_IPv%", "NDPLookupDebug", "IPv6_Ethernet_NDPCache_Blocking_Aspect");
 	
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer) :
-		around(SendBuffer* sendbuffer) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 		
-			// check ip version
+		// check ip version
 		if (tjp->that()->m_useipversion == 6 && (sendbuffer->getState() & SendBuffer::ResolveLinkLayerStateOption)) {
 			IPv6_Packet* ip = (IPv6_Packet*)sendbuffer->p.ip_packet;
 			
@@ -118,7 +118,7 @@ aspect IPv6NDPCache_aspect_debug {
 	 * But if we know the router entry of the ndp-cache already, we can use it.
 	 */
 	advice execution("% ipstack::IPV6::resolveRoute(...)") && that(ipv6) : after(IPV6& ipv6) {
-		AddressEntry* entry = *(tjp->result());
+		AddressEntryIPv6* entry = *(tjp->result());
 		
 		if (!ipv6.interface || !entry)
 			return;

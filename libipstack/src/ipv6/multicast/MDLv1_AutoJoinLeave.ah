@@ -17,17 +17,17 @@
 
 #pragma once
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "../ICMPv6_Packet.h"
 #include "../ICMPv6_Socket.h"
 #include "MLDMessages.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 #include "util/ipstack_inttypes.h"
 
 /**
- * Purpose: Joins and leaves multicast scopes. This is Version 2 of the protocol.
+ * Purpose: Joins and leaves multicast scopes. This is Version 1 of the protocol. (Version 2 is current)
  * This is only half standard compliant: There is a complex state machine with
  * timers and resending descripted in the RFC rfc3810 (MLD v2). We only register
  * to a multicast group once and leave a group if the interface is shutdown or the leave* API is used.
@@ -36,16 +36,16 @@
  * start up at the same time after a power shortage etc.
  */
 
-aspect MDLv2_Autojoinleave {
+aspect MDLv1_Autojoinleave {
 	advice execution("void ipstack::Interface::leave_multicastGroup(const ipstack::ipv6addr&)") && args(multicast_addr) && that(interface) :
 		after(const ipstack::ipv6addr& multicast_addr, Interface& interface) {
 
-		ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-		IPV6& ipv6 = icmpv6instance.ipv6;
+		ICMPv6_Socket& socket = Management_Task::Inst().get_socket_icmpv6();
+		IPV6& ipv6 = socket.ipv6;
 		ipstack::ipv6addr addr = {{0}};
 		addr.ipaddrB8[0] = 0xff;
 		addr.ipaddrB8[1] = 0x02;
-		addr.ipaddrB8[15] = 0x16;
+		addr.ipaddrB8[15] = 0x02;
 		ipv6.addAlertHopByHopOption(IPV6::MLPMessageAlert);
 		ipv6.set_dst_addr(addr, &interface); // all routers multicast address
 		ipv6.setHoplimit(1);
@@ -56,48 +56,47 @@ aspect MDLv2_Autojoinleave {
 			get_unspecified_ipv6_address(addr);
 			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
 		}
-		Demux::Inst().setDirectResponse(true);
-		SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, MLDMessages::mldv2_listener_report_message_size());
+		
+		SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, sizeof(MLDMessages::mldv1_listener_done));
 		if (sbi) {
-			sbi->mark("leave_multicastGroup v2");
-			MLDMessages::write_mldv2_listener_report_message((char*)sbi->getDataPointer(), multicast_addr, MLDMessages::mldv2_CHANGE_TO_INCLUDE_MODE);
-			sbi->writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
-			icmpv6instance.send(sbi);
+			sbi->mark("leave_multicastGroup v1");
+			MLDMessages::write_mldv1_listener_done((char*)sbi->getDataPointer(), multicast_addr);
+			sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_done));
+			socket.send(sbi);
 		}
 		ipv6.restoreDefaultSendingConfiguration();
 	}
 
 	advice execution("bool ipstack::Interface::join_multicastGroup%(const ipstack::ipv6addr&, bool)") && args(multicast_addr, registerToRouters) && that(interface) :
 		after(const ipstack::ipv6addr& multicast_addr, bool registerToRouters, Interface& interface) {
-			
-			// abort if the multicast address should not be registered to routers or if storing of the address failed (look at the function result)
-			if (!registerToRouters || !*tjp->result())
-				return;
-			
-			ICMPv6_Socket &icmpv6instance = ICMPv6_Socket::instance();
-			IPV6& ipv6 = icmpv6instance.ipv6;
-			ipstack::ipv6addr addr = {{0}};
-			addr.ipaddrB8[0] = 0xff;
-			addr.ipaddrB8[1] = 0x02;
-			addr.ipaddrB8[15] = 0x16;
-			ipv6.set_dst_addr(addr, &interface); // all routers multicast address
-			ipv6.setHoplimit(1);
-			ipv6.addAlertHopByHopOption(IPV6::MLPMessageAlert);
-			// For the src address try to get the link local address
-			if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
-				ipv6.set_src_addr(addr); // link-local
-			else {
-				get_unspecified_ipv6_address(addr);
-				ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
-			}
-			Demux::Inst().setDirectResponse(true);
-			SendBuffer* sbi = icmpv6instance.requestSendBuffer(&interface, MLDMessages::mldv2_listener_report_message_size());
-			if (sbi) {
-				sbi->mark("join_multicastGroup v2");
-				MLDMessages::write_mldv2_listener_report_message((char*)sbi->getDataPointer(), multicast_addr, MLDMessages::mldv2_CHANGE_TO_EXCLUDE_MODE);
-				sbi->writtenToDataPointer(MLDMessages::mldv2_listener_report_message_size());
-				icmpv6instance.send(sbi);
-			}
-			ipv6.restoreDefaultSendingConfiguration();
+		
+		// abort if the multicast address should not be registered to routers or if storing of the address failed (look at the function result)
+		if (!registerToRouters || !*tjp->result())
+			return;
+		
+		ICMPv6_Socket& socket = Management_Task::Inst().get_socket_icmpv6();
+		IPV6& ipv6 = socket.ipv6;
+		ipstack::ipv6addr addr = {{0}};
+		addr.ipaddrB8[0] = 0xff;
+		addr.ipaddrB8[1] = 0x02;
+		addr.ipaddrB8[15] = 0x02;
+		ipv6.set_dst_addr(addr, &interface); // all routers multicast address
+		ipv6.setHoplimit(1);
+		ipv6.addAlertHopByHopOption(IPV6::MLPMessageAlert);
+		// For the src address try to get the link local address
+		if (interface.getInterfaceIPv6AddressByScope(addr, IPV6AddressScope::IPV6_SCOPE_LINKLOCAL))
+			ipv6.set_src_addr(addr); // link-local
+		else {
+			get_unspecified_ipv6_address(addr);
+			ipv6.set_src_addr(addr); // we have no link-local address, use the unspecified address
+		}
+		SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, sizeof(MLDMessages::mldv1_listener_report));
+		if (sbi) {
+			sbi->mark("join_multicastGroup v1");
+			MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), multicast_addr);
+			sbi->writtenToDataPointer(sizeof(MLDMessages::mldv1_listener_report));
+			socket.send(sbi);
+		}
+		ipv6.restoreDefaultSendingConfiguration();
 	}
 };

@@ -216,7 +216,7 @@ namespace ipstack
 			}
 		}
 
-		return requestSendBuffer(getSpecificTCPHeaderSize() + payloadsize);
+		return SendbufferIP::requestIPBuffer(*this, *this, getSpecificTCPHeaderSize() + payloadsize);
 	}
 
 	SendBuffer* TCP_Socket::requestSendBufferTCP_syn(uint_fast16_t payloadsize) {

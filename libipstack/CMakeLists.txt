@@ -2,6 +2,17 @@
 
 cmake_minimum_required (VERSION 2.8.8)
 SET(IPSTACK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+############## Aspect compiler ##############
+# Find and check ACXX compiler
+if(NOT CMAKE_ACXX_COMPILER_WORKS)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/buildsystem/acxx")
+	enable_language(ACXX)
+endif()
+if(NOT CMAKE_ACXX_COMPILER_WORKS)
+	message(FATAL_ERROR "Required working ACXX compiler not found.")
+endif()
+
 ############## BUILD_ONLY_ONE_TASK ##############
 # * Remove all busy waiting
 # * Add ipstack_periodic()

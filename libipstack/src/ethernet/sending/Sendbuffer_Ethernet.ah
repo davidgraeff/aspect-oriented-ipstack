@@ -25,23 +25,23 @@
 using namespace ipstack;
 
 /**
- * Add the ethernet header frame size to the estimateSendBufferMinSize(size)
+ * Add the ethernet header frame
  */
 aspect Sendbuffer_Ethernet {
-	// Add the ethernet header size to the SendBuffer create call.
-	advice execution("% ipstack::%_Socket::estimateSendBufferMinSize()") && result(v) :
-		after(unsigned v) {
-		if (tjp->that()->getUsedInterface()->getType() == Interface::ETHERNET) {
-			*tjp->result() = v + Eth_Frame::ETH_HEADER_SIZE;
+	SocketMemory* mem, Interface* interface, uint_fast16_t requestedSize
+	advice call("% ipstack::SendBuffer::requestRawBuffer(ipstack::SocketMemory&, ipstack::Interface*, %)") && args(mem, interface, requestedSize) :
+		before(SocketMemory* mem, Interface* interface, uint_fast16_t requestedSize) {
+		if (interface->getType() == Interface::ETHERNET) {
+			*tjp->arg<2>() = requestedSize + Eth_Frame::ETH_HEADER_SIZE;
 		}
 	}
-	
+
 	// Before ARP or NDP
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") : 
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") : 
 		order("Sendbuffer_IPv%_Ethernet", "Sendbuffer_Ethernet" , "IPv4_Socket_Ethernet_ARP_Aspect"||"IPv6_Ethernet_NDPCache_%_Aspect");
 
-	advice execution("% ipstack::%_Socket::prepareSendBuffer(...)") && args(sendbuffer, use_as_response) :
-		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 			
 		// Proceed if direct response is off or if this should not be a reponse to a packet
 		if (!use_as_response) {

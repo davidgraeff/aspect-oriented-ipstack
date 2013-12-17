@@ -19,11 +19,10 @@
 
 #include "ipv6/IPv6AddressUtilities.h"
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
+#include "ipv6/IPv6.h"
 #include "util/ipstack_inttypes.h"
 #include "../ExtensionHeaderOptions.h"
-namespace ipstack
-{
+namespace ipstack {
 class IPv6HopByHop
 {
 	private:

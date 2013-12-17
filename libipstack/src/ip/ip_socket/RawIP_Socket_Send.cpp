@@ -16,17 +16,17 @@
 // Copyright (C) 2013 David Gräff
 
 #include "ip/RawIP_Socket.h"
-#include "router/sendbuffer/SendBuffer.h"
 #include "util/ipstack_inttypes.h"
+#include "ip/SendbufferIP.h"
 
 namespace ipstack {
 	bool RawIP_Socket::send(char* data, int len, ReceiveBuffer* use_as_response) {
-		SendBuffer* dataToSend = requestSendBuffer(len, use_as_response);
-		if (!dataToSend)
+		SendBuffer* sendbuffer = SendbufferIP::requestIPBuffer(*this, *this, len, use_as_response);
+		if (!sendbuffer)
 			return false;
-		dataToSend->write(data, len);
-		send(dataToSend);
-		freeSendbuffer(dataToSend);
+		sendbuffer->write(data, len);
+		sendbuffer->send();
+		freeSendbuffer(sendbuffer);
 		return true;
 	}
 }

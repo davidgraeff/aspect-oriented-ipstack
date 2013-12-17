@@ -16,36 +16,39 @@
 // Copyright (C) 2013 David Gräff
 
 #pragma once
+#include "Clock.h"
 
 namespace ipstack {
 
-class System {
-public:
 	/**
 	  * The ipstack calls this method to halt the system on fatal errors
 	  * (should not happen in normal operation mode and only on memory
 	  * corruption).
 	  */
-	static void haltsystem();
+	void System::haltsystem() {}
 	
 	/**
 	  * Call this for ipstack initalization.
 	  */
-	static void init();
+	void System::init() {}
 
 	/**
 	 * Call this periodically every minute. This is for time-related maintenance like
-	 * ARP/NDP entries expire, IPv6 address expire etc. If you did not enable expire
-	 * functionallity this method does nothing.
+	 * ARP/NDP entries expire, IPv6 address expire etc.
 	 */
-	static void periodic1min();
+	void System::periodic1min() {}
 	
 	/**
 	 * Convenience method for your main loop, to call periodic1min
 	 * every minute (based on your Clock implementation)
 	 */
-	static void periodic();
-	
-};
-
+	void System::periodic() {
+		const uint64_t curr_time = Clock::now(); //in ticks
+		static uint64_t timeout_window = 0;
+		
+		if(curr_time > timeout_window){
+			timeout_window = curr_time + Clock::ms_to_ticks(60 * 1000UL); //in ticks
+			periodic1min();
+		}
+	}
 }

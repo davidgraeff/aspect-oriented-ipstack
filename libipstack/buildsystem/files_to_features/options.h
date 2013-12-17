@@ -41,7 +41,7 @@ public:
         failed = true;
         /*************** parse options ***************/
         int opt;
-        while ((opt = getopt(argc, argv, "b:o:k:f:")) != -1) {
+        while ((opt = getopt(argc, argv, "b:k:f:")) != -1) {
                 switch (opt) {
                 case 'k':
                     kconfigfile = std::string(optarg);
@@ -85,7 +85,7 @@ public:
 
     void usage() {
         fprintf(stderr,
-        "Usage: -o output_file -b base_directory -f files_to_features file -k kconfig_input_filename\n"
+        "Usage: -b base_directory -f files_to_features file -k kconfig_input_filename\n"
         "	The kconfig_input_filename is the input of the kconfig tool (usually filename.fm).\n"
         );
     }

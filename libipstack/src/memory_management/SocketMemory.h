@@ -85,7 +85,6 @@ namespace ipstack
 		
 		ReceiveBuffer* receiveRawPointer();
 		void block();
-
 	protected:
 		MemoryInterface* mempool;
 		RingbufferInterface* packetbuffer;

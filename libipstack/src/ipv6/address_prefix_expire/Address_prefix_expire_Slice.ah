@@ -21,7 +21,7 @@
 
 using namespace ipstack;
 /**
- * Affects AddressEntry
+ * Affects AddressEntryIPv6
  *
  * Valid/Preferred times are refreshed by a NDP: Router advertisement message. If no
  * refresh occurs and the expire time is 0 the entry will

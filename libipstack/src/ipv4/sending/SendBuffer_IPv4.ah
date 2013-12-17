@@ -29,25 +29,23 @@ using namespace ipstack;
  * Set the IPv4 header
  */
 aspect Sendbuffer_IPv4 {
-	advice execution("% ipstack::%::estimateSendBufferMinSize()" && derived("ipstack::SendBufferAPI")
-		&& derived("ipstack::IP")) && result(v) :
-		after(unsigned v) {
+	advice execution("% ipstack::SendBufferIP::requestIPBuffer(ipstack::SocketMemory&, ipstack::IP&, %, ipstack::ReceiveBuffer*)") && args(mem, ip, requestedSize, use_as_response) :
+		before(SocketMemory& mem, IP& ip, uint_fast16_t requestedSize, ReceiveBuffer* use_as_response) {
 		// check ip version
-		if (tjp->that()->m_useipversion == 4) {
-			*tjp->result() = v + tjp->that()->ipv4.getSpecificHeaderSize();
+		if (ip.m_useipversion == IPV4_VERSION) {
+			*tjp->arg<2>() = requestedSize + ip.ipv4.getSpecificHeaderSize();
 		}
 	}
 
-	advice execution("% ipstack::%::prepareSendBuffer(...)" && derived("ipstack::SendBufferAPI")
-		&& derived("ipstack::IP")) && args(sendbuffer, use_as_response) :
-		around(SendBuffer* sendbuffer, ReceiveBuffer* use_as_response) {
+	advice execution("void ipstack::SendbufferIP::prepareSendBuffer(...)") && args(sendbuffer, ip, use_as_response) :
+		around(SendBuffer* sendbuffer, IP& ip, ReceiveBuffer* use_as_response) {
 
 		// check ip version
-		if (tjp->that()->m_useipversion == 4) {
+		if (ip.m_useipversion == 4) {
 			sendbuffer->p.ip_packet = sendbuffer->getDataPointer();
 			IPv4_Packet* ip = (IPv4_Packet*)sendbuffer->p.ip_packet;
-			tjp->that()->ipv4.setupHeader(ip, sendbuffer->getRemainingSize());
-			sendbuffer->writtenToDataPointer(tjp->that()->ipv4.getSpecificHeaderSize());
+			ip.ipv4.setupHeader(ip, sendbuffer->getRemainingSize());
+			sendbuffer->writtenToDataPointer(ip.ipv4.getSpecificHeaderSize());
 
 			// set pointer to next header field
 			sendbuffer->p.nextheaderfield_ip = ip->get_nextheaderPointer();

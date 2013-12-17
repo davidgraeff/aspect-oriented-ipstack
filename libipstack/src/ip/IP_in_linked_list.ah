@@ -17,35 +17,16 @@
 
 #pragma once
 
-
 #include "util/ipstack_inttypes.h"
-#include "util/singleton.h"
-#include "NeighbourEntry.h"
+using namespace ipstack;
 
-namespace ipstack
-{
-
-/**
- * 
- */
-class NextHopUpdateTable : public Singleton<NextHopUpdateTable>
-private:
-	struct {
-		NeighbourEntry* e;
-		ipaddr a;
-	} entry;
-	entry entries[3];
-	uint8_t updateSize;
+/* 
+* We need a linked list over all IP objects to be able to change/invalidate the nexthop cache
+* and the src IP entry (if an assigned IP address expired or is removed).
+* 
+* This feature is only needed, if entries can expire.
+*/
+aspect IP_in_linked_list {
 public:
-	void add(ipaddr, NeighbourEntry*);
-// 				IPV6* ipv6instance = Router::Inst().getFirstDestinationCacheEntry();
-// 			while (ipv6instance) {
-// 				if (compare_ipv6_addr(ipv6instance->get_dst_addr(), message->destination_address)) {
-// 					ipv6instance->set_nexthop_ndpcache_entry(ndpcacheentry);
-// 				}
-// 				ipv6instance = ipv6instance->getNext();
-// 			}
-	void checkUpdate(ipaddr);
+	advice "ipstack::IP" : baseclass ("LinkedList<IP, true>");
 };
-
-}

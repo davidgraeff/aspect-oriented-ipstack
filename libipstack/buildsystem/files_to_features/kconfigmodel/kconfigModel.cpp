@@ -25,9 +25,10 @@
 #include "kconfigModel.h"
 #include <QFile>
 #include <QDebug>
+#include <QColor>
 
 DependencyModel::DependencyModel(const QString& kconfig_input_filename, QObject *parent)
-    : QAbstractItemModel(parent), rootItem(0), kconfig_input_filename(kconfig_input_filename)
+    : QAbstractItemModel(parent), rootItem(0), kconfig_input_filename(kconfig_input_filename), usedEntries(0)
 {
     createModel();
 }
@@ -39,12 +40,15 @@ DependencyModel::~DependencyModel()
 
 void DependencyModel::createModel()
 {
+    beginResetModel();
     delete rootItem;
+    usedEntries = 0;
     rootItem = new DependencyModelItem();
 
     QFile file(kconfig_input_filename);
     if (!file.open(QFile::ReadOnly)) {
         qWarning() << "Failed to open kconfig input file" << kconfig_input_filename;
+        endResetModel();
         return;
     }
 
@@ -85,6 +89,10 @@ void DependencyModel::createModel()
 
         if (currentItem) {
             if (line.isEmpty()) {
+                if (inhelp) {
+                    // Break long help line into multiple lines
+                    currentItem->description = "<p>" + currentItem->description + "</p>";
+                }
                 inhelp = false;
                 if (currentItem->text.size()) {
                     items.append(currentItem);
@@ -95,7 +103,7 @@ void DependencyModel::createModel()
                 continue;
             }
             if (inhelp) {
-                currentItem->description += line;
+                currentItem->description += line + " ";
             } else if (line.startsWith("bool ")) {
                 currentItem->text = line.remove(0, 5).replace('"',"");
                 if (choiceDepends.size()) {
@@ -138,11 +146,53 @@ void DependencyModel::createModel()
         items[i]->row = rootItem->childs.size();
         rootItem->insertSorted(items[i]);
     }
+
+    endResetModel();
+}
+
+void DependencyModel::resetAllUsed()
+{
+    beginResetModel();
+    usedEntries = 0;
+    auto it = itemList.begin();
+    while(it!=itemList.end()) {
+        (*it)->used = false;
+        ++it;
+    }
+    endResetModel();
+}
+
+void DependencyModel::markUsed(const QString &dependencyName, bool used)
+{
+    DependencyModelItem* item = getItemByName(dependencyName);
+    if (!item || item->used == used)
+        return;
+
+    // update used counter
+//    qDebug() << "markUsed" << dependencyName << used << item;
+    usedEntries = usedEntries + (used?1:-1);
+    item->used = used;
+    QModelIndex index = createIndex(item->row, 0, item);
+    emit dataChanged(index, index);
+}
+
+void DependencyModel::updateDependency(const QString &oldDepString, const QString &newDepString)
+{
+    QStringList usedlist = oldDepString.split(' ');
+    foreach(const QString& used, usedlist) {
+        if (used.startsWith("&"))
+            markUsed(used.mid(1), false);
+    }
+    usedlist = newDepString.split(' ');
+    foreach(const QString& used, usedlist) {
+        if (used.startsWith("&"))
+            markUsed(used.mid(1), true);
+    }
 }
 
 int DependencyModel::columnCount(const QModelIndex &) const
 {
-        return 2;
+    return 2;
 }
 
 QVariant DependencyModel::data(const QModelIndex &index, int role) const
@@ -157,6 +207,8 @@ QVariant DependencyModel::data(const QModelIndex &index, int role) const
             case 0: return item->text;
             case 1: return item->name;
         }
+    } else if (role==Qt::ForegroundRole) {
+        return item->used ? QColor(Qt::green) : QColor(Qt::TextColorRole);
     } else
     if (role==Qt::ToolTipRole) {
         return item->description;

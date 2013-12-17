@@ -35,7 +35,8 @@ aspect SendBuffer_Free_DMA_Blocking {
 		Sendbuffer* sendbuffer = (SendBuffer*)b;
 		Interface* i = sendbuffer->getInterface();
 		
-		while (!i->hasBeenSent(sendbuffer->getDataStart()) {}
+		void* dataPointer = sendbuffer->getDataStart();
+		while (!i->hasBeenSent(dataPointer) {}
 		
 		tjp->proceed();
 	}

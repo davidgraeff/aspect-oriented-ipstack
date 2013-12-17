@@ -16,17 +16,42 @@
 // Copyright (C) 2013 David Gräff
 
 #include "udp/UDP_Socket.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 #include "util/ipstack_inttypes.h"
 
 namespace ipstack {
 	bool UDP_Socket::send(char* data, int len, ReceiveBuffer* use_as_response) {
-		SendBuffer* dataToSend = requestSendBuffer(len, use_as_response);
-		if (!dataToSend)
+		SendBuffer* sendbuffer = requestSendbuffer(len, use_as_response);
+		if (!sendbuffer)
 			return false;
-		dataToSend->write(data, len);
-		send(dataToSend);
-		freeSendbuffer(dataToSend);
+		sendbuffer->write(data, len);
+		sendbuffer->send();
+		freeSendbuffer(sendbuffer);
 		return true;
 	}
+	
+	SendBuffer* UDP_Socket::requestSendbuffer(int len, ReceiveBuffer* use_as_response) {
+		SendBuffer* sendbuffer = SendbufferIP::requestIPBuffer(*this, *this, len + UDP_Packet::UDP_HEADER_SIZE, use_as_response);
+		if (!sendbuffer)
+			return 0;
+		
+		// set ip next header protocol to UDP
+		*(sendbuffer->p.nextheaderfield_ip) = UDP_Packet::IP_TYPE_UDP;
+
+		UDP_Packet* udp_packet = sendbuffer->getDataPointer();
+		sendbuffer->p.transport_packet = udp_packet;
+		setupHeader(udp_packet, sendbuffer->getRemainingSize());
+		sendbuffer->writtenToDataPointer(UDP_Packet::UDP_HEADER_SIZE);
+
+		// Proceed if direct response is off or if this should not be a reponse to a packet
+		if (!use_as_response) {
+			tjp->proceed();
+			return;
+		}
+
+		// Set destination addr := remote src addr
+		const UDP_Packet* remote_udp_packet = (UDP_Packet*)use_as_response->p.transport_packet;
+		udp_packet->set_dport(remote_udp_packet->get_sport());
+	}
+	
 }

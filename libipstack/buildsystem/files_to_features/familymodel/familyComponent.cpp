@@ -9,11 +9,22 @@ FamilyComponent::FamilyComponent(FamilyModel *componentModel) : FamilyBaseItem(c
 
 }
 
-FamilyComponent* FamilyComponent::createComponent(FamilyModel *componentModel, const QDir &absolut_directory, FamilyComponent* parent) {
+FamilyComponent::~FamilyComponent()
+{
+    emit componentModel->updateDependency(depends, QString());
+}
+
+FamilyComponent* FamilyComponent::createComponent(FamilyModel *componentModel,
+                                                  const QDir &absolut_directory,
+                                                  FamilyComponent* parent,
+                                                  const QString &depends,
+                                                  const QString &vname) {
     FamilyComponent* item = new FamilyComponent(componentModel);
     item->set_directory(absolut_directory,false);
     item->parent = parent;
     item->type = FamilyComponent::TYPE;
+    item->vname = vname;
+    item->set_dependencies(depends);
 
     int c=0;
     if (parent) {
@@ -47,6 +58,8 @@ void FamilyComponent::update_component_name()
 
     if (cache_component_name.isEmpty())
         cache_component_name = "[unnamed component]";
+
+    componentModel->update(this);
 }
 
 void FamilyComponent::toJSon(QJsonObject &jsonObject)
@@ -192,6 +205,24 @@ QStringList FamilyComponent::get_all_files(bool only_existing, bool remove_files
     return f;
 }
 
+void FamilyComponent::get_dependencies_string(QStringList &l)
+{
+    // add own depends string
+    if (depends.size()) {
+        l.append(depends);
+    }
+
+    // add child depends strings
+    for(int i=0;i<childs.size();++i) {
+        FamilyBaseItem* child = childs[i];
+
+        if (child->type==FamilyComponent::TYPE) {
+            FamilyComponent* childC = static_cast<FamilyComponent*>(child);
+            childC->get_dependencies_string(l);
+        }
+    }
+}
+
 void FamilyComponent::set_directory(const QDir& absolut_dir, bool removeSubFiles) {
     if (removeSubFiles) {
         QStringList files;
@@ -204,6 +235,8 @@ void FamilyComponent::set_directory(const QDir& absolut_dir, bool removeSubFiles
 
     directory = absolut_dir;
     cache_relative_directory = componentModel->relative_directory(absolut_dir.absolutePath());
+
+    componentModel->update(this);
 }
 
 QDir FamilyComponent::get_directory() const
@@ -211,10 +244,14 @@ QDir FamilyComponent::get_directory() const
     return directory;
 }
 
-QString FamilyComponent::get_dependencies() const {
-    return depends;
+void FamilyComponent::set_dependencies(const QString &d) {
+    const QString old = depends;
+    depends = d;
+    update_component_name();
+    emit componentModel->updateDependency(old, d);
 }
 
-void FamilyComponent::set_dependencies(const QString &d) {
-    depends = d;
+void FamilyComponent::set_vname(const QString &n) {
+    vname = n;
+    update_component_name();
 }

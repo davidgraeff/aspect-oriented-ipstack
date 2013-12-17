@@ -18,59 +18,64 @@
 #pragma once
 
 #include "SendBuffer.h"
-namespace ipstack
-{
-		static SendBuffer* SendBuffer::createInstance(MemoryInterface* mem, uint_fast16_t requestedSize, Interface* interface) {
-			SendBuffer* r = (SendBuffer*)mem->alloc(requestedSize + sizeof(SendBuffer));
-			if (!r)
-				return 0;
-			r->m_memsize = requestedSize;
-			r->m_state = WritingState;
-			r->m_interface = interface;
-			r->initStartPointer();
-			return r;
-		}
+namespace ipstack {
+	static SendBuffer* SendBuffer::requestRawBuffer(SocketMemory& mem, Interface* interface, uint_fast16_t requestedSize) {
+		// Use maximum space if requestedSize == 0
+		if (!requestedSize)
+			requestedSize = mem.get_Mempool()->getMaxFreeBlockSize();
 		
-		void SendBuffer::initStartPointer() {
-			data = getDataStart();
-		}
+		SendBuffer* r = (SendBuffer*)mem.get_Mempool()->alloc(requestedSize + sizeof(SendBuffer));
+		if (!r)
+			return 0;
+		r->m_memsize = requestedSize;
+		r->m_used = 0;
+		r->m_state = WritingState;
+		r->m_interface = interface;
+		return r;
+	}
 
-		void* SendBuffer::getDataPointer() {
-			return data;
+	bool SendBuffer::send() {
+		// it is not supported to send a sendbuffer again. Use sendbuffer->recyle().
+		if (getState()!=SendBuffer::WritingState) {
+			return false;
 		}
+		setState(SendBuffer::TransmittedState);
+		getInterface()->send(getDataStart(), getSize());
+		return true;
+	}
+	
+	void* SendBuffer::getDataPointer() {
+		return (void*)(getDataStart() + m_used);
+	}
 
-		void SendBuffer::writtenToDataPointer(uint_fast16_t length) {
-			data = (char*)data + length;
-		}
+	void SendBuffer::writtenToDataPointer(uint_fast16_t length) {
+		m_used += length;
+	}
 
-		void SendBuffer::write(const void* newdata, uint_fast16_t length) {
-			uint_fast16_t availableLength = getRemainingSize();
-			if (availableLength < length)
-				length = availableLength;
+	void SendBuffer::write(const void* newdata, uint_fast16_t length) {
+		memcpy(getDataPointer(), newdata, length);
+		m_used += length;
+	}
+	
+	void SendBuffer::recycle() {
+		// block until buffer has been send by the hardware
+		if (m_state==SendBuffer::TransmittedState)
+			while(!m_interface->hasBeenSent(data)) {}
+		// reset the state to WriteState
+		m_state = WritingState;
+	}
 
-			memcpy(data, newdata, length);
-			data = (char*)data + length;
-		}
-		
-		void SendBuffer::recycle() {
-			// block until buffer has been send by the hardware
-			if (m_state==SendBuffer::TransmittedState)
-				while(!m_interface->hasBeenSent(getDataStart())) {}
-			// reset the state to WriteState
-			m_state = WritingState;
-		}
+	uint_fast16_t SendBuffer::getRemainingSize() {
+		return m_memsize - m_used;
+	}
+	uint_fast16_t SendBuffer::getSize() {
+		return m_memsize;
+	}
+	
+	void SendBuffer::setInterface(Interface* i) { m_interface = i; }
 
-		uint_fast16_t SendBuffer::getRemainingSize() {
-			return m_memsize - ((char*) data - (char*) getDataStart());
-		}
-		uint_fast16_t SendBuffer::getSize() {
-			return m_memsize;
-		}
-		
-		void SendBuffer::setInterface(Interface* i) { m_interface = i; }
-
-		explicit SendBuffer::SendBuffer() {} // private constructor
-		SendBuffer::SendBuffer(const SendBuffer& s) {} // private copy constructor
+	explicit SendBuffer::SendBuffer() {} // private constructor
+	SendBuffer::SendBuffer(const SendBuffer& s) {} // private copy constructor
 };
 
 } // namespace ipstack

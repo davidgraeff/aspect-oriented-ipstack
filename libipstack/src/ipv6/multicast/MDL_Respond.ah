@@ -17,13 +17,13 @@
 
 #pragma once
 #include "ipv6/IPv6_Packet.h"
-#include "ipv6/IPv6onSockets.h"
-#include "../ICMPv6_Packet.h"
-#include "../ICMPv6_Socket.h"
+#include "ipv6/IPv6.h"
+#include "icmpv6/ICMPv6_Packet.h"
+#include "icmpv6/ICMPv6_Socket.h"
 #include "MLDMessages.h"
 #include "router/Interface.h"
 #include "demux/Demux.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 #include "util/ipstack_inttypes.h"
 
 /**
@@ -58,7 +58,7 @@ aspect NDP_MDL_Respond {
 				need_response = true;
 			} else {
 				// is a Multicast Address Specific Query: Check each address if it is one ouf ours
-				if (b.get_interface()->hasIPv6Address(query->addr)) {
+				if (b.get_interface()->ipv6.hasAddress(query->addr)) {
 					need_response = true;
 				}
 			}
@@ -69,7 +69,7 @@ aspect NDP_MDL_Respond {
 				ipv6.setHoplimit(1);
 				
 				const unsigned maxlen = sizeof(MLDMessages::mldv1_listener_report);
-				SendBuffer* sbi = socket.requestSendBuffer(maxlen, *b);
+				SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, maxlen, *b);
 				if (sbi) {
 					sbi->mark("NDP_MDL_Respond");
 					MLDMessages::write_mldv1_listener_report((char*)sbi->getDataPointer(), query->addr);

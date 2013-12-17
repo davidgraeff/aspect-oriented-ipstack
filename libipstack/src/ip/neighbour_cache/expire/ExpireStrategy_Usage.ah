@@ -73,4 +73,20 @@ aspect IPv6NDPCacheExpire_aspect {
 		// This is usually done by neighbour advertisement message of remote hosts
 		entry->expire_value = NDPCACHE_TRESHOLD_REQUIRE_SOLICITATION + NDPCACHE_EXPIRE_RATE_PER_MINUTE;
 	}
+	
+	/**
+	 * Reset chached nexthop entry for all ipv6 sockets
+	 * Depends on: IP_in_linked_list feature for IP_Socket iteration
+	 */
+	advice execution("void ipstack::NeighbourCache::freeNonRouter(ipstack::NeighbourEntry*, %)") && args(entry, position) :
+		around(NeighbourEntry* entry, EntryPosition position) {
+			
+		IP* ipsocket = IP::getHead();
+		while (ipsocket) {
+			if (compare_ipv6_addr(ipsocket->ipv6.get_dst_addr(), entry->ipv6)) {
+				ipsocket->resetRoute();
+			}
+			ipsocket = ipsocket->getNext();
+		}
+	}
 };

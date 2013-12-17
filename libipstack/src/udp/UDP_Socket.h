@@ -18,9 +18,8 @@
 #pragma once
 
 #include "memory_management/SocketMemory.h"
-#include "demux/DemuxLinkedListContainer.h"
+#include "util/LinkedList.h"
 #include "demux/receivebuffer/SmartReceiveBufferPtr.h"
-#include "router/sendbuffer/sendbufferAPI.h"
 #include "util/ipstack_inttypes.h"
 #include "ip/IP.h"
 
@@ -30,13 +29,13 @@ namespace ipstack
 class UDP_Packet;
 /**
  * UDP Socket. Receiving API is made available by the SocketMemory class (receive()/receiveBlock())
- * and DemuxLinkedList class (bind()/unbind()) (if receiving is enabled!).
+ * (if receiving is enabled!).
  * For sending you may either use the convenience API (send(char* data, int len)) or the SendBuffer
- * API directly.
+ * via requestSendbuffer (use write, send on the sendbuffer; use freeSendbuffer after usage).
  * 
  * TODO AspectC++2: Use templates for IP version instead of inherit IP
  */
-class UDP_Socket: public DemuxLinkedList<UDP_Socket>, public SocketMemory, public SendBufferAPI, public IP
+class UDP_Socket: public LinkedList<UDP_Socket>, public SocketMemory, public IP
 {
 	public:
 		// Construct with socket memory
@@ -68,6 +67,14 @@ class UDP_Socket: public DemuxLinkedList<UDP_Socket>, public SocketMemory, publi
 		* udp_socket->send("test", 4);
 		*/
 		bool send(char* data, int len, ReceiveBuffer* use_as_response = 0);
+		
+		/**
+		 * Get a sendbuffer to write data to
+		 * -> send it with sendbuffer->send()
+		 * -> free it with freeSendbuffer(sendbuffer)
+		 * @return Return 0 if no memory is available.
+		 */
+		SendBuffer* requestSendbuffer(int len, ReceiveBuffer* use_as_response = 0);
 
 		/**
 		 * Bind this socket to the source port you have set before. Without binding

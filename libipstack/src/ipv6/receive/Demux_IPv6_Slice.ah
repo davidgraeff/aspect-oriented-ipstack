@@ -24,66 +24,136 @@ using namespace ipstack;
 
 slice class Demux_IPv6_Slice {
 private:
-    void ipv6_demux ( IPv6_Packet* packet, unsigned len, Interface* interface ) {
-        // Go through all linked next headers
-        unsigned remainingLength = packet->get_payload_len();
-		unsigned remainingLengthFailSafe = remainingLength;
-		void* payload = (void*)packet->get_payload();
-        unsigned char nextHeader = packet->get_nextheader();
+	void ipv6_demux(ReceiveBuffer& buffer){
+		//is the receiving interface running ipv6?
+		Interface* interface = buffer.get_interface();
+		if (interface->isIPv6Up() == false) {
+			//discard packets on down interfaces
+			return;
+		}
+
+		IPv6_Packet* packet = (IPv6_Packet*)buffer.get_payload_data();
+
+		if (packet->get_version() != IPv6_Packet::IPV6_VERSION) {
+			//no ipv6 packet
+			return;
+		}
+
+		unsigned len = packet->validPacketLength(packet->get_payload_len());
+		if (len == 0) {
+			//invalid packet length
+			return;
+		}
 		
-		while ( !ipv6_payload_demux ( interface, packet, payload, remainingLength, nextHeader ) ) {
-			if (!remainingLength) // all bytes consumed: return
-				return;
-			// With every iteration the remainingLength should shrink: if not -> no aspect registered
-			if (remainingLength==remainingLengthFailSafe) {
-				error_no_protocol_handler_v6(packet, interface);
-				break;
-			}
-			remainingLengthFailSafe = remainingLength;
-        }
+		// Is the dest address assigned to our interface?
+		if (!interface->hasIPv6Address(packet->get_dst_ipaddr())) {
+			//this packet has to be routed elsewhere
+			return;
+		}
+		
+        // Go through all linked next headers
+        unsigned char nextHeader = packet->get_nextheader();
+
+		// Advance ReceiveBuffer "payload" data pointer
+		buffer.setPayload(packet->get_payload(), len-IPv6_Packet::IPV6_HEADER_SIZE_IN_BYTES);
+		
+		if (nextHeader == IPv6Ext_HopyByHop) {
+			nextHeader = ipv6_ext_HopyByHop(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_DestOptions) {
+			nextHeader = ipv6_ext_DestOptions(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_Routing) {
+			nextHeader = ipv6_ext_Routing(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_Fragment) {
+			nextHeader = ipv6_ext_Fragment(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_Authentification) {
+			nextHeader = ipv6_ext_Authentification(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_ESP) {
+			nextHeader = ipv6_ext_ESP(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_DestOptions) {
+			nextHeader = ipv6_ext_DestOptions(buffer);
+		}
+		
+		if (nextHeader == IPv6Ext_Mobility) {
+			nextHeader = ipv6_ext_Mobility(buffer);
+		}
+		
+		// Nothing to do, no other payload
+		if (nextHeader == IPv6Ext_NoNext) {
+			return;
+		}
+		
+		// If extension header parsing didn't fail, propagate to ip_payload_demux
+		if (ip_payload_demux(buffer, nextHeader))
+			return;
+
+		error_no_protocol_handler_v6(buffer);
     }
 
-    /**
-     * An IPv6 Header may have several extension headers and upper layer protocols (udp, tcp)
-     * structured by a "Linked" list: Every extension header start with a next-header byte and
-     * a length byte, that indicates the size of the current extension header in a 8-byte-unit (excluding the first
-     * eight bytes)
-     */
-    bool ipv6_payload_demux ( Interface* interface, IPv6_Packet* packet, void*& payload, unsigned& payload_length, unsigned char& nextHeader ) {
-		return (nextHeader==59); // 59: no next protocol
-    }
-    
+	inline unsigned char ipv6_ext_HopyByHop(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_DestOptions(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_Routing(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_Fragment(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_Authentification(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_ESP(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	inline unsigned char ipv6_ext_Mobility(ReceiveBuffer& buffer){
+		return ExtensionHeaderOptions::skipHeader(buffer);
+	}
+	
     /**
 	 * Call this method if the ipv6 ttl is 0
 	 */
-	void error_ttl_v6(IPv6_Packet* ip_packet, Interface* interface) {
+	void error_ttl_v6(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
 	
 	/**
 	 * Call this method if there is no protocol handler for the given protocol
 	 */
-	void error_no_protocol_handler_v6(IPv6_Packet* ip_packet, Interface* interface) {
+	void error_no_protocol_handler_v6(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
 	
 	/**
 	 * Call this method if there is an unknown option
 	 */
-	void error_option_unknown_v6(IPv6_Packet* ip_packet, Interface* interface) {
+	void error_option_unknown_v6(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
 	
 	/**
 	 * Call this if the receiving queue is full
 	 */
-	void error_receiving_queue_full_v6(IPv6_Packet* ip_packet, const Interface* interface) {
+	void error_receiving_queue_full_v6(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
 	/**
 	 * Call this if the received packet does not fit into one of the available memory blocks
 	 */
-	void error_receiving_memory_too_small_v6(IPv6_Packet* ip_packet, const Interface* interface) {
+	void error_receiving_memory_too_small_v6(ReceiveBuffer& buffer) {
 		//Aspects to be weaved here!
 	}
 };

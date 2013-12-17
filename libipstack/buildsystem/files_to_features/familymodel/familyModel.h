@@ -68,6 +68,12 @@ public:
     QStringList get_used_files() const;
 
     /**
+     * @brief getDependStrings
+     * @return Return the dependency string for each component of this model
+     */
+    QStringList get_dependencies() const;
+
+    /**
      * @brief get_missing_files
      * @return Return missing files as QModelIndexList
      */
@@ -141,4 +147,5 @@ Q_SIGNALS:
     // This signal is emitted if files are added to the family model
     void added_files(const QStringList& files);
 	void changed();
+    void updateDependency(const QString& oldDepString, const QString& newDepString);
 };

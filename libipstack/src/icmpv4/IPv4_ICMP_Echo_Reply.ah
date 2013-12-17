@@ -23,6 +23,7 @@
 #include "router/Interface.h"
 #include "icmpv4/ICMPv4_Packet.h"
 #include "ICMPv4_Socket.h"
+#include "ip/SendbufferIP.h"
 
 using namespace ipstack;
 
@@ -52,7 +53,7 @@ aspect IPv4_ICMP_Echo_Reply {
 				maxlen = payloadlen;
 			}
 			
-			SendBuffer* sbi = socket.requestSendBuffer(maxlen, *b);
+			SendBuffer* sbi = SendbufferIP::requestIPBuffer(socket, socket, maxlen, *b);
 			//we have an echo request packet for IPv4
 			if (sbi) {
 				ICMPv4_Packet* reply_icmp = (ICMPv4_Packet*)sbi->getDataPointer();
@@ -63,8 +64,7 @@ aspect IPv4_ICMP_Echo_Reply {
 				sbi->writtenToDataPointer(ICMPv4_Packet::ICMP_HEADER_SIZE);
 				// append original payload of the source icmp packet
 				sbi->write(icmp_packet->get_data(), payloadlen-ICMPv4_Packet::ICMP_HEADER_SIZE);
-
-				socket.send(sbi);
+				sbi->send();
 			}
 		} else {
 			tjp->proceed();

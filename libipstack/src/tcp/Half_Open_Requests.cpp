@@ -1,13 +1,13 @@
 #include "Half_Open_Requests.h"
 #include "tcp/TCP_Segment.h"
-#include "router/sendbuffer/SendBuffer.h"
+#include "ip/SendbufferIP.h"
 
 namespace ipstack
 {
 	void Half_Open_Requests::respond(ReceiveBuffer& b) {
 		TCP_Segment* incoming_segment = static_cast<TCP_Segment*>(b.get_payload_data());
 		uint_fast16_t payload_len = b.get_payload_size();
-		SendBuffer* sendbuffer = socket.requestSendBuffer(b.get_interface(), maxlen, *b);
+		SendBuffer* sendbuffer = SendbufferIP::requestIPBuffer(*this, *this, payload_len, *b);
 
 		TCP_Segment* segment = (TCP_Segment*)sendbuffer->getDataPointer();
 		segment->set_dport(incoming_segment->get_sport());
@@ -40,7 +40,6 @@ namespace ipstack
 		}
 
 		sendbuffer->writtenToDataPointer(TCP_Segment::TCP_MIN_HEADER_SIZE);
-		
-		send(sendbuffer);
+		sendbuffer->send();
 	}
 }

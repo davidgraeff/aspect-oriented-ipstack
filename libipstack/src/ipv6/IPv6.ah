@@ -13,33 +13,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Aspect-Oriented-IP.  If not, see <http://www.gnu.org/licenses/>.
 // 
-// Copyright (C) 2012 David Gräff
+// Copyright (C) 2012-2013 David Gräff
 
 #pragma once
-
-#include "router/sendbuffer/Router_IPv6_Slice.ah"
-#include "Interface_IPv6_Slice.ah"
-#include "Socket_IPv6_Slice.ah"
+#include "InterfaceAddressesIPv6.ah"
+#include "IPv6.h"
 
 using namespace ipstack;
 
 aspect IPv6 {
-	/* Affect class: Interface */
-	advice "ipstack::Interface" : slice Interface_IPv6_Slice;
+	/* Add IP address handling to each Interface */
+	advice "ipstack::Interface" : slice class {
+	public:
+		InterfaceAddressesIPv6 ipv6;
+	};
 
-	/* Affect class: Router */
-	advice "ipstack::Router" : slice Router_IPv6_Slice;
-	
-	/* Add ipv6 member to each socket object */
-	advice "ipstack::%_Socket" : slice Socket_IPv6_Slice;
-	
-	advice execution("void ipstack::NeighbourCache::removeRouter(ipstack::NeighbourEntry*,%)") && args(entry, position) :
-		around(NeighbourEntry* entry, EntryPosition position) {
-		// Free all address prefixes that belong to this router
-		uint8_t nextEntry = 0;
-		while (AddressEntry* addressentry = entry->interface->assignedAddresses.findEntry(&nextEntry)) {
-			if (addressentry->routerEntryPosition == position)
-				entry->interface->assignedAddresses.freeEntry(addressentry);
-		}
-	}
+	/* Add ipv6 member to each IP (socket) object */
+	advice "ipstack::IP" : slice class {
+	public:
+		IPV6 ipv6;
+	};
 };
